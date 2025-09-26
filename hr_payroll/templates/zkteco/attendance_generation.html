@@ -1,0 +1,1115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Attendance Generation - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .loading-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid hsl(var(--muted));
+    border-top: 4px solid hsl(var(--primary));
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* Modal styles */
+  .modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+  }
+
+  /* Modern Configuration tabs with proper backgrounds */
+  .config-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.125rem;
+    margin-bottom: 2rem;
+    padding: 0.25rem;
+    background: var(--muted);
+    border-radius: 0.5rem;
+    border: 1px solid var(--border);
+  }
+
+  .config-tab-button {
+    flex: 1;
+    min-width: fit-content;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    background: transparent;
+    color: var(--muted-foreground);
+    text-align: center;
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .config-tab-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--accent);
+    opacity: 0;
+    transform: translateX(-100%);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .config-tab-button:hover:not(.active)::before {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .config-tab-button:hover:not(.active) {
+    color: var(--accent-foreground);
+  }
+
+  .config-tab-button.active {
+    background: var(--background);
+    color: var(--foreground);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+  }
+
+  .config-tab-button.active::before {
+    display: none;
+  }
+
+  .config-tab-button > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .config-tab-content {
+    display: none;
+  }
+
+  .config-tab-content.active {
+    display: block;
+    animation: fadeInUp 0.2s ease-out;
+  }
+
+  /* Status badges */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.625rem;
+    font-weight: 500;
+  }
+
+  .status-present { 
+    background-color: rgb(220 252 231); 
+    color: rgb(22 101 52); 
+  }
+  .dark .status-present { 
+    background-color: rgb(22 101 52 / 0.3); 
+    color: rgb(134 239 172); 
+  }
+
+  .status-absent { 
+    background-color: rgb(254 226 226); 
+    color: rgb(153 27 27); 
+  }
+  .dark .status-absent { 
+    background-color: rgb(153 27 27 / 0.3); 
+    color: rgb(252 165 165); 
+  }
+
+  .status-late { 
+    background-color: rgb(254 243 199); 
+    color: rgb(146 64 14); 
+  }
+  .dark .status-late { 
+    background-color: rgb(146 64 14 / 0.3); 
+    color: rgb(253 186 116); 
+  }
+
+  .status-holiday { 
+    background-color: rgb(219 234 254); 
+    color: rgb(30 64 175); 
+  }
+  .dark .status-holiday { 
+    background-color: rgb(30 64 175 / 0.3); 
+    color: rgb(147 197 253); 
+  }
+
+  .status-leave { 
+    background-color: rgb(243 232 255); 
+    color: rgb(124 58 237); 
+  }
+  .dark .status-leave { 
+    background-color: rgb(124 58 237 / 0.3); 
+    color: rgb(196 181 253); 
+  }
+
+  .status-halfday { 
+    background-color: rgb(255 237 213); 
+    color: rgb(194 65 12); 
+  }
+  .dark .status-halfday { 
+    background-color: rgb(194 65 12 / 0.3); 
+    color: rgb(251 146 60); 
+  }
+
+  /* Print styles */
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+    
+    .print-only {
+      display: block !important;
+    }
+    
+    body {
+      background: white !important;
+      color: black !important;
+    }
+    
+    .glass-effect {
+      background: white !important;
+      border: 1px solid #ddd !important;
+      box-shadow: none !important;
+    }
+    
+    .report-table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    
+    .report-table th,
+    .report-table td {
+      border: 1px solid #000;
+      padding: 8px;
+      text-align: left;
+    }
+    
+    .report-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+  }
+
+  /* Report table styling */
+  .report-table {
+    width: 100%;
+    font-size: 0.75rem;
+    border-collapse: collapse;
+  }
+
+  .report-table th,
+  .report-table td {
+    padding: 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .report-table th {
+    background-color: hsl(var(--muted));
+    font-weight: 600;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .report-table tr:hover {
+    background-color: hsl(var(--accent));
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-4 animate-fade-in-up">
+  <!-- Simple Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div>
+      <h1 class="text-xl font-bold text-heading">Attendance Generation</h1>
+      <p class="text-xs text-muted-foreground mt-0.5">Configure and generate attendance reports</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="open-config-modal" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-200 shadow-md hover:shadow-lg focus-ring">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        </svg>
+        Configure Attendance
+      </button>
+    </div>
+  </div>
+
+  <!-- Preview Results Section -->
+  <div id="preview-results" class="hidden">
+    <div class="glass-effect rounded-lg card-elevated">
+      <!-- Report Header (for printing) -->
+      <div class="report-header px-6 py-4 border-b border-border">
+        <div class="text-center">
+          <h2 class="text-xl font-bold text-heading mb-1">{{ company.name }}</h2>
+          <p class="text-sm text-muted-foreground">{{ company.address|default:"Company Address" }}</p>
+          <h3 class="text-lg font-semibold text-heading mt-3 mb-1">Attendance Summary Report</h3>
+          <p class="text-xs text-muted-foreground">Generated on: <span id="report-date"></span></p>
+          <p class="text-xs text-muted-foreground">Period: <span id="report-period"></span></p>
+        </div>
+      </div>
+
+      <!-- Summary Statistics -->
+      <div class="px-6 py-4 border-b border-border">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="text-center">
+            <div class="text-2xl font-bold text-foreground" id="summary-total">0</div>
+            <div class="text-xs text-muted-foreground">Total Records</div>
+          </div>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-green-600" id="summary-present">0</div>
+            <div class="text-xs text-muted-foreground">Present Days</div>
+          </div>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-red-600" id="summary-absent">0</div>
+            <div class="text-xs text-muted-foreground">Absent Days</div>
+          </div>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-blue-600" id="summary-overtime">0</div>
+            <div class="text-xs text-muted-foreground">OT Hours</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modern Action Buttons -->
+      <div class="px-6 py-4 border-b border-border no-print">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-md flex items-center justify-center">
+              <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+            </div>
+            <div>
+              <h4 class="text-sm font-semibold text-heading">Report Actions</h4>
+              <p class="text-xs text-muted-foreground">Print, export, or generate final records</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="print-report" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-accent-foreground bg-accent hover:bg-accent/80 rounded-lg transition-all duration-200 focus-ring">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+              </svg>
+              Print Report
+            </button>
+            <button id="export-csv" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-accent-foreground bg-accent hover:bg-accent/80 rounded-lg transition-all duration-200 focus-ring">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Export CSV
+            </button>
+            <button id="generate-final" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-200 shadow-md hover:shadow-lg focus-ring">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Generate Records
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modern Report Table -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full">
+          <thead class="bg-muted/50">
+            <tr class="border-b border-border">
+              <th class="px-4 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wide">Employee</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wide">Department</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wide">Date</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wide">Check In</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wide">Check Out</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wide">Hours</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wide">OT Hours</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wide">Status</th>
+            </tr>
+          </thead>
+          <tbody id="report-table-body" class="divide-y divide-border">
+            <!-- Data will be populated here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Configuration Modal -->
+<div id="config-modal" class="fixed inset-0 z-50 overflow-auto modal-backdrop hidden py-16">
+  <div class="bg-card mx-auto my-2 p-0 border border-border rounded-xl w-11/12 max-w-4xl shadow-2xl relative glass-effect card-elevated">
+    <!-- Compact Modal Header -->
+    <div class="px-4 py-3 border-b border-border">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center shadow-md">
+            <svg class="w-3 h-3 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-base font-semibold text-heading">Attendance Configuration</h2>
+            <p class="text-xs text-muted-foreground">Configure attendance processing rules</p>
+          </div>
+        </div>
+        <button type="button" id="close-modal" class="p-2 -m-2 rounded-lg hover:bg-accent transition-colors text-muted-foreground hover:text-foreground focus-ring">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Content -->
+    <div class="p-4">
+      <!-- Modern Configuration Tabs -->
+      <div class="config-tabs">
+        <button class="config-tab-button active" data-config-tab="basic">
+          <svg class="w-3 h-3 inline mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 4v10m0 0l3-3m-3 3l3 3"></path>
+          </svg>
+          Basic
+        </button>
+        <button class="config-tab-button" data-config-tab="rules">
+          <svg class="w-3 h-3 inline mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          Rules
+        </button>
+        <button class="config-tab-button" data-config-tab="overtime">
+          <svg class="w-3 h-3 inline mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12,6 12,12 16,14"></polyline>
+          </svg>
+          Overtime
+        </button>
+        <button class="config-tab-button" data-config-tab="advanced">
+          <svg class="w-3 h-3 inline mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+          </svg>
+          Advanced
+        </button>
+      </div>
+
+      <form id="attendance-config-form" class="space-y-4">
+        {% csrf_token %}
+        
+        <!-- Basic Settings Tab -->
+        <div id="basic-tab" class="config-tab-content active">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label class="block mb-1 text-xs font-medium text-foreground">Start Date *</label>
+              <input type="date" name="start_date" required class="w-full px-3 py-2 text-xs border border-border rounded-md bg-input text-foreground focus:border-ring focus:ring-1 focus:ring-ring/20 focus:outline-none transition-all duration-200">
+            </div>
+            <div>
+              <label class="block mb-1 text-xs font-medium text-foreground">End Date *</label>
+              <input type="date" name="end_date" required class="w-full px-3 py-2 text-xs border border-border rounded-md bg-input text-foreground focus:border-ring focus:ring-1 focus:ring-ring/20 focus:outline-none transition-all duration-200">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label class="block mb-1 text-xs font-medium text-foreground">Employees (Optional)</label>
+              <select name="employee_ids" multiple class="w-full px-3 py-2 text-xs border border-border rounded-md bg-input text-foreground focus:border-ring focus:ring-1 focus:ring-ring/20 focus:outline-none transition-all duration-200" size="4">
+                {% for employee in all_employees %}
+                <option value="{{ employee.id }}">{{ employee.employee_id }} - {{ employee.name }}</option>
+                {% endfor %}
+              </select>
+              <p class="text-xs text-muted-foreground mt-1">Leave empty for all employees</p>
+            </div>
+
+            <div>
+              <label class="block mb-1 text-xs font-medium text-foreground">Departments (Optional)</label>
+              <select name="department_ids" multiple class="w-full px-3 py-2 text-xs border border-border rounded-md bg-input text-foreground focus:border-ring focus:ring-1 focus:ring-ring/20 focus:outline-none transition-all duration-200" size="4">
+                {% for department in departments %}
+                <option value="{{ department.id }}">{{ department.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="flex items-center gap-2">
+              <input type="checkbox" name="regenerate_existing" class="h-4 w-4 text-primary focus:ring-primary border-border rounded">
+              <span class="text-xs font-medium text-foreground">Regenerate Existing Records</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Attendance Rules Tab -->
+        <div id="rules-tab" class="config-tab-content">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-3">
+              <label class="flex items-center gap-2">
+                <input type="checkbox" name="enable_minimum_working_hours_rule" class="h-4 w-4 text-primary focus:ring-primary border-border rounded">
+                <span class="text-xs font-medium text-foreground">Minimum Working Hours Rule</span>
+              </label>
+              <div class="ml-6">
+                <label class="block text-xs text-muted-foreground mb-1">Minimum Hours for Present</label>
+                <input type="number" name="minimum_working_hours_for_present" value="4" step="0.5" min="0" max="24" class="w-full px-3 py-2 text-xs border border-border rounded-md bg-input text-foreground focus:border-ring focus:ring-1 focus:ring-ring/20 focus:outline-none transition-all duration-200">
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <label class="flex items-center gap-2">
+                <input type="checkbox" name="enable_working_hours_half_day_rule" class="h-4 w-4 text-primary focus:ring-primary border-border rounded">
+                <span class="text-xs font-medium text-foreground">Half Day Rule</span>
+              </label>
+              <div class="ml-6 grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs text-muted-foreground mb-1">Min Hours</label>
+                  <input type="number" name="half_day_minimum_hours" value="4" step="0.5" min="0" max="24" class="w-full px-3 py-2 text-xs border border-border rounded-md bg-input text-foreground focus:border-ring focus:ring-1 focus:ring-ring/20 focus:outline-none transition-all duration-200">
+                </div>
+                <div>
+                  <label class="block text-xs text-muted-foreground mb-1">Max Hours</label>
+                  <input type="number" name="half_day_maximum_hours" value="6" step="0.5" min="0" max="24" class="w-full px-3 py-2 text-xs border border-border rounded-md bg-input text-foreground focus:border-ring focus:ring-1 focus:ring-ring/20 focus:outline-none transition-all duration-200">
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <label class="flex items-center gap-2">
+                <input type="checkbox" name="require_both_in_and_out" class="h-4 w-4 text-primary focus:ring-primary border-border rounded">
+                <span class="text-xs font-medium text-foreground">Require Both In/Out</span>
+              </label>
+            </div>
+
+            <div class="space-y-3">
+              <label class="flex items-center gap-2">
+                <input type="checkbox" name="enable_maximum_working_hours_rule" class="h-4 w-4 text-primary focus:ring-primary border-border rounded">
+                <span class="text-xs font-medium text-foreground">Maximum Working Hours Rule</span>
+              </label>
+              <div class="ml-6">
+                <label class="block text-xs text-muted-foreground mb-1">Maximum Hours</label>
+                <input type="number" name="maximum_allowable_working_hours" value="16" step="0.5" min="0" max="24" class="w-full px-3 py-2 text-xs border border-border rounded-md bg-input text-foreground focus:border-ring focus:ring-1 focus:ring-ring/20 focus:outline-none transition-all duration-200">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Overtime Settings Tab -->
+        <div id="overtime-tab" class="config-tab-content">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block mb-1 text-xs font-medium text-foreground">Grace Minutes</label>
+              <input type="number" name="grace_minutes" value="15" min="0" max="60" class="w-full px-3 py-2 text-xs border border-border rounded-md bg-input text-foreground focus:border-ring focus:ring-1 focus:ring-ring/20 focus:outline-none transition-all duration-200">
+            </div>
+
+            <div>
+              <label class="block mb-1 text-xs font-medium text-foreground">Early Out Threshold (min)</label>
+              <input type="number" name="early_out_threshold_minutes" value="30" min="0" max="120" class="w-full px-3 py-2 text-xs border border-border rounded-md bg-input text-foreground focus:border-ring focus:ring-1 focus:ring-ring/20 focus:outline-none transition-all duration-200">
+            </div>
+
+            <div>
+              <label class="block mb-1 text-xs font-medium text-foreground">OT Start After (min)</label>
+              <input type="number" name="overtime_start_after_minutes" value="15" min="0" max="120" class="w-full px-3 py-2 text-xs border border-border rounded-md bg-input text-foreground focus:border-ring focus:ring-1 focus:ring-ring/20 focus:outline-none transition-all duration-200">
+            </div>
+
+            <div>
+              <label class="block mb-1 text-xs font-medium text-foreground">Minimum OT (min)</label>
+              <input type="number" name="minimum_overtime_minutes" value="60" min="0" max="240" class="w-full px-3 py-2 text-xs border border-border rounded-md bg-input text-foreground focus:border-ring focus:ring-1 focus:ring-ring/20 focus:outline-none transition-all duration-200">
+            </div>
+
+            <div>
+              <label class="block mb-1 text-xs font-medium text-foreground">OT Calculation Method</label>
+              <select name="overtime_calculation_method" class="w-full px-3 py-2 text-xs border border-border rounded-md bg-input text-foreground focus:border-ring focus:ring-1 focus:ring-ring/20 focus:outline-none transition-all duration-200">
+                <option value="employee_based" selected>Employee-Based</option>
+                <option value="shift_based">Shift-Based</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="flex items-center gap-2 mt-6">
+                <input type="checkbox" name="use_employee_expected_hours" checked class="h-4 w-4 text-primary focus:ring-primary border-border rounded">
+                <span class="text-xs font-medium text-foreground">Use Employee Expected Hours</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Advanced Options Tab -->
+        <div id="advanced-tab" class="config-tab-content">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-3">
+              <label class="flex items-center gap-2">
+                <input type="checkbox" name="enable_dynamic_shift_detection" class="h-4 w-4 text-primary focus:ring-primary border-border rounded">
+                <span class="text-xs font-medium text-foreground">Dynamic Shift Detection</span>
+              </label>
+              <div class="ml-6">
+                <label class="block text-xs text-muted-foreground mb-1">Tolerance (min)</label>
+                <input type="number" name="dynamic_shift_tolerance_minutes" value="30" min="0" max="120" class="w-full px-3 py-2 text-xs border border-border rounded-md bg-input text-foreground focus:border-ring focus:ring-1 focus:ring-ring/20 focus:outline-none transition-all duration-200">
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <label class="flex items-center gap-2">
+                <input type="checkbox" name="use_shift_grace_time" class="h-4 w-4 text-primary focus:ring-primary border-border rounded">
+                <span class="text-xs font-medium text-foreground">Use Shift Grace Time</span>
+              </label>
+            </div>
+
+            <div class="space-y-3">
+              <label class="flex items-center gap-2">
+                <input type="checkbox" name="enable_consecutive_absence_flagging" class="h-4 w-4 text-primary focus:ring-primary border-border rounded">
+                <span class="text-xs font-medium text-foreground">Consecutive Absence Flagging</span>
+              </label>
+              <div class="ml-6">
+                <label class="block text-xs text-muted-foreground mb-1">Risk Days</label>
+                <input type="number" name="consecutive_absence_termination_risk_days" value="5" min="1" max="30" class="w-full px-3 py-2 text-xs border border-border rounded-md bg-input text-foreground focus:border-ring focus:ring-1 focus:ring-ring/20 focus:outline-none transition-all duration-200">
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-xs font-medium text-foreground">Weekend Days</label>
+              <div class="flex flex-wrap gap-2">
+                <label class="flex items-center gap-1">
+                  <input type="checkbox" name="weekend_days" value="0" class="h-3 w-3 text-primary focus:ring-primary border-border rounded">
+                  <span class="text-xs text-foreground">Sun</span>
+                </label>
+                <label class="flex items-center gap-1">
+                  <input type="checkbox" name="weekend_days" value="1" class="h-3 w-3 text-primary focus:ring-primary border-border rounded">
+                  <span class="text-xs text-foreground">Mon</span>
+                </label>
+                <label class="flex items-center gap-1">
+                  <input type="checkbox" name="weekend_days" value="2" class="h-3 w-3 text-primary focus:ring-primary border-border rounded">
+                  <span class="text-xs text-foreground">Tue</span>
+                </label>
+                <label class="flex items-center gap-1">
+                  <input type="checkbox" name="weekend_days" value="3" class="h-3 w-3 text-primary focus:ring-primary border-border rounded">
+                  <span class="text-xs text-foreground">Wed</span>
+                </label>
+                <label class="flex items-center gap-1">
+                  <input type="checkbox" name="weekend_days" value="4" checked class="h-3 w-3 text-primary focus:ring-primary border-border rounded">
+                  <span class="text-xs text-foreground">Thu</span>
+                </label>
+                <label class="flex items-center gap-1">
+                  <input type="checkbox" name="weekend_days" value="5" checked class="h-3 w-3 text-primary focus:ring-primary border-border rounded">
+                  <span class="text-xs text-foreground">Fri</span>
+                </label>
+                <label class="flex items-center gap-1">
+                  <input type="checkbox" name="weekend_days" value="6" class="h-3 w-3 text-primary focus:ring-primary border-border rounded">
+                  <span class="text-xs text-foreground">Sat</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-2 pt-3 border-t border-border">
+          <button type="button" id="preview-btn" class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-accent-foreground bg-accent hover:bg-accent/80 rounded-lg transition-all duration-200 focus-ring">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            </svg>
+            Preview Report
+          </button>
+          <button type="button" id="close-modal" class="px-3 py-2 text-xs font-medium text-accent-foreground bg-accent hover:bg-accent/80 rounded-lg transition-all duration-200 focus-ring">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay">
+  <div class="text-center">
+    <div class="loading-spinner"></div>
+    <div class="text-lg font-semibold text-foreground">Processing...</div>
+    <div class="text-sm text-muted-foreground mt-2" id="loading-message">Please wait while we process your request</div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // CSRF Token setup
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  const csrftoken = getCookie('csrftoken');
+  let cachedPreviewData = null;
+
+  // Configuration tab management
+  function switchConfigTab(tabName) {
+    document.querySelectorAll('.config-tab-content').forEach(tab => {
+      tab.classList.remove('active');
+    });
+    
+    document.querySelectorAll('.config-tab-button').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    
+    document.getElementById(tabName + '-tab').classList.add('active');
+    document.querySelector(`[data-config-tab="${tabName}"]`).classList.add('active');
+  }
+
+  // Configuration tab button event listeners
+  document.querySelectorAll('.config-tab-button').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const tabName = this.dataset.configTab;
+      switchConfigTab(tabName);
+    });
+  });
+
+  // Modal management
+  function showModal() {
+    document.getElementById('config-modal').classList.remove('hidden');
+  }
+
+  function hideModal() {
+    document.getElementById('config-modal').classList.add('hidden');
+  }
+
+  function showLoading(message = 'Processing...') {
+    document.getElementById('loading-message').textContent = message;
+    document.querySelector('.loading-overlay').classList.add('active');
+  }
+
+  function hideLoading() {
+    document.querySelector('.loading-overlay').classList.remove('active');
+  }
+
+  function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-16 rounded-lg shadow-lg max-w-md ${
+      type === 'success' ? 'bg-green-500 text-white' : 
+      type === 'error' ? 'bg-red-500 text-white' : 
+      'bg-blue-500 text-white'
+    }`;
+    notification.innerHTML = `
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          ${type === 'success' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>' :
+            type === 'error' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>' :
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>'
+          }
+        </svg>
+        <span>${message}</span>
+      </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.remove();
+    }, 5000);
+  }
+
+  // Modal event handlers
+  document.getElementById('open-config-modal').addEventListener('click', showModal);
+  
+  document.querySelectorAll('#close-modal').forEach(btn => {
+    btn.addEventListener('click', hideModal);
+  });
+
+  // Close modal on backdrop click
+  document.getElementById('config-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      hideModal();
+    }
+  });
+
+  // Set default dates
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  document.querySelector('input[name="start_date"]').value = yesterday.toISOString().split('T')[0];
+  document.querySelector('input[name="end_date"]').value = today.toISOString().split('T')[0];
+
+  // Preview report
+  document.getElementById('preview-btn').addEventListener('click', function() {
+    previewAttendanceReport();
+  });
+
+  function previewAttendanceReport() {
+    const form = document.getElementById('attendance-config-form');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Convert multiple select values to arrays
+    data.employee_ids = Array.from(formData.getAll('employee_ids'));
+    data.department_ids = Array.from(formData.getAll('department_ids'));
+    data.weekend_days = Array.from(formData.getAll('weekend_days'));
+    
+    // Convert checkbox values to boolean
+    const checkboxFields = [
+      'regenerate_existing', 'enable_minimum_working_hours_rule', 'enable_working_hours_half_day_rule',
+      'require_both_in_and_out', 'enable_maximum_working_hours_rule', 'enable_dynamic_shift_detection',
+      'use_shift_grace_time', 'enable_consecutive_absence_flagging', 'use_employee_expected_hours'
+    ];
+    
+    checkboxFields.forEach(field => {
+      data[field] = formData.has(field);
+    });
+
+    showLoading('Generating attendance preview...');
+
+    fetch('{% url "zkteco:attendance_generation_preview" %}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrftoken
+      },
+      body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+      hideLoading();
+      
+      if (result.success) {
+        cachedPreviewData = result.preview_data;
+        displayPreviewReport(result, data);
+        hideModal();
+        showNotification('Preview generated successfully!', 'success');
+      } else {
+        showNotification('Error: ' + result.error, 'error');
+      }
+    })
+    .catch(error => {
+      hideLoading();
+      showNotification('Network error: ' + error, 'error');
+    });
+  }
+
+  function displayPreviewReport(result, formData) {
+    const previewSection = document.getElementById('preview-results');
+    const reportBody = document.getElementById('report-table-body');
+    
+    // Show preview section
+    previewSection.classList.remove('hidden');
+    
+    // Update report header
+    const reportDate = new Date().toLocaleDateString();
+    const startDate = formData.start_date;
+    const endDate = formData.end_date;
+    
+    document.getElementById('report-date').textContent = reportDate;
+    document.getElementById('report-period').textContent = `${startDate} to ${endDate}`;
+    
+    // Update summary
+    if (result.summary) {
+      document.getElementById('summary-total').textContent = result.summary.total_records;
+      document.getElementById('summary-present').textContent = result.summary.present_days;
+      document.getElementById('summary-absent').textContent = result.summary.absent_days;
+      document.getElementById('summary-overtime').textContent = result.summary.total_overtime_hours;
+    }
+    
+    // Update table
+    reportBody.innerHTML = '';
+    if (result.preview_data && result.preview_data.length > 0) {
+      result.preview_data.forEach(record => {
+        // Create the row element first
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-accent/30 transition-all duration-200 group';
+        
+        // Determine status badge class
+        let statusClass = 'status-present';
+        let statusText = record.status;
+        
+        if (record.status === 'A') {
+          statusClass = 'status-absent';
+          statusText = 'Absent';
+        } else if (record.status === 'LAT') {
+          statusClass = 'status-late';
+          statusText = 'Late';
+        } else if (record.status === 'H') {
+          statusClass = 'status-holiday';
+          statusText = 'Holiday';
+        } else if (record.status === 'L') {
+          statusClass = 'status-leave';
+          statusText = 'Leave';
+        } else if (record.status === 'HAL') {
+          statusClass = 'status-halfday';
+          statusText = 'Half Day';
+        } else if (record.status === 'P') {
+          statusText = 'Present';
+        }
+        
+        row.innerHTML = `
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-2">
+              <div class="relative">
+                <div class="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-emerald-500/25 transition-all duration-200">
+                  <span class="text-white font-bold text-xs">${record.employee_name.charAt(0).toUpperCase()}</span>
+                </div>
+                <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-card"></div>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="font-medium text-foreground text-xs">${record.employee_name}</div>
+                <div class="text-xs text-muted-foreground font-mono">ID: ${record.employee_code}</div>
+              </div>
+            </div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="text-xs font-medium text-foreground">${record.department}</div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="font-mono text-xs text-foreground">${record.date}</div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="font-mono text-xs ${record.check_in_time ? 'text-foreground' : 'text-muted-foreground'}">${record.check_in_time || '-'}</div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="font-mono text-xs ${record.check_out_time ? 'text-foreground' : 'text-muted-foreground'}">${record.check_out_time || '-'}</div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="font-mono text-xs font-medium text-foreground">${record.working_hours}</div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="font-mono text-xs font-medium ${record.overtime_hours > 0 ? 'text-blue-600' : 'text-muted-foreground'}">${record.overtime_hours}</div>
+          </td>
+          <td class="px-4 py-3">
+            <span class="status-badge ${statusClass}">${statusText}</span>
+          </td>
+        `;
+        reportBody.appendChild(row);
+      });
+    } else {
+      reportBody.innerHTML = `
+        <tr>
+          <td colspan="9" class="text-center py-8 text-muted-foreground">No attendance data found</td>
+        </tr>
+      `;
+    }
+  }
+
+  // Print report
+  document.getElementById('print-report').addEventListener('click', function() {
+    window.print();
+  });
+
+  // Export CSV
+  document.getElementById('export-csv').addEventListener('click', function() {
+    if (!cachedPreviewData || cachedPreviewData.length === 0) {
+      showNotification('No data to export', 'error');
+      return;
+    }
+
+    showLoading('Exporting to CSV...');
+
+    fetch('{% url "zkteco:export_preview_data" %}', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrftoken
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        return response.blob();
+      }
+      throw new Error('Export failed');
+    })
+    .then(blob => {
+      hideLoading();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `attendance_report_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      showNotification('Export completed successfully!', 'success');
+    })
+    .catch(error => {
+      hideLoading();
+      showNotification('Export error: ' + error, 'error');
+    });
+  });
+
+  // Generate final records
+  document.getElementById('generate-final').addEventListener('click', function() {
+    if (!cachedPreviewData) {
+      showNotification('Please generate preview first', 'error');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to generate attendance records? This action cannot be undone.')) {
+      return;
+    }
+
+    showLoading('Generating attendance records...');
+
+    fetch('{% url "zkteco:generate_attendance_records" %}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrftoken
+      },
+      body: JSON.stringify({ use_cached_preview: true })
+    })
+    .then(response => response.json())
+    .then(result => {
+      hideLoading();
+      
+      if (result.success) {
+        showNotification(`Attendance generated successfully! ${result.generated_count} created, ${result.updated_count} updated.`, 'success');
+        
+        // Reload page after 3 seconds
+        setTimeout(() => {
+          location.reload();
+        }, 3000);
+      } else {
+        showNotification('Error: ' + result.error, 'error');
+      }
+    })
+    .catch(error => {
+      hideLoading();
+      showNotification('Network error: ' + error, 'error');
+    });
+  });
+
+  // Enhanced keyboard shortcuts
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.metaKey) {
+      switch(e.key) {
+        case 'Enter':
+          e.preventDefault();
+          document.getElementById('preview-btn').click();
+          break;
+        case 'p':
+          e.preventDefault();
+          document.getElementById('print-report').click();
+          break;
+      }
+    }
+    
+    if (e.key === 'Escape') {
+      hideModal();
+    }
+  });
+
+  // Auto-save form data to localStorage for user convenience
+  function saveFormData() {
+    const form = document.getElementById('attendance-config-form');
+    const formData = new FormData(form);
+    const data = {};
+    
+    for (let [key, value] of formData.entries()) {
+      if (data[key]) {
+        if (Array.isArray(data[key])) {
+          data[key].push(value);
+        } else {
+          data[key] = [data[key], value];
+        }
+      } else {
+        data[key] = value;
+      }
+    }
+    
+    // Save checkboxes
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      data[cb.name + '_checked'] = cb.checked;
+    });
+    
+    localStorage.setItem('attendance_config', JSON.stringify(data));
+  }
+
+  function loadFormData() {
+    const saved = localStorage.getItem('attendance_config');
+    if (!saved) return;
+    
+    try {
+      const data = JSON.parse(saved);
+      
+      // Restore form values
+      Object.keys(data).forEach(key => {
+        if (key.endsWith('_checked')) {
+          const fieldName = key.replace('_checked', '');
+          const checkbox = document.querySelector(`input[name="${fieldName}"]`);
+          if (checkbox && checkbox.type === 'checkbox') {
+            checkbox.checked = data[key];
+          }
+        } else {
+          const field = document.querySelector(`[name="${key}"]`);
+          if (field && !field.type.includes('date')) { // Don't restore dates
+            if (field.multiple) {
+              const values = Array.isArray(data[key]) ? data[key] : [data[key]];
+              Array.from(field.options).forEach(option => {
+                option.selected = values.includes(option.value);
+              });
+            } else {
+              field.value = data[key];
+            }
+          }
+        }
+      });
+    } catch (e) {
+      console.error('Error loading saved form data:', e);
+    }
+  }
+
+  // Load saved form data on page load
+  loadFormData();
+
+  // Save form data when user makes changes
+  document.getElementById('attendance-config-form').addEventListener('change', saveFormData);
+});
+</script>
+{% endblock %}

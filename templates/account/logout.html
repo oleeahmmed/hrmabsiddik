@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+{% load i18n %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Sign Out" %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        .spinner {
+            display: none;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .toast {
+            transition: all 0.3s ease-out;
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md animate-fade-in">
+        <h1 class="text-3xl font-bold text-gray-900 mb-4 text-center">
+            {% trans "Sign Out" %}
+        </h1>
+        <p class="text-gray-600 mb-6 text-center text-sm">
+            {% trans "Are you sure you want to sign out?" %}
+        </p>
+
+        <!-- Toast Notification Container -->
+        <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+        {% if messages %}
+            <div class="mb-6 p-4 bg-red-100 text-red-700 rounded-lg text-sm">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'account_logout' %}" id="logout-form" class="action-form" data-action="logout">
+            {% csrf_token %}
+            {% if redirect_field_value %}
+                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+            {% endif %}
+            <div class="flex justify-center space-x-4">
+                <button type="submit" class="bg-red-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-red-700 focus:ring-4 focus:ring-red-200 transition duration-300 flex items-center disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span id="button-text">{% trans "Sign Out" %}</span>
+                    <span class="spinner ml-2" id="spinner"></span>
+                </button>
+                <a href="{% url 'account_email' %}" class="bg-gray-200 text-gray-700 font-semibold py-2 px-6 rounded-lg hover:bg-gray-300 focus:ring-4 focus:ring-gray-200 transition duration-300">
+                    {% trans "Cancel" %}
+                </a>
+            </div>
+        </form>
+
+        <p class="mt-6 text-gray-500 text-center text-sm">
+            By signing out, you agree to our 
+            <a href="#" class="text-blue-600 hover:underline font-medium">Terms of Service</a> and 
+            <a href="#" class="text-blue-600 hover:underline font-medium">Privacy Policy</a>.
+        </p>
+    </div>
+
+    <script>
+        // Toast notification function
+        function showToast(message, type = 'success') {
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast p-4 rounded-lg shadow-lg text-sm font-medium ${
+                type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`;
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+            
+            // Show toast
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Handle form submission with loading state and toast
+        document.getElementById('logout-form').addEventListener('submit', function(e) {
+            const button = this.querySelector('button');
+            const buttonText = document.getElementById('button-text');
+            const spinner = document.getElementById('spinner');
+            
+            button.disabled = true;
+            buttonText.textContent = 'Processing...';
+            spinner.style.display = 'inline-block';
+
+            // Simulate success for demo (replace with actual form submission handling)
+            setTimeout(() => {
+                showToast('Successfully signed out!', 'success');
+                // Note: Actual form submission will redirect, so toast may not be visible
+                // This is for demo purposes; adjust based on your needs
+            }, 1000);
+        });
+
+        // Store original button text
+        const buttonText = document.getElementById('button-text');
+        buttonText.dataset.originalText = buttonText.textContent;
+    </script>
+</body>
+</html>

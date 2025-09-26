@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+{% load i18n %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Manage Email" %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        .spinner {
+            display: none;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .toast {
+            transition: all 0.3s ease-out;
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg animate-fade-in">
+        <h1 class="text-3xl font-bold text-gray-900 mb-4 text-center">
+            {% trans "Manage Your Email Addresses" %}
+        </h1>
+        <p class="text-gray-600 mb-6 text-center text-sm">
+            {% trans "Add, remove, or verify email addresses for your account." %}
+        </p>
+
+        <!-- Toast Notification Container -->
+        <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+        {% if messages %}
+            <div class="mb-6 p-4 bg-red-100 text-red-700 rounded-lg text-sm">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if user.emailaddress_set.all %}
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-3">{% trans "Your Email Addresses" %}</h2>
+                <ul class="space-y-3">
+                    {% for emailaddress in user.emailaddress_set.all %}
+                        <li class="flex items-center justify-between p-4 bg-gray-50 rounded-lg group hover:bg-gray-100 transition-all">
+                            <div class="flex items-center">
+                                <span class="text-gray-700 font-medium">{{ emailaddress.email }}</span>
+                                {% if emailaddress.verified %}
+                                    <span class="ml-2 inline-flex items-center px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">
+                                        {% trans "Verified" %}
+                                    </span>
+                                {% else %}
+                                    <span class="ml-2 inline-flex items-center px-2 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 rounded-full">
+                                        {% trans "Unverified" %}
+                                    </span>
+                                {% endif %}
+                                {% if emailaddress.primary %}
+                                    <span class="ml-2 inline-flex items-center px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full">
+                                        {% trans "Primary" %}
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="flex space-x-3">
+                                {% if not emailaddress.primary %}
+                                    <form method="post" action="{% url 'account_email' %}" class="inline action-form" data-action="set_primary" data-email="{{ emailaddress.email }}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="email" value="{{ emailaddress.email }}" />
+                                        <input type="hidden" name="action" value="set_primary" />
+                                        <button type="submit" class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
+                                            <span>{% trans "Set as Primary" %}</span>
+                                            <span class="spinner ml-1"></span>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                                {% if not emailaddress.verified %}
+                                    <form method="post" action="{% url 'account_email' %}" class="inline action-form" data-action="send" data-email="{{ emailaddress.email }}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="email" value="{{ emailaddress.email }}" />
+                                        <input type="hidden" name="action" value="send" />
+                                        <button type="submit" class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
+                                            <span>{% trans "Re-send Verification" %}</span>
+                                            <span class="spinner ml-1"></span>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                                <form method="post" action="{% url 'account_email' %}" class="inline action-form" data-action="remove" data-email="{{ emailaddress.email }}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="email" value="{{ emailaddress.email }}" />
+                                    <input type="hidden" name="action" value="remove" />
+                                    <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium flex items-center">
+                                        <span>{% trans "Remove" %}</span>
+                                        <span class="spinner ml-1"></span>
+                                    </button>
+                                </form>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% else %}
+            <p class="text-gray-600 mb-6 text-center text-sm">
+                {% trans "No email addresses are associated with your account." %}
+            </p>
+        {% endif %}
+
+        <div class="mt-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">{% trans "Add a New Email Address" %}</h2>
+            <form method="post" action="{% url 'account_email' %}" id="add-email-form" class="action-form" data-action="add">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label for="email" class="block text-sm font-medium text-gray-700">
+                        {% trans "New Email Address" %}
+                    </label>
+                    <input type="email" name="email" id="email"
+                           class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                           placeholder="{% trans 'Enter new email address' %}"
+                           required>
+                </div>
+                <input type="hidden" name="action" value="add" />
+                <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span id="button-text">{% trans "Add Email" %}</span>
+                    <span class="spinner ml-2" id="spinner"></span>
+                </button>
+            </form>
+        </div>
+
+        <p class="mt-6 text-gray-500 text-center text-sm">
+            <a href="{% url 'account_logout' %}" class="text-blue-600 hover:underline font-medium">{% trans "Sign Out" %}</a>
+        </p>
+        <p class="mt-2 text-gray-500 text-center text-sm">
+            By continuing, you agree to our 
+            <a href="#" class="text-blue-600 hover:underline font-medium">Terms of Service</a> and 
+            <a href="#" class="text-blue-600 hover:underline font-medium">Privacy Policy</a>.
+        </p>
+    </div>
+
+    <script>
+        // Toast notification function
+        function showToast(message, type = 'success') {
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast p-4 rounded-lg shadow-lg text-sm font-medium ${
+                type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`;
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+            
+            // Show toast
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Handle form submissions with loading state and toast
+        document.querySelectorAll('.action-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const button = this.querySelector('button');
+                const buttonText = button.querySelector('span:not(.spinner)');
+                const spinner = button.querySelector('.spinner');
+                const action = this.dataset.action;
+                const email = this.dataset.email || this.querySelector('input[name="email"]').value;
+                
+                button.disabled = true;
+                buttonText.textContent = 'Processing...';
+                spinner.style.display = 'inline-block';
+
+                // Simulate success for demo (replace with actual form submission handling)
+                setTimeout(() => {
+                    button.disabled = false;
+                    buttonText.textContent = buttonText.dataset.originalText || buttonText.textContent;
+                    spinner.style.display = 'none';
+                    
+                    // Show toast based on action
+                    const messages = {
+                        add: `Email ${email} added successfully!`,
+                        set_primary: `Email ${email} set as primary!`,
+                        send: `Verification email sent to ${email}!`,
+                        remove: `Email ${email} removed successfully!`
+                    };
+                    showToast(messages[action] || 'Action completed!', 'success');
+                }, 1000); // Simulated delay
+            });
+
+            // Store original button text
+            const buttonText = form.querySelector('button span:not(.spinner)');
+            buttonText.dataset.originalText = buttonText.textContent;
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+{% load i18n %}
+{% load allauth %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Sign In" %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom animation for fade-in */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        /* Loading spinner */
+        .spinner {
+            display: none;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md animate-fade-in">
+        {% if process == "connect" %}
+            <h1 class="text-3xl font-bold text-gray-900 mb-4 text-center">
+                {% blocktrans with provider.name as provider %}Connect {{ provider }}{% endblocktrans %}
+            </h1>
+            <p class="text-gray-600 mb-6 text-center text-sm">
+                {% blocktrans with provider.name as provider %}Link your {{ provider }} account to continue.{% endblocktrans %}
+            </p>
+        {% else %}
+            <h1 class="text-3xl font-bold text-gray-900 mb-4 text-center">
+                {% blocktrans with provider.name as provider %}Sign In with {{ provider }}{% endblocktrans %}
+            </h1>
+            <p class="text-gray-600 mb-6 text-center text-sm">
+                {% blocktrans with provider.name as provider %}Use your {{ provider }} account to sign in quickly and securely.{% endblocktrans %}
+            </p>
+        {% endif %}
+
+        {% if messages %}
+            <div class="mb-6 p-4 bg-red-100 text-red-700 rounded-lg text-sm">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'socialaccount_login' %}" id="login-form">
+            {% csrf_token %}
+            <input type="hidden" name="provider" value="google" />
+            <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg class="w-6 h-6 mr-2" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="#fff" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                    <path fill="#fff" d="M46.98 24.55c0-1.7-.19-3.34-.56-4.92H24v9.29h12.88c-.56 3.02-2.24 5.58-4.78 7.3l7.98 6.19c4.66-4.3 7.9-10.88 7.9-17.86z"/>
+                    <path fill="#fff" d="M10.54 28.78l-7.98-6.19C.96 25.66 0 28.76 0 32.5c0 3.74.96 7.26 2.56 10.33l7.98-6.19c-1.11-1.74-1.79-3.78-1.79-5.94s.68-4.2 1.79-5.94z"/>
+                    <path fill="#fff" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.98-6.19c-2.24 1.5-5.09 2.39-7.91 2.39-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                </svg>
+                <span id="button-text">{% trans "Continue with Google" %}</span>
+                <span class="spinner ml-2" id="spinner"></span>
+            </button>
+        </form>
+
+        <p class="mt-6 text-gray-500 text-center text-sm">
+            By continuing, you agree to our 
+            <a href="#" class="text-blue-600 hover:underline font-medium">Terms of Service</a> and 
+            <a href="#" class="text-blue-600 hover:underline font-medium">Privacy Policy</a>.
+        </p>
+    </div>
+
+    <script>
+        // Add loading state to button on form submission
+        document.getElementById('login-form').addEventListener('submit', function() {
+            const button = this.querySelector('button');
+            const buttonText = document.getElementById('button-text');
+            const spinner = document.getElementById('spinner');
+            button.disabled = true;
+            buttonText.textContent = 'Loading...';
+            spinner.style.display = 'inline-block';
+        });
+    </script>
+</body>
+</html>
