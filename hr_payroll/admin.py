@@ -403,3 +403,136 @@ class AttendanceAdmin(CustomModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+
+
+from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
+from unfold.admin import ModelAdmin
+from .models import AttendanceProcessorConfiguration
+
+@admin.register(AttendanceProcessorConfiguration)
+class AttendanceProcessorConfigurationAdmin(ModelAdmin):
+    list_display = ['name', 'company', 'is_active', 'weekend_display', 'created_at']
+    list_filter = ['is_active', 'company', 'created_at']
+    search_fields = ['name', 'company__name']
+    readonly_fields = ['created_at', 'updated_at']
+
+    fieldsets = (
+        (_("General Info"), {
+            "fields": ("company", "name", "is_active", "created_by"),
+            "classes": ("tab", "col2"),
+        }),
+        (_("Basic Attendance"), {
+            "fields": (
+                "grace_minutes",
+                "early_out_threshold_minutes",
+                "overtime_start_after_minutes",
+                "minimum_overtime_minutes",
+            ),
+            "classes": ("tab", "col2"),
+        }),
+        (_("Weekend & Breaks"), {
+            "fields": (
+                ("weekend_monday", "weekend_tuesday", "weekend_wednesday", "weekend_thursday"),
+                ("weekend_friday", "weekend_saturday", "weekend_sunday"),
+                "default_break_minutes",
+                "use_shift_break_time",
+                "break_deduction_method",
+            ),
+            "classes": ("tab", "col2"),
+        }),
+        (_("Minimum & Half Day Rules"), {
+            "fields": (
+                "enable_minimum_working_hours_rule",
+                "minimum_working_hours_for_present",
+                "enable_working_hours_half_day_rule",
+                "half_day_minimum_hours",
+                "half_day_maximum_hours",
+            ),
+            "classes": ("tab", "col2"),
+        }),
+        (_("In/Out & Max Hours Rules"), {
+            "fields": (
+                "require_both_in_and_out",
+                "enable_maximum_working_hours_rule",
+                "maximum_allowable_working_hours",
+            ),
+            "classes": ("tab", "col2"),
+        }),
+        (_("Shift Management"), {
+            "fields": (
+                "enable_dynamic_shift_detection",
+                "dynamic_shift_tolerance_minutes",
+                "multiple_shift_priority",
+                "dynamic_shift_fallback_to_default",
+                "dynamic_shift_fallback_shift",
+                "use_shift_grace_time",
+            ),
+            "classes": ("tab", "col2"),
+        }),
+        (_("Absence & Early Out"), {
+            "fields": (
+                "enable_consecutive_absence_flagging",
+                "consecutive_absence_termination_risk_days",
+                "enable_max_early_out_flagging",
+                "max_early_out_threshold_minutes",
+                "max_early_out_occurrences",
+            ),
+            "classes": ("tab", "col2"),
+        }),
+        (_("Overtime Settings"), {
+            "fields": (
+                "overtime_calculation_method",
+                "holiday_overtime_full_day",
+                "weekend_overtime_full_day",
+                "late_affects_overtime",
+                "separate_ot_break_time",
+            ),
+            "classes": ("tab", "col2"),
+        }),
+        (_("Employee Specific"), {
+            "fields": (
+                "use_employee_specific_grace",
+                "use_employee_specific_overtime",
+                "use_employee_expected_hours",
+            ),
+            "classes": ("tab", "col2"),
+        }),
+        (_("Advanced Rules"), {
+            "fields": (
+                "late_to_absent_days",
+                "holiday_before_after_absent",
+                "weekend_before_after_absent",
+                "require_holiday_presence",
+                "include_holiday_analysis",
+                "holiday_buffer_days",
+            ),
+            "classes": ("tab", "col2"),
+        }),
+        (_("Display Options"), {
+            "fields": (
+                "show_absent_employees",
+                "show_leave_employees",
+                "show_holiday_status",
+                "include_roster_info",
+            ),
+            "classes": ("tab", "col2"),
+        }),
+        (_("Metadata"), {
+            "fields": ("created_at", "updated_at"),
+            "classes": ("tab", "col2"),
+        }),
+    )
+
+    def weekend_display(self, obj):
+        days = []
+        if obj.weekend_monday: days.append('Mon')
+        if obj.weekend_tuesday: days.append('Tue')
+        if obj.weekend_wednesday: days.append('Wed')
+        if obj.weekend_thursday: days.append('Thu')
+        if obj.weekend_friday: days.append('Fri')
+        if obj.weekend_saturday: days.append('Sat')
+        if obj.weekend_sunday: days.append('Sun')
+        return ', '.join(days) if days else 'None'
+    weekend_display.short_description = 'Weekend Days'

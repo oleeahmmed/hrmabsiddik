@@ -20,6 +20,487 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+
+# models.py এ যোগ করুন
+
+class AttendanceProcessorConfiguration(models.Model):
+    """
+    Attendance Processor এর জন্য সকল কনফিগারেশন সংরক্ষণ ও পরিচালনার মডেল
+    """
+    # Company relationship
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name=_("Company"))
+    name = models.CharField(_("Configuration Name"), max_length=100, default="Default Configuration")
+    is_active = models.BooleanField(_("Active"), default=True)
+    
+    # Basic Attendance Settings
+    grace_minutes = models.PositiveIntegerField(
+        _("Grace Minutes"), 
+        default=15,
+        help_text=_("Late arrival grace period in minutes")
+    )
+    early_out_threshold_minutes = models.PositiveIntegerField(
+        _("Early Out Threshold (minutes)"), 
+        default=30,
+        help_text=_("Minutes before end time to consider as early departure")
+    )
+    overtime_start_after_minutes = models.PositiveIntegerField(
+        _("Overtime Start After (minutes)"), 
+        default=15,
+        help_text=_("Minutes after scheduled end time to start overtime calculation")
+    )
+    minimum_overtime_minutes = models.PositiveIntegerField(
+        _("Minimum Overtime Minutes"), 
+        default=60,
+        help_text=_("Minimum overtime duration to be eligible for overtime pay")
+    )
+    
+    # Weekend Configuration
+    weekend_friday = models.BooleanField(_("Friday Weekend"), default=True)
+    weekend_saturday = models.BooleanField(_("Saturday Weekend"), default=False)
+    weekend_sunday = models.BooleanField(_("Sunday Weekend"), default=False)
+    weekend_monday = models.BooleanField(_("Monday Weekend"), default=False)
+    weekend_tuesday = models.BooleanField(_("Tuesday Weekend"), default=False)
+    weekend_wednesday = models.BooleanField(_("Wednesday Weekend"), default=False)
+    weekend_thursday = models.BooleanField(_("Thursday Weekend"), default=False)
+    
+    # Break Time Configuration
+    default_break_minutes = models.PositiveIntegerField(
+        _("Default Break Time (minutes)"), 
+        default=60,
+        help_text=_("Default break time if shift doesn't specify")
+    )
+    use_shift_break_time = models.BooleanField(
+        _("Use Shift Break Time"), 
+        default=True,
+        help_text=_("Use shift-specific break time instead of default")
+    )
+    break_deduction_method = models.CharField(
+        _("Break Deduction Method"),
+        max_length=20,
+        choices=[
+            ('fixed', _('Fixed')),
+            ('proportional', _('Proportional')),
+        ],
+        default='fixed',
+        help_text=_("Method to calculate break time deduction")
+    )
+    
+    # Enhanced Rule 1: Minimum Working Hours Rule
+    enable_minimum_working_hours_rule = models.BooleanField(
+        _("Enable Minimum Working Hours Rule"), 
+        default=False,
+        help_text=_("Convert present to absent if working hours below threshold")
+    )
+    minimum_working_hours_for_present = models.FloatField(
+        _("Minimum Working Hours for Present"), 
+        default=4.0,
+        help_text=_("Minimum hours required to mark as present")
+    )
+    
+    # Enhanced Rule 2: Working Hours Half Day Rule
+    enable_working_hours_half_day_rule = models.BooleanField(
+        _("Enable Working Hours Half Day Rule"), 
+        default=False,
+        help_text=_("Convert to half day based on working hours range")
+    )
+    half_day_minimum_hours = models.FloatField(
+        _("Half Day Minimum Hours"), 
+        default=4.0,
+        help_text=_("Minimum hours for half day qualification")
+    )
+    half_day_maximum_hours = models.FloatField(
+        _("Half Day Maximum Hours"), 
+        default=6.0,
+        help_text=_("Maximum hours for half day qualification")
+    )
+    
+    # Enhanced Rule 3: Both In and Out Time Requirement
+    require_both_in_and_out = models.BooleanField(
+        _("Require Both In and Out Time"), 
+        default=False,
+        help_text=_("Mark as absent if either check-in or check-out is missing")
+    )
+    
+    # Enhanced Rule 4: Maximum Working Hours Rule
+    enable_maximum_working_hours_rule = models.BooleanField(
+        _("Enable Maximum Working Hours Rule"), 
+        default=False,
+        help_text=_("Flag records with excessive working hours")
+    )
+    maximum_allowable_working_hours = models.FloatField(
+        _("Maximum Allowable Working Hours"), 
+        default=16.0,
+        help_text=_("Maximum allowed working hours per day")
+    )
+    
+    # Enhanced Rule 5: Dynamic Shift Detection
+    enable_dynamic_shift_detection = models.BooleanField(
+        _("Enable Dynamic Shift Detection"), 
+        default=False,
+        help_text=_("Automatically detect shift based on attendance pattern")
+    )
+    dynamic_shift_tolerance_minutes = models.PositiveIntegerField(
+        _("Dynamic Shift Tolerance (minutes)"), 
+        default=30,
+        help_text=_("Tolerance in minutes for shift pattern matching")
+    )
+    multiple_shift_priority = models.CharField(
+        _("Multiple Shift Priority"),
+        max_length=20,
+        choices=[
+            ('least_break', _('Least Break Time')),
+            ('shortest_duration', _('Shortest Duration')),
+            ('alphabetical', _('Alphabetical')),
+            ('highest_score', _('Highest Score')),
+        ],
+        default='least_break',
+        help_text=_("Priority method when multiple shifts match")
+    )
+    dynamic_shift_fallback_to_default = models.BooleanField(
+        _("Dynamic Shift Fallback to Default"), 
+        default=True,
+        help_text=_("Use employee's default shift if dynamic detection fails")
+    )
+    dynamic_shift_fallback_shift = models.ForeignKey(
+        'Shift', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        verbose_name=_("Fallback Shift"),
+        help_text=_("Fixed shift to use if dynamic detection fails and no default shift")
+    )
+    
+    # Enhanced Rule 6: Shift Grace Time
+    use_shift_grace_time = models.BooleanField(
+        _("Use Shift-Specific Grace Time"), 
+        default=False,
+        help_text=_("Use grace time from shift instead of global grace time")
+    )
+    
+    # Enhanced Rule 7: Consecutive Absence Flagging
+    enable_consecutive_absence_flagging = models.BooleanField(
+        _("Enable Consecutive Absence Flagging"), 
+        default=False,
+        help_text=_("Flag employees with consecutive absences as termination risk")
+    )
+    consecutive_absence_termination_risk_days = models.PositiveIntegerField(
+        _("Consecutive Absence Risk Days"), 
+        default=5,
+        help_text=_("Number of consecutive absent days to flag as termination risk")
+    )
+    
+    # Enhanced Rule 8: Early Out Flagging
+    enable_max_early_out_flagging = models.BooleanField(
+        _("Enable Max Early Out Flagging"), 
+        default=False,
+        help_text=_("Flag employees with excessive early departures")
+    )
+    max_early_out_threshold_minutes = models.PositiveIntegerField(
+        _("Max Early Out Threshold (minutes)"), 
+        default=120,
+        help_text=_("Minutes of early departure to consider excessive")
+    )
+    max_early_out_occurrences = models.PositiveIntegerField(
+        _("Max Early Out Occurrences"), 
+        default=3,
+        help_text=_("Number of early departures in a month to flag")
+    )
+    
+    # Overtime Configuration
+    overtime_calculation_method = models.CharField(
+        _("Overtime Calculation Method"),
+        max_length=20,
+        choices=[
+            ('shift_based', _('Shift Based')),
+            ('employee_based', _('Employee Based')),
+            ('fixed_hours', _('Fixed Hours')),
+        ],
+        default='employee_based',
+        help_text=_("Method to calculate overtime")
+    )
+    holiday_overtime_full_day = models.BooleanField(
+        _("Holiday Overtime Full Day"), 
+        default=True,
+        help_text=_("Count all holiday working hours as overtime")
+    )
+    weekend_overtime_full_day = models.BooleanField(
+        _("Weekend Overtime Full Day"), 
+        default=True,
+        help_text=_("Count all weekend working hours as overtime")
+    )
+    late_affects_overtime = models.BooleanField(
+        _("Late Arrival Affects Overtime"), 
+        default=False,
+        help_text=_("Reduce overtime if employee arrives late")
+    )
+    separate_ot_break_time = models.PositiveIntegerField(
+        _("Separate OT Break Time (minutes)"), 
+        default=0,
+        help_text=_("Additional break time to deduct from overtime")
+    )
+    
+    # Employee-Specific Settings
+    use_employee_specific_grace = models.BooleanField(
+        _("Use Employee Specific Grace"), 
+        default=True,
+        help_text=_("Use employee-specific grace time if available")
+    )
+    use_employee_specific_overtime = models.BooleanField(
+        _("Use Employee Specific Overtime"), 
+        default=True,
+        help_text=_("Use employee-specific overtime settings if available")
+    )
+    use_employee_expected_hours = models.BooleanField(
+        _("Use Employee Expected Hours"), 
+        default=True,
+        help_text=_("Use employee-specific expected working hours")
+    )
+    
+    # Advanced Rules
+    late_to_absent_days = models.PositiveIntegerField(
+        _("Late to Absent Days"), 
+        default=3,
+        help_text=_("Convert late to absent after consecutive late days")
+    )
+    holiday_before_after_absent = models.BooleanField(
+        _("Holiday Before/After Absent"), 
+        default=True,
+        help_text=_("Consider attendance around holidays for absence rules")
+    )
+    weekend_before_after_absent = models.BooleanField(
+        _("Weekend Before/After Absent"), 
+        default=True,
+        help_text=_("Consider attendance around weekends for absence rules")
+    )
+    require_holiday_presence = models.BooleanField(
+        _("Require Holiday Presence"), 
+        default=False,
+        help_text=_("Require attendance on designated working holidays")
+    )
+    include_holiday_analysis = models.BooleanField(
+        _("Include Holiday Analysis"), 
+        default=True,
+        help_text=_("Include holiday patterns in attendance analysis")
+    )
+    holiday_buffer_days = models.PositiveIntegerField(
+        _("Holiday Buffer Days"), 
+        default=1,
+        help_text=_("Days before/after holiday to consider for analysis")
+    )
+    
+    # Display Options
+    show_absent_employees = models.BooleanField(
+        _("Show Absent Employees"), 
+        default=True,
+        help_text=_("Include absent employees in reports")
+    )
+    show_leave_employees = models.BooleanField(
+        _("Show Leave Employees"), 
+        default=True,
+        help_text=_("Include employees on leave in reports")
+    )
+    show_holiday_status = models.BooleanField(
+        _("Show Holiday Status"), 
+        default=True,
+        help_text=_("Show holiday information in reports")
+    )
+    include_roster_info = models.BooleanField(
+        _("Include Roster Info"), 
+        default=True,
+        help_text=_("Include roster information in attendance records")
+    )
+    
+    # Metadata
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+    created_by = models.ForeignKey(
+        'auth.User', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='created_attendance_configs',
+        verbose_name=_("Created By")
+    )
+    
+    class Meta:
+        verbose_name = _("Attendance Processor Configuration")
+        verbose_name_plural = _("Attendance Processor Configurations")
+        unique_together = ('company', 'name')
+        ordering = ['-is_active', 'name']
+    
+    def __str__(self):
+        status = "Active" if self.is_active else "Inactive"
+        return f"{self.name} - {self.company.name} ({status})"
+    
+    @property
+    def weekend_days(self):
+        """Get weekend days as a list of integers (0=Monday, 6=Sunday)"""
+        days = []
+        if self.weekend_monday:
+            days.append(0)
+        if self.weekend_tuesday:
+            days.append(1)
+        if self.weekend_wednesday:
+            days.append(2)
+        if self.weekend_thursday:
+            days.append(3)
+        if self.weekend_friday:
+            days.append(4)
+        if self.weekend_saturday:
+            days.append(5)
+        if self.weekend_sunday:
+            days.append(6)
+        return days
+    
+    def get_config_dict(self):
+        """Convert model instance to dictionary for processor"""
+        return {
+            # Basic settings
+            'grace_minutes': self.grace_minutes,
+            'early_out_threshold_minutes': self.early_out_threshold_minutes,
+            'overtime_start_after_minutes': self.overtime_start_after_minutes,
+            'minimum_overtime_minutes': self.minimum_overtime_minutes,
+            'weekend_days': self.weekend_days,
+            
+            # Break time
+            'default_break_minutes': self.default_break_minutes,
+            'use_shift_break_time': self.use_shift_break_time,
+            'break_deduction_method': self.break_deduction_method,
+            
+            # Enhanced rules
+            'enable_minimum_working_hours_rule': self.enable_minimum_working_hours_rule,
+            'minimum_working_hours_for_present': self.minimum_working_hours_for_present,
+            'enable_working_hours_half_day_rule': self.enable_working_hours_half_day_rule,
+            'half_day_minimum_hours': self.half_day_minimum_hours,
+            'half_day_maximum_hours': self.half_day_maximum_hours,
+            'require_both_in_and_out': self.require_both_in_and_out,
+            'enable_maximum_working_hours_rule': self.enable_maximum_working_hours_rule,
+            'maximum_allowable_working_hours': self.maximum_allowable_working_hours,
+            
+            # Dynamic shift detection
+            'enable_dynamic_shift_detection': self.enable_dynamic_shift_detection,
+            'dynamic_shift_tolerance_minutes': self.dynamic_shift_tolerance_minutes,
+            'multiple_shift_priority': self.multiple_shift_priority,
+            'dynamic_shift_fallback_to_default': self.dynamic_shift_fallback_to_default,
+            'dynamic_shift_fallback_shift_id': self.dynamic_shift_fallback_shift_id,
+            
+            # Shift grace time
+            'use_shift_grace_time': self.use_shift_grace_time,
+            
+            # Consecutive absence
+            'enable_consecutive_absence_flagging': self.enable_consecutive_absence_flagging,
+            'consecutive_absence_termination_risk_days': self.consecutive_absence_termination_risk_days,
+            
+            # Early out flagging
+            'enable_max_early_out_flagging': self.enable_max_early_out_flagging,
+            'max_early_out_threshold_minutes': self.max_early_out_threshold_minutes,
+            'max_early_out_occurrences': self.max_early_out_occurrences,
+            
+            # Overtime configuration
+            'overtime_calculation_method': self.overtime_calculation_method,
+            'holiday_overtime_full_day': self.holiday_overtime_full_day,
+            'weekend_overtime_full_day': self.weekend_overtime_full_day,
+            'late_affects_overtime': self.late_affects_overtime,
+            'separate_ot_break_time': self.separate_ot_break_time,
+            
+            # Employee-specific settings
+            'use_employee_specific_grace': self.use_employee_specific_grace,
+            'use_employee_specific_overtime': self.use_employee_specific_overtime,
+            'use_employee_expected_hours': self.use_employee_expected_hours,
+            
+            # Advanced rules
+            'late_to_absent_days': self.late_to_absent_days,
+            'holiday_before_after_absent': self.holiday_before_after_absent,
+            'weekend_before_after_absent': self.weekend_before_after_absent,
+            'require_holiday_presence': self.require_holiday_presence,
+            'include_holiday_analysis': self.include_holiday_analysis,
+            'holiday_buffer_days': self.holiday_buffer_days,
+            
+            # Display options
+            'show_absent_employees': self.show_absent_employees,
+            'show_leave_employees': self.show_leave_employees,
+            'show_holiday_status': self.show_holiday_status,
+            'include_roster_info': self.include_roster_info,
+        }
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one active configuration per company
+        if self.is_active:
+            AttendanceProcessorConfiguration.objects.filter(
+                company=self.company, 
+                is_active=True
+            ).exclude(id=self.id).update(is_active=False)
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_active_config(cls, company):
+        """Get active configuration for a company"""
+        try:
+            return cls.objects.filter(company=company, is_active=True).first()
+        except cls.DoesNotExist:
+            return None
+    
+    @classmethod
+    def get_config_dict_for_company(cls, company):
+        """Get configuration dictionary for a company"""
+        config = cls.get_active_config(company)
+        if config:
+            return config.get_config_dict()
+        else:
+            # Return default configuration
+            return cls.get_default_config()
+    
+    @classmethod
+    def get_default_config(cls):
+        """Get default configuration dictionary"""
+        return {
+            'grace_minutes': 15,
+            'early_out_threshold_minutes': 30,
+            'overtime_start_after_minutes': 15,
+            'minimum_overtime_minutes': 60,
+            'weekend_days': [4],  # Friday
+            'default_break_minutes': 60,
+            'use_shift_break_time': True,
+            'break_deduction_method': 'fixed',
+            'enable_minimum_working_hours_rule': False,
+            'minimum_working_hours_for_present': 4.0,
+            'enable_working_hours_half_day_rule': False,
+            'half_day_minimum_hours': 4.0,
+            'half_day_maximum_hours': 6.0,
+            'require_both_in_and_out': False,
+            'enable_maximum_working_hours_rule': False,
+            'maximum_allowable_working_hours': 16.0,
+            'enable_dynamic_shift_detection': False,
+            'dynamic_shift_tolerance_minutes': 30,
+            'multiple_shift_priority': 'least_break',
+            'dynamic_shift_fallback_to_default': True,
+            'dynamic_shift_fallback_shift_id': None,
+            'use_shift_grace_time': False,
+            'enable_consecutive_absence_flagging': False,
+            'consecutive_absence_termination_risk_days': 5,
+            'enable_max_early_out_flagging': False,
+            'max_early_out_threshold_minutes': 120,
+            'max_early_out_occurrences': 3,
+            'overtime_calculation_method': 'employee_based',
+            'holiday_overtime_full_day': True,
+            'weekend_overtime_full_day': True,
+            'late_affects_overtime': False,
+            'separate_ot_break_time': 0,
+            'use_employee_specific_grace': True,
+            'use_employee_specific_overtime': True,
+            'use_employee_expected_hours': True,
+            'late_to_absent_days': 3,
+            'holiday_before_after_absent': True,
+            'weekend_before_after_absent': True,
+            'require_holiday_presence': False,
+            'include_holiday_analysis': True,
+            'holiday_buffer_days': 1,
+            'show_absent_employees': True,
+            'show_leave_employees': True,
+            'show_holiday_status': True,
+            'include_roster_info': True,
+        }
+
 # ==================== EMPLOYEE INFORMATION ====================
 
 class Department(models.Model):
@@ -470,3 +951,5 @@ class RosterDay(models.Model):
         verbose_name_plural = _("Roster Days")
         unique_together = ('roster_assignment', 'date')
         ordering = ['date']
+
+

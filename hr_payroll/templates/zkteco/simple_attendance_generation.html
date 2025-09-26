@@ -1,0 +1,655 @@
+{% extends 'base.html' %}
+
+{% block title %}Simple Attendance Generation - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .loading-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid hsl(var(--muted));
+    border-top: 4px solid hsl(var(--primary));
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* Status badges */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.625rem;
+    font-weight: 500;
+  }
+
+  .status-present { 
+    background-color: rgb(220 252 231); 
+    color: rgb(22 101 52); 
+  }
+  .dark .status-present { 
+    background-color: rgb(22 101 52 / 0.3); 
+    color: rgb(134 239 172); 
+  }
+
+  .status-absent { 
+    background-color: rgb(254 226 226); 
+    color: rgb(153 27 27); 
+  }
+  .dark .status-absent { 
+    background-color: rgb(153 27 27 / 0.3); 
+    color: rgb(252 165 165); 
+  }
+
+  .status-late { 
+    background-color: rgb(254 243 199); 
+    color: rgb(146 64 14); 
+  }
+  .dark .status-late { 
+    background-color: rgb(146 64 14 / 0.3); 
+    color: rgb(253 186 116); 
+  }
+
+  .status-holiday { 
+    background-color: rgb(219 234 254); 
+    color: rgb(30 64 175); 
+  }
+  .dark .status-holiday { 
+    background-color: rgb(30 64 175 / 0.3); 
+    color: rgb(147 197 253); 
+  }
+
+  .status-leave { 
+    background-color: rgb(243 232 255); 
+    color: rgb(124 58 237); 
+  }
+  .dark .status-leave { 
+    background-color: rgb(124 58 237 / 0.3); 
+    color: rgb(196 181 253); 
+  }
+
+  .status-halfday { 
+    background-color: rgb(255 237 213); 
+    color: rgb(194 65 12); 
+  }
+  .dark .status-halfday { 
+    background-color: rgb(194 65 12 / 0.3); 
+    color: rgb(251 146 60); 
+  }
+
+  /* Print styles */
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+    
+    .print-only {
+      display: block !important;
+    }
+    
+    body {
+      background: white !important;
+      color: black !important;
+    }
+    
+    .glass-effect {
+      background: white !important;
+      border: 1px solid #ddd !important;
+      box-shadow: none !important;
+    }
+    
+    .report-table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    
+    .report-table th,
+    .report-table td {
+      border: 1px solid #000;
+      padding: 8px;
+      text-align: left;
+    }
+    
+    .report-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+  }
+
+  /* Report table styling */
+  .report-table {
+    width: 100%;
+    font-size: 0.75rem;
+    border-collapse: collapse;
+  }
+
+  .report-table th,
+  .report-table td {
+    padding: 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .report-table th {
+    background-color: hsl(var(--muted));
+    font-weight: 600;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .report-table tr:hover {
+    background-color: hsl(var(--accent));
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-4 animate-fade-in-up">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div>
+      <h1 class="text-xl font-bold text-heading">Simple Attendance Generation</h1>
+      <p class="text-xs text-muted-foreground mt-0.5">Generate attendance using active configuration ({{ config.name }})</p>
+    </div>
+    <div class="flex items-center gap-2">
+       Statistics 
+      <div class="flex items-center gap-3 px-3 py-1.5 bg-accent rounded-lg text-xs">
+        <span class="text-muted-foreground">Employees: <strong class="text-foreground">{{ stats.total_employees }}</strong></span>
+        <span class="text-muted-foreground">Logs: <strong class="text-foreground">{{ stats.total_logs }}</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="glass-effect rounded-lg card-elevated p-6">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-md flex items-center justify-center">
+        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 4v10m0 0l3-3m-3 3l3 3"></path>
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-base font-semibold text-heading">Date Range Selection</h3>
+        <p class="text-xs text-muted-foreground">Select date range to generate attendance</p>
+      </div>
+    </div>
+
+    <form id="simple-attendance-form" class="space-y-4">
+      {% csrf_token %}
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block mb-1 text-xs font-medium text-foreground">Start Date *</label>
+          <input type="date" name="start_date" required class="w-full px-3 py-2 text-xs border border-border rounded-md bg-input text-foreground focus:border-ring focus:ring-1 focus:ring-ring/20 focus:outline-none transition-all duration-200">
+        </div>
+        <div>
+          <label class="block mb-1 text-xs font-medium text-foreground">End Date *</label>
+          <input type="date" name="end_date" required class="w-full px-3 py-2 text-xs border border-border rounded-md bg-input text-foreground focus:border-ring focus:ring-1 focus:ring-ring/20 focus:outline-none transition-all duration-200">
+        </div>
+        <div class="flex items-end">
+          <button type="button" id="preview-btn" class="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-200 shadow-md hover:shadow-lg focus-ring">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            </svg>
+            Preview Report
+          </button>
+        </div>
+      </div>
+      
+       Configuration Info 
+      <div class="p-3 bg-accent/30 rounded-lg border border-accent">
+        <div class="flex items-center gap-2 text-xs">
+          <svg class="w-3 h-3 text-accent-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span class="text-accent-foreground">Using active configuration: <strong>{{ config.name }}</strong></span>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div id="preview-results" class="hidden">
+    <div class="glass-effect rounded-lg card-elevated">
+      <div class="report-header px-6 py-4 border-b border-border">
+        <div class="text-center">
+          <h2 class="text-xl font-bold text-heading mb-1">{{ company.name }}</h2>
+          <h3 class="text-lg font-semibold text-heading mt-3 mb-1">Simple Attendance Report</h3>
+          <p class="text-xs text-muted-foreground">Generated on: <span id="report-date"></span></p>
+          <p class="text-xs text-muted-foreground">Period: <span id="report-period"></span></p>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 border-b border-border">
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
+          <div class="text-center">
+            <div class="text-xl font-bold text-foreground" id="summary-total">0</div>
+            <div class="text-xs text-muted-foreground">Total</div>
+          </div>
+          <div class="text-center">
+            <div class="text-xl font-bold text-green-600" id="summary-present">0</div>
+            <div class="text-xs text-muted-foreground">Present</div>
+          </div>
+          <div class="text-center">
+            <div class="text-xl font-bold text-red-600" id="summary-absent">0</div>
+            <div class="text-xs text-muted-foreground">Absent</div>
+          </div>
+          <div class="text-center">
+            <div class="text-xl font-bold text-yellow-600" id="summary-late">0</div>
+            <div class="text-xs text-muted-foreground">Late</div>
+          </div>
+          <div class="text-center">
+            <div class="text-xl font-bold text-blue-600" id="summary-overtime">0</div>
+            <div class="text-xs text-muted-foreground">OT Hours</div>
+          </div>
+          <div class="text-center">
+            <div class="text-xl font-bold text-purple-600" id="summary-amount">0</div>
+            <div class="text-xs text-muted-foreground">OT Amount</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 border-b border-border no-print">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 bg-gradient-to-br from-green-500 to-green-600 rounded-md flex items-center justify-center">
+              <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+            <div>
+              <h4 class="text-sm font-semibold text-heading">Report Actions</h4>
+              <p class="text-xs text-muted-foreground">Print, export, or generate final records</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="print-report" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-accent-foreground bg-accent hover:bg-accent/80 rounded-lg transition-all duration-200 focus-ring">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+              </svg>
+              Print
+            </button>
+            <button id="export-csv" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-accent-foreground bg-accent hover:bg-accent/80 rounded-lg transition-all duration-200 focus-ring">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Export CSV
+            </button>
+            <button id="generate-final" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-200 shadow-md hover:shadow-lg focus-ring">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Generate Records
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full">
+          <thead class="bg-muted/50">
+            <tr class="border-b border-border">
+              <th class="px-4 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wide">Employee</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wide">Department</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wide">Date</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wide">Check In</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wide">Check Out</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wide">Hours</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wide">OT Hours</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wide">OT Amount</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wide">Status</th>
+            </tr>
+          </thead>
+          <tbody id="report-table-body" class="divide-y divide-border">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+ <!-- Loading Overlay  -->
+<div class="loading-overlay">
+  <div class="text-center">
+    <div class="loading-spinner"></div>
+    <div class="text-lg font-semibold text-foreground">Processing...</div>
+    <div class="text-sm text-muted-foreground mt-2" id="loading-message">Please wait while we process your request</div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // CSRF Token setup
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  const csrftoken = getCookie('csrftoken');
+  let cachedPreviewData = null;
+
+  function showLoading(message = 'Processing...') {
+    document.getElementById('loading-message').textContent = message;
+    document.querySelector('.loading-overlay').classList.add('active');
+  }
+
+  function hideLoading() {
+    document.querySelector('.loading-overlay').classList.remove('active');
+  }
+
+  function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-md ${
+      type === 'success' ? 'bg-green-500 text-white' : 
+      type === 'error' ? 'bg-red-500 text-white' : 
+      'bg-blue-500 text-white'
+    }`;
+    notification.innerHTML = `
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          ${type === 'success' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>' :
+            type === 'error' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>' :
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>'
+          }
+        </svg>
+        <span>${message}</span>
+      </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.remove();
+    }, 5000);
+  }
+
+  // Set default dates
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  document.querySelector('input[name="start_date"]').value = yesterday.toISOString().split('T')[0];
+  document.querySelector('input[name="end_date"]').value = today.toISOString().split('T')[0];
+
+  // Preview report
+  document.getElementById('preview-btn').addEventListener('click', function() {
+    const form = document.getElementById('simple-attendance-form');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+
+    showLoading('Generating attendance preview...');
+
+    fetch('{% url "zkteco:simple_attendance_preview" %}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrftoken
+      },
+      body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+      hideLoading();
+      
+      if (result.success) {
+        cachedPreviewData = result.preview_data;
+        displayPreviewReport(result, data);
+        showNotification('Preview generated successfully!', 'success');
+      } else {
+        showNotification('Error: ' + result.error, 'error');
+      }
+    })
+    .catch(error => {
+      hideLoading();
+      showNotification('Network error: ' + error, 'error');
+    });
+  });
+
+  function displayPreviewReport(result, formData) {
+    const previewSection = document.getElementById('preview-results');
+    const reportBody = document.getElementById('report-table-body');
+    
+    // Show preview section
+    previewSection.classList.remove('hidden');
+    
+    // Update report header
+    const reportDate = new Date().toLocaleDateString();
+    const startDate = formData.start_date;
+    const endDate = formData.end_date;
+    
+    document.getElementById('report-date').textContent = reportDate;
+    document.getElementById('report-period').textContent = `${startDate} to ${endDate}`;
+    
+    // Update summary
+    if (result.summary) {
+      document.getElementById('summary-total').textContent = result.summary.total_records || 0;
+      document.getElementById('summary-present').textContent = result.summary.present_count || 0;
+      document.getElementById('summary-absent').textContent = result.summary.absent_count || 0;
+      document.getElementById('summary-late').textContent = result.summary.late_count || 0;
+      document.getElementById('summary-overtime').textContent = (result.summary.total_overtime_hours || 0).toFixed(1);
+      document.getElementById('summary-amount').textContent = (result.summary.total_overtime_amount || 0).toFixed(2);
+    }
+    
+    // Update table
+    reportBody.innerHTML = '';
+    if (result.preview_data && result.preview_data.length > 0) {
+      result.preview_data.forEach(record => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-accent/30 transition-all duration-200 group';
+        
+        // Determine status badge class
+        let statusClass = 'status-present';
+        let statusText = record.status;
+        
+        if (record.status === 'A') {
+          statusClass = 'status-absent';
+          statusText = 'Absent';
+        } else if (record.status === 'LAT') {
+          statusClass = 'status-late';
+          statusText = 'Late';
+        } else if (record.status === 'H') {
+          statusClass = 'status-holiday';
+          statusText = 'Holiday';
+        } else if (record.status === 'L') {
+          statusClass = 'status-leave';
+          statusText = 'Leave';
+        } else if (record.status === 'HAL') {
+          statusClass = 'status-halfday';
+          statusText = 'Half Day';
+        } else if (record.status === 'P') {
+          statusText = 'Present';
+        }
+        
+        row.innerHTML = `
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-2">
+              <div class="relative">
+                <div class="w-7 h-7 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-md">
+                  <span class="text-white font-bold text-xs">${record.employee_name.charAt(0).toUpperCase()}</span>
+                </div>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="font-medium text-foreground text-xs">${record.employee_name}</div>
+                <div class="text-xs text-muted-foreground font-mono">ID: ${record.employee_code}</div>
+              </div>
+            </div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="text-xs font-medium text-foreground">${record.department}</div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="font-mono text-xs text-foreground">${record.date}</div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="font-mono text-xs ${record.check_in_time ? 'text-foreground' : 'text-muted-foreground'}">${record.check_in_time || '-'}</div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="font-mono text-xs ${record.check_out_time ? 'text-foreground' : 'text-muted-foreground'}">${record.check_out_time || '-'}</div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="font-mono text-xs font-medium text-foreground">${record.working_hours}</div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="font-mono text-xs font-medium ${record.overtime_hours > 0 ? 'text-blue-600' : 'text-muted-foreground'}">${record.overtime_hours}</div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="font-mono text-xs font-medium ${record.overtime_amount > 0 ? 'text-purple-600' : 'text-muted-foreground'}">${record.overtime_amount}</div>
+          </td>
+          <td class="px-4 py-3">
+            <span class="status-badge ${statusClass}">${statusText}</span>
+          </td>
+        `;
+        
+        reportBody.appendChild(row);
+      });
+    } else {
+      reportBody.innerHTML = '<tr><td colspan="9" class="px-4 py-8 text-center text-muted-foreground">No attendance records found for the selected date range.</td></tr>';
+    }
+    
+    // Scroll to results
+    previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Print report
+  document.getElementById('print-report').addEventListener('click', function() {
+    window.print();
+  });
+
+  // Export CSV
+  document.getElementById('export-csv').addEventListener('click', function() {
+    if (!cachedPreviewData || cachedPreviewData.length === 0) {
+      showNotification('No data to export. Please generate a preview first.', 'error');
+      return;
+    }
+
+    const headers = ['Employee Name', 'Employee Code', 'Department', 'Date', 'Check In', 'Check Out', 'Working Hours', 'OT Hours', 'OT Amount', 'Status'];
+    const csvContent = [
+      headers.join(','),
+      ...cachedPreviewData.map(record => [
+        `"${record.employee_name}"`,
+        record.employee_code,
+        `"${record.department}"`,
+        record.date,
+        record.check_in_time || '',
+        record.check_out_time || '',
+        record.working_hours,
+        record.overtime_hours,
+        record.overtime_amount,
+        record.status
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `simple_attendance_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showNotification('CSV exported successfully!', 'success');
+  });
+
+  // Generate final records
+  document.getElementById('generate-final').addEventListener('click', function() {
+    if (!cachedPreviewData || cachedPreviewData.length === 0) {
+      showNotification('No data to generate. Please create a preview first.', 'error');
+      return;
+    }
+
+    const form = document.getElementById('simple-attendance-form');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+
+    showLoading('Generating final attendance records...');
+
+    fetch('{% url "zkteco:simple_generate_records" %}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrftoken
+      },
+      body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+      hideLoading();
+      
+      if (result.success) {
+        showNotification(`Successfully generated ${result.records_created} attendance records!`, 'success');
+        
+        // Reset form and hide preview
+        document.getElementById('simple-attendance-form').reset();
+        document.getElementById('preview-results').classList.add('hidden');
+        cachedPreviewData = null;
+        
+        // Set default dates again
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        document.querySelector('input[name="start_date"]').value = yesterday.toISOString().split('T')[0];
+        document.querySelector('input[name="end_date"]').value = today.toISOString().split('T')[0];
+      } else {
+        showNotification('Error: ' + result.error, 'error');
+      }
+    })
+    .catch(error => {
+      hideLoading();
+      showNotification('Network error: ' + error, 'error');
+    });
+  });
+});
+</script>
+{% endblock %}

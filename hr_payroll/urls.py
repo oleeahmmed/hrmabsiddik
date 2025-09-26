@@ -1,6 +1,7 @@
 # zkteco/urls.py
 from django.urls import path
 from . import device_views, attendance_log_views, attendance_generation_views_enhanced, hourly_attendance
+from . import simple_attendance_generation_views
 
 app_name = 'zkteco'
 
@@ -52,4 +53,23 @@ urlpatterns = [
 
     # Export report (CSV/Excel)
     path('hourly-report/export/', hourly_attendance.export_hourly_report, name='export_hourly_report'),
+
+
+
+    # Simple Attendance Generation URLs
+    path('simple-attendance/', 
+         simple_attendance_generation_views.simple_attendance_generation, 
+         name='simple_attendance_generation'),
+    
+    path('simple-attendance/preview/', 
+         simple_attendance_generation_views.simple_attendance_preview, 
+         name='simple_attendance_preview'),
+    
+    path('simple-attendance/generate/', 
+         simple_attendance_generation_views.simple_generate_records, 
+         name='simple_generate_records'),
+    
+    path('simple-attendance/export/', 
+         simple_attendance_generation_views.simple_export_csv, 
+         name='simple_export_csv'),    
 ]
