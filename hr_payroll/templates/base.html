@@ -422,9 +422,9 @@
       z-index: 9999 !important;
     }
 
-    .header-high-z {
-      z-index: 1000 !important;
-    }
+    /* .header-high-z {
+      z-index: 9999 !important;
+    } */
 
     /* Color picker grid improvements */
     .color-grid {
@@ -623,66 +623,98 @@
           </div>
         </a>
         <button @click="sidebarOpen = false" class="lg:hidden p-2 -m-2 rounded-xl hover:bg-accent transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+   
+
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-muted-foreground opacity-70 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                  </svg>
         </button>
       </div>
 
       <!-- Enhanced Navigation -->
       <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
         <!-- Main Navigation -->
-        <div class="space-y-1">
-          <div class="px-1 py-1">
-            <div class="space-y-1">
-              <!-- Devices -->
-              <a href="{% url 'zkteco:device_list' %}" 
-                 @click="setActiveMenu('devices')"
-                 class="menu-item flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-200 group {% if request.resolver_match.url_name == 'device_list' %}active{% endif %}">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                </svg>
-                <span class="flex-1">Devices</span>
-                {% if total_devices %}
-                  <span class="inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium bg-primary text-primary-foreground rounded-full min-w-[16px] h-4">{{ total_devices }}</span>
-                {% endif %}
-              </a>
+<div class="space-y-1">
+  <div class="px-1 py-1">
+    <div class="space-y-1">
+      <!-- Devices -->
+      <a href="{% url 'zkteco:device_list' %}" 
+         @click="setActiveMenu('devices')"
+         class="menu-item flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-200 group {% if request.resolver_match.url_name == 'device_list' %}active{% endif %}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          {% if request.resolver_match.url_name == 'device_list' %}
+            <!-- Active SVG for Devices (Different Icon) -->
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 3v2H6v4h4v2H6v4h4v2H6v4h8V3h-4z"/>
+          {% else %}
+            <!-- Default SVG for Devices -->
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          {% endif %}
+        </svg>
+        <span class="flex-1">Devices</span>
+        {% if total_devices %}
+          <span class="inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium bg-primary text-primary-foreground rounded-full min-w-[16px] h-4">{{ total_devices }}</span>
+        {% endif %}
+      </a>
 
-              <!-- Attendance Logs -->
-              <a href="{% url 'zkteco:attendance_logs' %}" 
-                 @click="setActiveMenu('attendance')"
-                 class="menu-item flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-200 group {% if request.resolver_match.url_name == 'attendance_logs' %}active{% endif %}">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                <span class="flex-1">Attendance Logs</span>
-              </a>
+      <!-- Attendance Logs -->
+      <a href="{% url 'zkteco:attendance_logs' %}" 
+         @click="setActiveMenu('attendance')"
+         class="menu-item flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-200 group {% if request.resolver_match.url_name == 'attendance_logs' %}active{% endif %}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          {% if request.resolver_match.url_name == 'attendance_logs' %}
+            <!-- Active SVG for Attendance Logs (Different Icon) -->
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 5h18M3 10h18M3 15h18M3 20h18"/>
+          {% else %}
+            <!-- Default SVG for Attendance Logs -->
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          {% endif %}
+        </svg>
+        <span class="flex-1">Attendance Logs</span>
+      </a>
 
-              <!-- Generate Reports -->
-              <a href="{% url 'zkteco:attendance_generation' %}" 
-                 @click="setActiveMenu('reports')"
-                 class="menu-item flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-200 group {% if request.resolver_match.url_name == 'attendance_generation' %}active{% endif %}">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                </svg>
-                <span class="flex-1">Generate Reports</span>
-              </a>
+      <!-- Generate Reports -->
+      <a href="{% url 'zkteco:simple_attendance_generation' %}" 
+         @click="setActiveMenu('reports')"
+         class="menu-item flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-200 group {% if request.resolver_match.url_name == 'simple_attendance_generation' %}active{% endif %}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          {% if request.resolver_match.url_name == 'simple_attendance_generation' %}
+            <!-- Active SVG for Generate Reports (Different Icon) -->
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+          {% else %}
+            <!-- Default SVG for Generate Reports -->
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+          {% endif %}
+        </svg>
+        <span class="flex-1">Generate Reports</span>
+      </a>
 
-              <!-- Hourly Report -->
-              <a href="{% url 'zkteco:hourly_attendance_report' %}" 
-                 @click="setActiveMenu('hourly')"
-                 class="menu-item flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-200 group {% if request.resolver_match.url_name == 'hourly_attendance_report' %}active{% endif %}">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 4h18M3 12h18M3 20h18"/>
-                </svg>
-                <span class="flex-1">Hourly Report</span>
-              </a>
-            </div>
-          </div>
-        </div>
+      <!-- Hourly Report -->
+      <a href="{% url 'zkteco:hourly_attendance_report' %}" 
+         @click="setActiveMenu('hourly')"
+         class="menu-item flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-200 group {% if request.resolver_match.url_name == 'hourly_attendance_report' %}active{% endif %}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                  </svg>
+        <span class="flex-1">Hourly Report</span>
+      </a>
+
+      <!-- Report -->
+      <a href="{% url 'zkteco:attendance_reports_main' %}" 
+         @click="setActiveMenu('hourly')"
+         class="menu-item flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-200 group {% if request.resolver_match.url_name == 'attendance_reports_main' %}active{% endif %}">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                  </svg>
+        <span class="flex-1">Report</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+
 
         <!-- Enhanced Analytics Dropdown -->
-        <div class="space-y-1">
+        <!-- <div class="space-y-1">
           <div class="px-1 py-1">
             <h2 class="mb-2 px-2 text-xs font-medium tracking-wide text-muted-foreground uppercase opacity-70">
               Analytics
@@ -725,7 +757,7 @@
               </div>
             </div>
           </div>
-        </div>
+        </div> -->
       </nav>
 
       <!-- Enhanced Sidebar Footer -->

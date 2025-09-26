@@ -2,6 +2,7 @@
 from django.urls import path
 from . import device_views, attendance_log_views, attendance_generation_views_enhanced, hourly_attendance
 from . import simple_attendance_generation_views
+from . import attendance_reports_views
 
 app_name = 'zkteco'
 
@@ -72,4 +73,11 @@ urlpatterns = [
     path('simple-attendance/export/', 
          simple_attendance_generation_views.simple_export_csv, 
          name='simple_export_csv'),    
+
+
+     # ==================== ATTENDANCE REPORTS VIEWS ====================
+    path('reports/', attendance_reports_views.attendance_reports_main, name='attendance_reports_main'),
+    path('reports/daily/', attendance_reports_views.daily_attendance_report, name='daily_attendance_report'),
+    path('reports/monthly/', attendance_reports_views.monthly_attendance_report, name='monthly_attendance_report'),
+    path('reports/analytics/', attendance_reports_views.analytics_summary_report, name='analytics_summary_report'),        
 ]
