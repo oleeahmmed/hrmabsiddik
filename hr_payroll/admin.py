@@ -138,7 +138,7 @@ class EmployeeAdmin(CustomModelAdmin):
             'fields': ('company', 'employee_id', 'zkteco_id')
         }),
         (_("Personal Information"), {
-            'fields': ('name', 'first_name', 'last_name')
+            'fields': ('user','name', 'first_name', 'last_name')
         }),
         (_("Employment Details"), {
             'fields': ('department', 'designation', 'default_shift', 'is_active')
@@ -536,3 +536,65 @@ class AttendanceProcessorConfigurationAdmin(ModelAdmin):
         if obj.weekend_sunday: days.append('Sun')
         return ', '.join(days) if days else 'None'
     weekend_display.short_description = 'Weekend Days'
+
+
+from .models import Location, UserLocation
+
+
+class UserLocationInline(admin.TabularInline):
+    model = UserLocation
+    extra = 1
+    fields = ('user', 'is_primary')
+    verbose_name = _("User Location Assignment")
+    verbose_name_plural = _("User Location Assignments")
+
+
+@admin.register(Location)
+class LocationAdmin(ModelAdmin):
+    list_display = (
+        'name', 'address_short', 'latitude', 'longitude', 
+        'radius', 'is_active', 'user_count', 'created_at'
+    )
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('name', 'address')
+    ordering = ('name',)
+    inlines = [UserLocationInline]
+    
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'address', 'is_active')
+        }),
+        (_("Geographic Coordinates"), {
+            'fields': ('latitude', 'longitude', 'radius')
+        }),
+    )
+    
+    def address_short(self, obj):
+        """Display truncated address"""
+        return obj.address[:50] + '...' if len(obj.address) > 50 else obj.address
+    address_short.short_description = _("Address")
+    
+    def user_count(self, obj):
+        """Count of users assigned to this location"""
+        return obj.user_locations.count()
+    user_count.short_description = _("Assigned Users")
+
+
+@admin.register(UserLocation)
+class UserLocationAdmin(ModelAdmin):
+    list_display = (
+        'user', 'location', 'is_primary', 'created_at'
+    )
+    list_filter = ('is_primary', 'location', 'created_at')
+    search_fields = ('user__username', 'user__email', 'location__name')
+    ordering = ('user__username', 'location__name')
+    list_select_related = ('user', 'location')
+    
+    fieldsets = (
+        (None, {
+            'fields': ('user', 'location', 'is_primary')
+        }),
+    )
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user', 'location')

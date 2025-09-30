@@ -6,6 +6,8 @@ from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 import logging
 from django.utils.dateparse import parse_datetime
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 
 # Import Company model from custom_auth app
 from core.models import Company
@@ -564,7 +566,15 @@ class Employee(models.Model):
     name = models.CharField(_("Name"), max_length=100)
     first_name = models.CharField(_("First Name"), max_length=50, blank=True, null=True)
     last_name = models.CharField(_("Last Name"), max_length=50, blank=True, null=True)
-    
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='employee_user',
+        verbose_name=_("User"),
+        help_text=_("User who marked attendance (for mobile attendance)")
+    )    
     # Salary and working hour configurations
     basic_salary = models.DecimalField(_("Basic Salary"), max_digits=10, decimal_places=2, default=0.00)
     overtime_rate = models.DecimalField(_("Overtime Rate (per hour)"), max_digits=8, decimal_places=2, default=0.00)
@@ -750,25 +760,142 @@ class ZkDevice(models.Model):
         unique_together = ('company', 'ip_address')
         ordering = ['name']
 
+class Location(models.Model):
+    """Represents a geolocation for attendance tracking."""
+    name = models.CharField(_("Name"), max_length=100)
+    address = models.TextField(_("Address"))
+    latitude = models.DecimalField(_("Latitude"), max_digits=10, decimal_places=8)
+    longitude = models.DecimalField(_("Longitude"), max_digits=11, decimal_places=8)
+    radius = models.DecimalField(_("Radius (km)"), max_digits=5, decimal_places=2)
+    is_active = models.BooleanField(_("Is Active"), default=True)
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+    
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = _("Location")
+        verbose_name_plural = _("Locations")
+        ordering = ['name']        
+class UserLocation(models.Model):
+    """Associates users with locations for attendance tracking."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, 
+                            related_name='user_locations', verbose_name=_("User"))
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, 
+                                related_name='user_locations', verbose_name=_("Location"))
+    is_primary = models.BooleanField(_("Is Primary"), default=False)
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.location.name}"
+
+    class Meta:
+        verbose_name = _("User Location")
+        verbose_name_plural = _("User Locations")
+        unique_together = ('user', 'location')
+        ordering = ['user__username', 'location__name']
+
 class AttendanceLog(models.Model):
     """
-    Stores raw attendance data from ZKTeco devices.
+    Stores raw attendance data from ZKTeco devices and mobile/location-based attendance.
     """
     SOURCE_TYPES = (
         ('ZK', 'ZKTeco Device'),
         ('MN', 'Manual'),
+        ('MB', 'Mobile'),  # New: Mobile attendance
+    )
+    
+    ATTENDANCE_TYPE_CHOICES = (
+        ('IN', 'Check-in'),
+        ('OUT', 'Check-out'),
     )
 
+    # Required fields
     device = models.ForeignKey(ZkDevice, on_delete=models.CASCADE, verbose_name=_("Device"))
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, verbose_name=_("Employee"))
     timestamp = models.DateTimeField(_("Timestamp"))
     status_code = models.IntegerField(_("Status Code"), default=0)
     punch_type = models.CharField(_("Punch Type"), max_length=50, default='UNKNOWN')
     source_type = models.CharField(_("Source Type"), max_length=10, choices=SOURCE_TYPES, default='ZK')
+    
+    # Optional fields for mobile/location-based attendance
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='attendance_logs',
+        verbose_name=_("User"),
+        help_text=_("User who marked attendance (for mobile attendance)")
+    )
+    location = models.ForeignKey(
+        Location, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='attendance_logs',
+        verbose_name=_("Location"),
+        help_text=_("Location where attendance was marked")
+    )
+    attendance_type = models.CharField(
+        _("Attendance Type"), 
+        max_length=3, 
+        choices=ATTENDANCE_TYPE_CHOICES,
+        null=True,
+        blank=True,
+        help_text=_("Check-in or Check-out type")
+    )
+    latitude = models.DecimalField(
+        _("Latitude"), 
+        max_digits=10, 
+        decimal_places=8,
+        null=True,
+        blank=True,
+        help_text=_("GPS latitude coordinate")
+    )
+    longitude = models.DecimalField(
+        _("Longitude"), 
+        max_digits=11, 
+        decimal_places=8,
+        null=True,
+        blank=True,
+        help_text=_("GPS longitude coordinate")
+    )
+    is_within_radius = models.BooleanField(
+        _("Is Within Radius"), 
+        default=False,
+        help_text=_("Whether attendance was marked within location radius")
+    )
+    distance = models.DecimalField(
+        _("Distance (km)"), 
+        max_digits=8, 
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text=_("Distance from location center in kilometers")
+    )
+    device_info = models.TextField(
+        _("Device Info"), 
+        blank=True, 
+        null=True,
+        help_text=_("Mobile device information")
+    )
+    ip_address = models.GenericIPAddressField(
+        _("IP Address"), 
+        blank=True, 
+        null=True,
+        help_text=_("IP address from which attendance was marked")
+    )
+    
+    # Timestamps
     created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
 
     def __str__(self):
+        if self.source_type == 'MB' and self.location:
+            return f"{self.employee.employee_id} - {self.location.name} - {self.timestamp}"
         return f"{self.employee.employee_id} - {self.timestamp}"
 
     class Meta:
@@ -778,7 +905,12 @@ class AttendanceLog(models.Model):
         indexes = [
             models.Index(fields=['employee', 'timestamp']),
             models.Index(fields=['device', 'timestamp']),
+            models.Index(fields=['user', 'timestamp']),
+            models.Index(fields=['location', 'timestamp']),
+            models.Index(fields=['source_type', 'timestamp']),
         ]
+
+
 
 class Attendance(models.Model):
     """

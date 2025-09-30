@@ -3,6 +3,7 @@ from django.urls import path
 from . import device_views, attendance_log_views, attendance_generation_views_enhanced, hourly_attendance
 from . import simple_attendance_generation_views
 from . import attendance_reports_views
+from .views import location_views
 
 app_name = 'zkteco'
 
@@ -79,5 +80,70 @@ urlpatterns = [
     path('reports/', attendance_reports_views.attendance_reports_main, name='attendance_reports_main'),
     path('reports/daily/', attendance_reports_views.daily_attendance_report, name='daily_attendance_report'),
     path('reports/monthly/', attendance_reports_views.monthly_attendance_report, name='monthly_attendance_report'),
-    path('reports/analytics/', attendance_reports_views.analytics_summary_report, name='analytics_summary_report'),        
+    path('reports/analytics/', attendance_reports_views.analytics_summary_report, name='analytics_summary_report'),    
+
+
+
+      # ==================== LOCATION URLS ====================
+    path('locations/', 
+         location_views.LocationListView.as_view(), 
+         name='location_list'),
+    
+    path('locations/create/', 
+         location_views.LocationCreateView.as_view(), 
+         name='location_create'),
+    
+    path('locations/<int:pk>/', 
+         location_views.LocationDetailView.as_view(), 
+         name='location_detail'),
+    
+    path('locations/<int:pk>/update/', 
+         location_views.LocationUpdateView.as_view(), 
+         name='location_update'),
+    
+    path('locations/<int:pk>/delete/', 
+         location_views.LocationDeleteView.as_view(), 
+         name='location_delete'),
+    
+    
+    # ==================== USER LOCATION URLS ====================
+    path('user-locations/', 
+         location_views.UserLocationListView.as_view(), 
+         name='user_location_list'),
+    
+    path('user-locations/create/', 
+         location_views.UserLocationCreateView.as_view(), 
+         name='user_location_create'),
+    
+    path('user-locations/<int:pk>/update/', 
+         location_views.UserLocationUpdateView.as_view(), 
+         name='user_location_update'),
+    
+    path('user-locations/<int:pk>/delete/', 
+         location_views.UserLocationDeleteView.as_view(), 
+         name='user_location_delete'),
+    
+    
+    # ==================== MOBILE ATTENDANCE URLS ====================
+    path('mobile-attendance/', 
+         location_views.MobileAttendanceView.as_view(), 
+         name='mobile_attendance'),
+    
+    path('api/get-locations/', 
+         location_views.GetLocationsView.as_view(), 
+         name='get_locations'),
+    
+    path('api/mark-attendance/', 
+         location_views.MarkAttendanceView.as_view(), 
+         name='mark_attendance'),
+    
+    
+    # ==================== ATTENDANCE LOG URLS ====================
+    path('attendance-logs/', 
+         location_views.AttendanceLogListView.as_view(), 
+         name='attendance_log_list'),
+    
+    path('attendance-logs/<int:pk>/', 
+         location_views.AttendanceLogDetailView.as_view(), 
+         name='attendance_log_detail'),      
 ]

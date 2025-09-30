@@ -1,0 +1,546 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Mobile Attendance - Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-semibold text-foreground">{{ title|default:"Mobile Attendance" }}</h2>
+            <p class="text-sm text-muted-foreground mt-1">{{ subtitle|default:"Mark your attendance from anywhere" }}</p>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    <!-- Location Permission Banner -->
+    <div id="location-banner" class="bg-card rounded-lg border border-border p-4 hidden">
+        <div class="flex items-start space-x-3">
+            <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <div class="flex-1">
+                <h4 class="text-sm font-semibold text-foreground">{% trans "Location Access Required" %}</h4>
+                <p class="text-sm text-muted-foreground mt-1">{% trans "Please enable location services to mark attendance" %}</p>
+                <button id="enable-location-btn" class="mt-3 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
+                    {% trans "Enable Location" %}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Location Map -->
+    <div id="map-container" class="bg-card rounded-lg border border-border overflow-hidden hidden">
+        <div class="p-4 border-b border-border bg-muted/50">
+            <div class="flex justify-between items-center">
+                <h4 class="text-sm font-semibold text-foreground">{% trans "Your Current Location" %}</h4>
+                <span id="location-accuracy" class="text-xs text-muted-foreground"></span>
+            </div>
+        </div>
+        <div id="main-map" class="h-64 w-full"></div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loading" class="bg-card rounded-lg border border-border p-12 text-center hidden">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <p class="mt-4 text-sm text-muted-foreground">{% trans "Loading locations..." %}</p>
+    </div>
+
+    <!-- Location Cards Grid -->
+    <div id="locations-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Location cards will be dynamically added here -->
+    </div>
+
+    <!-- No Locations Message -->
+    <div id="no-locations" class="bg-card rounded-lg border border-border p-12 text-center hidden">
+        <svg class="w-16 h-16 mx-auto text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <h3 class="mt-4 text-lg font-semibold text-foreground">{% trans "No Locations Assigned" %}</h3>
+        <p class="mt-2 text-sm text-muted-foreground">{% trans "Please contact your administrator to assign locations" %}</p>
+    </div>
+</div>
+
+<!-- Location Card Template -->
+<template id="location-card-template">
+    <div class="location-card bg-card rounded-lg border border-border overflow-hidden hover:border-primary/50 transition-all duration-200">
+        <div class="p-4 border-b border-border bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900/20 dark:to-gray-800/20">
+            <div class="flex items-start justify-between mb-2">
+                <div class="flex-1">
+                    <h4 class="text-base font-semibold text-foreground location-name"></h4>
+                    <p class="text-xs text-muted-foreground location-address mt-1 line-clamp-2"></p>
+                </div>
+                <span class="location-badge px-2 py-1 rounded-full text-xs font-medium ml-2 flex-shrink-0"></span>
+            </div>
+        </div>
+        
+        <div class="p-4">
+            <div class="location-map h-32 rounded-md mb-3 overflow-hidden border border-border bg-muted"></div>
+            
+            <div class="space-y-2 mb-4">
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-muted-foreground">{% trans "Distance:" %}</span>
+                    <span class="location-distance font-medium text-foreground"></span>
+                </div>
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-muted-foreground">{% trans "Status:" %}</span>
+                    <span class="location-status font-medium"></span>
+                </div>
+            </div>
+            
+            <div class="flex gap-2 mt-4">
+                <button class="check-in-btn flex-1 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-green-600 text-white hover:bg-green-600/90 disabled:opacity-50 disabled:cursor-not-allowed h-9 px-3 py-2">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                    </svg>
+                    {% trans "Check In" %}
+                </button>
+                <button class="check-out-btn flex-1 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-red-600 text-white hover:bg-red-600/90 disabled:opacity-50 disabled:cursor-not-allowed h-9 px-3 py-2">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    {% trans "Check Out" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</template>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+    /* Toast Styles */
+    .toast {
+        transform: translateX(100%);
+        transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        opacity: 0;
+    }
+    
+    .toast.show {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    
+    .toast.hide {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    /* Leaflet map styling to match theme */
+    .leaflet-container {
+        background: hsl(var(--muted));
+    }
+
+    /* Line clamp utility */
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let userPosition = null;
+    let locations = [];
+    let mainMap = null;
+    let locationMaps = {};
+    
+    const elements = {
+        loading: document.getElementById('loading'),
+        locationsGrid: document.getElementById('locations-grid'),
+        noLocations: document.getElementById('no-locations'),
+        locationBanner: document.getElementById('location-banner'),
+        mapContainer: document.getElementById('map-container'),
+        locationAccuracy: document.getElementById('location-accuracy'),
+        enableLocationBtn: document.getElementById('enable-location-btn'),
+        toastContainer: document.getElementById('toast-container')
+    };
+    
+    // Toast notification function
+    function showToast(message, type = 'info', duration = 3000) {
+        const toastId = 'toast-' + Date.now();
+        
+        const icons = {
+            success: `<svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>`,
+            error: `<svg class="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>`,
+            warning: `<svg class="w-4 h-4 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>`,
+            info: `<svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>`
+        };
+        
+        const colors = {
+            success: 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950',
+            error: 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950',
+            warning: 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950',
+            info: 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950'
+        };
+        
+        const toast = document.createElement('div');
+        toast.id = toastId;
+        toast.className = `toast min-w-80 max-w-md p-4 rounded-md border shadow-lg ${colors[type]}`;
+        toast.innerHTML = `
+            <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0">${icons[type]}</div>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-foreground">${message}</p>
+                </div>
+                <button onclick="hideToast('${toastId}')" class="flex-shrink-0 ml-4 text-muted-foreground hover:text-foreground transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        `;
+        
+        elements.toastContainer.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 10);
+        setTimeout(() => hideToast(toastId), duration);
+    }
+    
+    window.hideToast = function(toastId) {
+        const toast = document.getElementById(toastId);
+        if (toast) {
+            toast.classList.remove('show');
+            toast.classList.add('hide');
+            setTimeout(() => toast.remove(), 300);
+        }
+    }
+    
+    // Calculate distance between two coordinates (Haversine formula)
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; // Earth's radius in km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+    
+    // Get user's current location
+    function getUserLocation() {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                reject(new Error('{% trans "Geolocation not supported" %}'));
+                return;
+            }
+            
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    userPosition = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    };
+                    
+                    elements.mapContainer.classList.remove('hidden');
+                    elements.locationBanner.classList.add('hidden');
+                    elements.locationAccuracy.textContent = `{% trans "Accuracy" %}: ±${Math.round(userPosition.accuracy)}m`;
+                    
+                    initMainMap();
+                    resolve(userPosition);
+                },
+                error => {
+                    elements.locationBanner.classList.remove('hidden');
+                    let errorMessage = '{% trans "Unable to get location" %}';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = '{% trans "Location access denied" %}';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = '{% trans "Location information unavailable" %}';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = '{% trans "Location request timed out" %}';
+                            break;
+                    }
+                    reject(new Error(errorMessage));
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        });
+    }
+    
+    // Initialize main map with user and all location markers
+    function initMainMap() {
+        if (mainMap) mainMap.remove();
+        
+        mainMap = L.map('main-map').setView([userPosition.latitude, userPosition.longitude], 13);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(mainMap);
+        
+        // Add user marker
+        const userIcon = L.divIcon({
+            html: '<div class="w-4 h-4 rounded-full bg-red-500 border-2 border-white shadow-lg"></div>',
+            className: '',
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+        });
+        L.marker([userPosition.latitude, userPosition.longitude], {icon: userIcon})
+            .bindPopup('<b>{% trans "Your Location" %}</b>')
+            .addTo(mainMap);
+        
+        // Add location markers and circles
+        locations.forEach(loc => {
+            const locIcon = L.divIcon({
+                html: '<div class="w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-lg"></div>',
+                className: '',
+                iconSize: [16, 16],
+                iconAnchor: [8, 8]
+            });
+            L.marker([loc.latitude, loc.longitude], {icon: locIcon})
+                .bindPopup(`<b>${loc.name}</b><br><span class="text-sm">${loc.address}</span>`)
+                .addTo(mainMap);
+            
+            L.circle([loc.latitude, loc.longitude], {
+                radius: loc.radius * 1000,
+                color: '#3b82f6',
+                fillColor: '#93c5fd',
+                fillOpacity: 0.2,
+                weight: 2
+            }).addTo(mainMap);
+        });
+    }
+    
+    // Initialize individual location map
+    function initLocationMap(locationId, lat, lng, radius) {
+        const mapEl = document.querySelector(`[data-location-id="${locationId}"] .location-map`);
+        if (!mapEl) return;
+        
+        const map = L.map(mapEl, {
+            zoomControl: false,
+            dragging: false,
+            scrollWheelZoom: false,
+            doubleClickZoom: false,
+            touchZoom: false
+        }).setView([lat, lng], 14);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        
+        // Location marker
+        const locIcon = L.divIcon({
+            html: '<div class="w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-md"></div>',
+            className: '',
+            iconSize: [12, 12],
+            iconAnchor: [6, 6]
+        });
+        L.marker([lat, lng], {icon: locIcon}).addTo(map);
+        
+        // Radius circle
+        L.circle([lat, lng], {
+            radius: radius * 1000,
+            color: '#3b82f6',
+            fillColor: '#93c5fd',
+            fillOpacity: 0.2,
+            weight: 2
+        }).addTo(map);
+        
+        // User marker if available
+        if (userPosition) {
+            const userIcon = L.divIcon({
+                html: '<div class="w-2 h-2 rounded-full bg-red-500 border border-white shadow-md"></div>',
+                className: '',
+                iconSize: [8, 8],
+                iconAnchor: [4, 4]
+            });
+            L.marker([userPosition.latitude, userPosition.longitude], {icon: userIcon}).addTo(map);
+        }
+        
+        locationMaps[locationId] = map;
+    }
+    
+    // Fetch locations from server
+    async function fetchLocations() {
+        elements.loading.classList.remove('hidden');
+        
+        try {
+            const response = await fetch('{% url "zkteco:get_locations" %}');
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                locations = data.data;
+                
+                if (locations.length === 0) {
+                    elements.noLocations.classList.remove('hidden');
+                } else {
+                    try {
+                        await getUserLocation();
+                        renderLocations();
+                    } catch (error) {
+                        showToast(error.message, 'error');
+                        renderLocationsWithoutPosition();
+                    }
+                }
+            } else {
+                showToast(data.message || '{% trans "Failed to load locations" %}', 'error');
+                elements.noLocations.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            showToast('{% trans "Network error. Please try again." %}', 'error');
+            elements.noLocations.classList.remove('hidden');
+        } finally {
+            elements.loading.classList.add('hidden');
+        }
+    }
+    
+    // Render location cards without position (fallback)
+    function renderLocationsWithoutPosition() {
+        elements.locationsGrid.innerHTML = '';
+        
+        locations.forEach(location => {
+            const template = document.getElementById('location-card-template');
+            const card = template.content.cloneNode(true);
+            
+            card.querySelector('.location-card').dataset.locationId = location.id;
+            card.querySelector('.location-name').textContent = location.name;
+            card.querySelector('.location-address').textContent = location.address;
+            
+            const badge = card.querySelector('.location-badge');
+            if (location.is_primary || location.is_assigned) {
+                badge.textContent = location.is_primary ? '{% trans "Primary" %}' : '{% trans "Assigned" %}';
+                badge.classList.add('bg-green-100', 'text-green-800', 'dark:bg-green-900', 'dark:text-green-300');
+            } else {
+                badge.textContent = '{% trans "Available" %}';
+                badge.classList.add('bg-blue-100', 'text-blue-800', 'dark:bg-blue-900', 'dark:text-blue-300');
+            }
+            
+            card.querySelector('.location-distance').textContent = '{% trans "Location required" %}';
+            card.querySelector('.location-status').textContent = '{% trans "Unknown" %}';
+            card.querySelector('.location-status').classList.add('text-muted-foreground');
+            
+            card.querySelector('.check-in-btn').disabled = true;
+            card.querySelector('.check-out-btn').disabled = true;
+            
+            elements.locationsGrid.appendChild(card);
+            
+            setTimeout(() => initLocationMap(location.id, location.latitude, location.longitude, location.radius), 100);
+        });
+    }
+    
+    // Render location cards with user position
+    function renderLocations() {
+        elements.locationsGrid.innerHTML = '';
+        
+        locations.forEach(location => {
+            const distance = calculateDistance(
+                userPosition.latitude,
+                userPosition.longitude,
+                location.latitude,
+                location.longitude
+            );
+            const isWithinRadius = distance <= location.radius;
+            
+            const template = document.getElementById('location-card-template');
+            const card = template.content.cloneNode(true);
+            
+            card.querySelector('.location-card').dataset.locationId = location.id;
+            card.querySelector('.location-name').textContent = location.name;
+            card.querySelector('.location-address').textContent = location.address;
+            
+            const badge = card.querySelector('.location-badge');
+            if (location.is_primary || location.is_assigned) {
+                badge.textContent = location.is_primary ? '{% trans "Primary" %}' : '{% trans "Assigned" %}';
+                badge.classList.add('bg-green-100', 'text-green-800', 'dark:bg-green-900', 'dark:text-green-300');
+            } else {
+                badge.textContent = '{% trans "Available" %}';
+                badge.classList.add('bg-blue-100', 'text-blue-800', 'dark:bg-blue-900', 'dark:text-blue-300');
+            }
+            
+            card.querySelector('.location-distance').textContent = `${distance.toFixed(2)} km`;
+            
+            const status = card.querySelector('.location-status');
+            if (isWithinRadius) {
+                status.textContent = '{% trans "In Range" %}';
+                status.classList.add('text-green-600', 'dark:text-green-400');
+            } else {
+                status.textContent = '{% trans "Out of Range" %}';
+                status.classList.add('text-red-600', 'dark:text-red-400');
+                
+                card.querySelector('.check-in-btn').disabled = true;
+                card.querySelector('.check-out-btn').disabled = true;
+            }
+            
+            card.querySelector('.check-in-btn').addEventListener('click', () => markAttendance(location.id, 'IN'));
+            card.querySelector('.check-out-btn').addEventListener('click', () => markAttendance(location.id, 'OUT'));
+            
+            elements.locationsGrid.appendChild(card);
+            
+            setTimeout(() => initLocationMap(location.id, location.latitude, location.longitude, location.radius), 100);
+        });
+    }
+    
+    // Mark attendance (check-in or check-out)
+    async function markAttendance(locationId, type) {
+        elements.loading.classList.remove('hidden');
+        
+        try {
+            const position = await getUserLocation();
+            
+            const formData = new FormData();
+            formData.append('location_id', locationId);
+            formData.append('attendance_type', type);
+            formData.append('latitude', position.latitude);
+            formData.append('longitude', position.longitude);
+            formData.append('device_info', navigator.userAgent);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+            
+            const response = await fetch('{% url "zkteco:mark_attendance" %}', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                showToast(data.message, 'success');
+            } else {
+                showToast(data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Attendance error:', error);
+            showToast(`{% trans "Error" %}: ${error.message}`, 'error');
+        } finally {
+            elements.loading.classList.add('hidden');
+        }
+    }
+    
+    // Enable location button click handler
+    elements.enableLocationBtn.addEventListener('click', () => {
+        getUserLocation()
+            .then(() => {
+                renderLocations();
+                showToast('{% trans "Location enabled successfully" %}', 'success');
+            })
+            .catch(error => {
+                showToast(error.message, 'error');
+            });
+    });
+    
+    // Initialize app
+    fetchLocations();
+});
+</script>
+{% endblock %}

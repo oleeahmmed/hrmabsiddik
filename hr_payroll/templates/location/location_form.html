@@ -1,0 +1,416 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-semibold text-foreground">{{ title|default:"Location Management" }}</h2>
+            <p class="text-sm text-muted-foreground mt-1">{{ subtitle|default:"Add or update location details for attendance tracking" }}</p>
+        </div>
+        {% if cancel_url %}
+        <a href="{{ cancel_url }}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Back to List
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Main Form Card -->
+    <div class="bg-card rounded-lg border border-border">
+        <form method="post" enctype="multipart/form-data" id="location-form" {% if is_detail_view %}onsubmit="return false;"{% endif %}>
+            {% csrf_token %}
+            
+            <div class="p-6 space-y-6">
+                <!-- Location Information Section -->
+                <div>
+                    <h3 class="text-base font-semibold text-foreground mb-4">Location Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Name Field -->
+                        <div class="space-y-2">
+                            <label for="id_name" class="text-sm font-medium text-foreground">
+                                Name{% if form.name.field.required %}<span class="text-destructive ml-1">*</span>{% endif %}
+                            </label>
+                            <input type="text" 
+                                id="id_name" 
+                                name="name"
+                                class="w-full px-3 py-2 text-sm border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent" 
+                                placeholder="Enter location name"
+                                value="{{ form.name.value|default:'' }}"
+                                {% if form.name.field.required %}required{% endif %}
+                                {% if is_detail_view %}readonly{% endif %}>
+                            {% if form.name.errors %}
+                                <p class="text-destructive text-xs mt-1">{{ form.name.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Is Active Field -->
+                        <div class="space-y-2">
+                            <label for="id_is_active" class="text-sm font-medium text-foreground">Status</label>
+                            <div class="flex items-center space-x-2 h-10">
+                                <label class="switch">
+                                    <input type="checkbox" 
+                                        id="id_is_active" 
+                                        name="is_active" 
+                                        {% if form.is_active.value %}checked{% endif %}
+                                        {% if is_detail_view %}disabled{% endif %}>
+                                    <span class="switch-slider"></span>
+                                </label>
+                                <span class="text-sm text-muted-foreground">Active</span>
+                            </div>
+                        </div>
+
+                        <!-- Address Field (Full Width) -->
+                        <div class="md:col-span-2 space-y-2">
+                            <label for="id_address" class="text-sm font-medium text-foreground">
+                                Address{% if form.address.field.required %}<span class="text-destructive ml-1">*</span>{% endif %}
+                            </label>
+                            <textarea 
+                                id="id_address" 
+                                name="address" 
+                                rows="3" 
+                                class="w-full px-3 py-2 text-sm border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent resize-none" 
+                                placeholder="Enter full address"
+                                {% if is_detail_view %}readonly{% endif %}>{{ form.address.value|default:'' }}</textarea>
+                            {% if form.address.errors %}
+                                <p class="text-destructive text-xs mt-1">{{ form.address.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Geographic Coordinates Section -->
+                <div class="border-t border-border pt-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-base font-semibold text-foreground">Geographic Coordinates</h3>
+                        {% if not is_detail_view %}
+                        <button type="button" id="get-current-location" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-3 py-2">
+                            <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 8C9.79 8 8 9.79 8 12C8 14.21 9.79 16 12 16C14.21 16 16 14.21 16 12C16 9.79 14.21 8 12 8ZM20.94 11C20.48 6.83 17.17 3.52 13 3.06V2C13 1.45 12.55 1 12 1C11.45 1 11 1.45 11 2V3.06C6.83 3.52 3.52 6.83 3.06 11H2C1.45 11 1 11.45 1 12C1 12.55 1.45 13 2 13H3.06C3.52 17.17 6.83 20.48 11 20.94V22C11 22.55 11.45 23 12 23C12.55 23 13 22.55 13 22V20.94C17.17 20.48 20.48 17.17 20.94 13H22C22.55 13 23 12.55 23 12C23 11.45 22.55 11 22 11H20.94ZM12 19C8.13 19 5 15.87 5 12C5 8.13 8.13 5 12 5C15.87 5 19 8.13 19 12C19 15.87 15.87 19 12 19Z" fill="currentColor"/>
+                            </svg>
+                            Use Current Location
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <!-- Latitude Field -->
+                        <div class="space-y-2">
+                            <label for="id_latitude" class="text-sm font-medium text-foreground">
+                                Latitude{% if form.latitude.field.required %}<span class="text-destructive ml-1">*</span>{% endif %}
+                            </label>
+                            <input type="number" 
+                                id="id_latitude" 
+                                name="latitude"
+                                class="w-full px-3 py-2 text-sm border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent" 
+                                placeholder="23.8103"
+                                value="{{ form.latitude.value|default:'' }}"
+                                step="any"
+                                {% if form.latitude.field.required %}required{% endif %}
+                                {% if is_detail_view %}readonly{% endif %}>
+                            {% if form.latitude.errors %}
+                                <p class="text-destructive text-xs mt-1">{{ form.latitude.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Longitude Field -->
+                        <div class="space-y-2">
+                            <label for="id_longitude" class="text-sm font-medium text-foreground">
+                                Longitude{% if form.longitude.field.required %}<span class="text-destructive ml-1">*</span>{% endif %}
+                            </label>
+                            <input type="number" 
+                                id="id_longitude" 
+                                name="longitude"
+                                class="w-full px-3 py-2 text-sm border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent" 
+                                placeholder="90.4125"
+                                value="{{ form.longitude.value|default:'' }}"
+                                step="any"
+                                {% if form.longitude.field.required %}required{% endif %}
+                                {% if is_detail_view %}readonly{% endif %}>
+                            {% if form.longitude.errors %}
+                                <p class="text-destructive text-xs mt-1">{{ form.longitude.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Radius Field -->
+                        <div class="space-y-2">
+                            <label for="id_radius" class="text-sm font-medium text-foreground">
+                                Radius (km){% if form.radius.field.required %}<span class="text-destructive ml-1">*</span>{% endif %}
+                            </label>
+                            <input type="number" 
+                                id="id_radius" 
+                                name="radius"
+                                class="w-full px-3 py-2 text-sm border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent" 
+                                placeholder="1.0"
+                                value="{{ form.radius.value|default:'1' }}"
+                                step="0.01"
+                                min="0.01"
+                                {% if form.radius.field.required %}required{% endif %}
+                                {% if is_detail_view %}readonly{% endif %}>
+                            {% if form.radius.errors %}
+                                <p class="text-destructive text-xs mt-1">{{ form.radius.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Location Status Message -->
+                    <div id="location-status" class="mb-4 min-h-[20px]"></div>
+
+                    <!-- Map Preview -->
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-foreground">Map Preview</label>
+                        <p class="text-xs text-muted-foreground mb-2">{% if not is_detail_view %}Click on the map to set location or manually enter coordinates above{% else %}Location visualization{% endif %}</p>
+                        <div id="map" class="w-full h-[400px] rounded-md border border-border bg-muted"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Footer -->
+            <div class="border-t border-border p-6 bg-muted/50">
+                <div class="flex items-center justify-between">
+                    <p class="text-xs text-muted-foreground flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                        Your data is secure and encrypted
+                    </p>
+                    <div class="flex items-center space-x-2">
+                        {% if is_detail_view %}
+                            {% if update_url %}
+                            <a href="{{ update_url }}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                                Edit Location
+                            </a>
+                            {% endif %}
+                            {% if delete_url %}
+                            <a href="{{ delete_url }}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 px-4 py-2">
+                                Delete
+                            </a>
+                            {% endif %}
+                        {% else %}
+                            <button type="button" onclick="this.form.reset(); initializeMap();" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                                Reset
+                            </button>
+                            <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                                {% if form.instance.pk %}Update Location{% else %}Create Location{% endif %}
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<style>
+    /* Number input styling */
+    input[type="number"] {
+        -moz-appearance: textfield;
+    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Location status styling */
+    .location-status-loading {
+        color: hsl(var(--primary));
+    }
+    .location-status-success {
+        color: #10B981;
+    }
+    .location-status-error {
+        color: hsl(var(--destructive));
+    }
+
+    /* Leaflet map styling to match theme */
+    .leaflet-container {
+        background: hsl(var(--background));
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+    let map, marker, circle;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeMap();
+    });
+    
+    function initializeMap() {
+        const locationStatus = document.getElementById('location-status');
+        const latField = document.getElementById('id_latitude');
+        const lngField = document.getElementById('id_longitude');
+        const radiusField = document.getElementById('id_radius');
+        
+        if (!latField || !lngField) {
+            console.warn('Latitude or longitude fields not found');
+            return;
+        }
+        
+        // Get initial values
+        let lat = parseFloat(latField.value) || 23.8103;
+        let lng = parseFloat(lngField.value) || 90.4125;
+        let radius = parseFloat(radiusField ? radiusField.value : 1) || 1;
+        
+        // Clear existing map
+        if (map) {
+            map.remove();
+        }
+        
+        // Initialize map
+        map = L.map('map').setView([lat, lng], 13);
+        
+        // Add tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // Add marker and circle
+        updateMapMarker(lat, lng, radius);
+        
+        {% if not is_detail_view %}
+        // Add click event to map
+        map.on('click', function(e) {
+            const clickedLat = e.latlng.lat;
+            const clickedLng = e.latlng.lng;
+            
+            latField.value = clickedLat.toFixed(8);
+            lngField.value = clickedLng.toFixed(8);
+            
+            updateMapMarker(clickedLat, clickedLng, radius);
+            showToast('Location updated on map', 'success', 2000);
+        });
+        
+        // Add input event listeners
+        latField.addEventListener('input', updateMapFromForm);
+        lngField.addEventListener('input', updateMapFromForm);
+        if (radiusField) {
+            radiusField.addEventListener('input', updateMapFromForm);
+        }
+        
+        // Current location button
+        const getCurrentLocationBtn = document.getElementById('get-current-location');
+        if (getCurrentLocationBtn) {
+            getCurrentLocationBtn.addEventListener('click', getCurrentLocation);
+        }
+        
+        // Auto-request location for new forms
+        if (!latField.value && !lngField.value) {
+            getCurrentLocation();
+        }
+        {% endif %}
+    }
+    
+    function updateMapMarker(lat, lng, radius) {
+        if (marker) map.removeLayer(marker);
+        if (circle) map.removeLayer(circle);
+        
+        marker = L.marker([lat, lng]).addTo(map);
+        marker.bindPopup("Location: " + lat.toFixed(6) + ", " + lng.toFixed(6)).openPopup();
+        
+        circle = L.circle([lat, lng], {
+            radius: radius * 1000,
+            color: 'hsl(var(--primary))',
+            fillColor: 'hsl(var(--primary))',
+            fillOpacity: 0.2,
+            weight: 2
+        }).addTo(map);
+        
+        map.setView([lat, lng], 13);
+    }
+    
+    function updateMapFromForm() {
+        const lat = parseFloat(document.getElementById('id_latitude').value) || 0;
+        const lng = parseFloat(document.getElementById('id_longitude').value) || 0;
+        const radius = parseFloat(document.getElementById('id_radius').value) || 0.01;
+        
+        updateMapMarker(lat, lng, radius);
+    }
+    
+    function getCurrentLocation() {
+        const locationStatus = document.getElementById('location-status');
+        const latField = document.getElementById('id_latitude');
+        const lngField = document.getElementById('id_longitude');
+        const radiusField = document.getElementById('id_radius');
+        
+        if (!navigator.geolocation) {
+            if (locationStatus) {
+                locationStatus.className = 'location-status-error text-sm';
+                locationStatus.textContent = 'Geolocation is not supported by this browser.';
+            }
+            showToast('Geolocation not supported', 'error');
+            return;
+        }
+        
+        if (locationStatus) {
+            locationStatus.className = 'location-status-loading text-sm';
+            locationStatus.textContent = 'Requesting location access...';
+        }
+        
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const radius = parseFloat(radiusField ? radiusField.value : 1) || 1;
+                
+                latField.value = lat.toFixed(8);
+                lngField.value = lng.toFixed(8);
+                
+                updateMapMarker(lat, lng, radius);
+                
+                if (locationStatus) {
+                    locationStatus.className = 'location-status-success text-sm';
+                    locationStatus.textContent = 'Current location loaded successfully!';
+                    setTimeout(() => {
+                        locationStatus.textContent = '';
+                        locationStatus.className = '';
+                    }, 3000);
+                }
+                
+                showToast('Location detected successfully!', 'success');
+            },
+            function(error) {
+                let errorMessage = 'Unable to get location';
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage = 'Location access denied. Please enable location services.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage = 'Location information unavailable.';
+                        break;
+                    case error.TIMEOUT:
+                        errorMessage = 'Location request timed out.';
+                        break;
+                }
+                
+                if (locationStatus) {
+                    locationStatus.className = 'location-status-error text-sm';
+                    locationStatus.textContent = errorMessage;
+                    setTimeout(() => {
+                        locationStatus.textContent = '';
+                        locationStatus.className = '';
+                    }, 5000);
+                }
+                
+                showToast(errorMessage, 'error');
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    }
+</script>
+{% endblock %}
