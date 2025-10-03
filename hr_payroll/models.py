@@ -580,7 +580,30 @@ class Employee(models.Model):
     overtime_rate = models.DecimalField(_("Overtime Rate (per hour)"), max_digits=8, decimal_places=2, default=0.00)
     per_hour_rate = models.DecimalField(_("Per Hour Rate"), max_digits=8, decimal_places=2, default=30.00)  # NEW FIELD
     expected_working_hours = models.FloatField(_("Expected Working Hours"), default=8.0)
-    
+    # Contact / Personal
+    contact_number = models.CharField(_("Contact Number"), max_length=20, blank=True, null=True, default="")
+    date_of_birth = models.DateField(_("Date of Birth"), blank=True, null=True)
+    joining_date = models.DateField(_("Joining Date"), blank=True, null=True)
+    nid = models.CharField(_("National ID"), max_length=30, blank=True, null=True, default="")
+    marital_status = models.CharField(_("Marital Status"), max_length=20, blank=True, null=True, default="")
+
+    # Payroll Common Fields
+    house_rent_allowance = models.DecimalField(_("House Rent Allowance"), max_digits=10, decimal_places=2, default=0.00)
+    medical_allowance = models.DecimalField(_("Medical Allowance"), max_digits=10, decimal_places=2, default=0.00)
+    conveyance_allowance = models.DecimalField(_("Conveyance Allowance"), max_digits=10, decimal_places=2, default=0.00)
+    food_allowance = models.DecimalField(_("Food Allowance"), max_digits=10, decimal_places=2, default=0.00)
+    attendance_bonus = models.DecimalField(_("Attendance Bonus"), max_digits=10, decimal_places=2, default=0.00)
+    festival_bonus = models.DecimalField(_("Festival Bonus"), max_digits=10, decimal_places=2, default=0.00)
+
+    # Deduction Common Fields
+    provident_fund = models.DecimalField(_("Provident Fund"), max_digits=10, decimal_places=2, default=0.00)
+    tax_deduction = models.DecimalField(_("Tax Deduction"), max_digits=10, decimal_places=2, default=0.00)
+    loan_deduction = models.DecimalField(_("Loan Deduction"), max_digits=10, decimal_places=2, default=0.00)
+
+    # Extra Payroll Info
+    bank_account_no = models.CharField(_("Bank Account No"), max_length=50, blank=True, null=True, default="")
+    payment_method = models.CharField(_("Payment Method"), max_length=20, default="Cash")
+
     overtime_grace_minutes = models.IntegerField(_("Overtime Grace Minutes"), default=15)
     is_active = models.BooleanField(_("Active"), default=True)
     created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
@@ -876,6 +899,13 @@ class AttendanceLog(models.Model):
         blank=True,
         help_text=_("Distance from location center in kilometers")
     )
+
+    location_name = models.TextField(
+        _("Location Name"), 
+        blank=True, 
+        null=True,
+        help_text=_("Location device information")
+    )    
     device_info = models.TextField(
         _("Device Info"), 
         blank=True, 

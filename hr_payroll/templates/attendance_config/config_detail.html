@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}Configuration Detail - {{ block.super }}{% endblock %}
+{% block page_title %}Configuration Detail{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-foreground">{{ config.name }}</h1>
+            <p class="text-sm text-muted-foreground">Created by {{ config.created_by.username }} on {{ config.created_at|date:"d M, Y" }}</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'zkteco:config_update' config.pk %}" class="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Edit</a>
+            <a href="{% url 'zkteco:config_delete' config.pk %}" class="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90">Delete</a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+         
+        <div class="rounded-lg border bg-card shadow-sm">
+            <div class="border-b bg-muted/50 px-4 py-3">
+                <h2 class="text-sm font-semibold text-foreground">Basic Information</h2>
+            </div>
+            <div class="p-4 space-y-2 text-sm">
+                <div class="flex justify-between"><span class="text-muted-foreground">Name</span><span class="font-medium">{{ config.name }}</span></div>
+                <div class="flex justify-between"><span class="text-muted-foreground">Company</span><span class="font-medium">{{ config.company.name|default:'-' }}</span></div>
+                <div class="flex justify-between">
+                    <span class="text-muted-foreground">Status</span>
+                    <span class="font-medium">
+                        {% if config.is_active %}
+                            <span class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-full border border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300">
+                                Active
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-full border border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-900/20 dark:text-gray-300">
+                                Inactive
+                            </span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+       
+        <div class="rounded-lg border bg-card shadow-sm">
+            <div class="border-b bg-muted/50 px-4 py-3">
+                <h2 class="text-sm font-semibold text-foreground">Weekend Days</h2>
+            </div>
+            <div class="p-4 text-sm text-foreground">
+                <p class="font-medium">{{ weekend_days_text }}</p>
+            </div>
+        </div>
+
+        
+        <div class="rounded-lg border bg-card shadow-sm">
+            <div class="border-b bg-muted/50 px-4 py-3">
+                <h2 class="text-sm font-semibold text-foreground">Shift Configuration</h2>
+            </div>
+            <div class="p-4 space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-muted-foreground">Dynamic Shift</span>
+                    <span class="font-medium">
+                        {% if config.dynamic_shift_enabled %}
+                            <span class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-full border border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300">
+                                Enabled
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-full border border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-900/20 dark:text-gray-300">
+                                Disabled
+                            </span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="flex justify-between"><span class="text-muted-foreground">Fallback Shift</span><span class="font-medium">{{ config.dynamic_shift_fallback_shift.name|default:'-' }}</span></div>
+            </div>
+        </div>
+
+       
+        <div class="rounded-lg border bg-card shadow-sm">
+            <div class="border-b bg-muted/50 px-4 py-3">
+                <h2 class="text-sm font-semibold text-foreground">Timing Settings</h2>
+            </div>
+            <div class="p-4 space-y-2 text-sm">
+                <div class="flex justify-between"><span class="text-muted-foreground">Grace Period</span><span class="font-medium">{{ config.grace_period_minutes }} minutes</span></div>
+                <div class="flex justify-between"><span class="text-muted-foreground">Half Day Threshold</span><span class="font-medium">{{ config.half_day_threshold_minutes }} minutes</span></div>
+                <div class="flex justify-between"><span class="text-muted-foreground">Overtime Threshold</span><span class="font-medium">{{ config.overtime_threshold_minutes }} minutes</span></div>
+                <div class="flex justify-between"><span class="text-muted-foreground">Early Departure Threshold</span><span class="font-medium">{{ config.early_departure_threshold_minutes }} minutes</span></div>
+            </div>
+        </div>
+
+        
+        <div class="rounded-lg border bg-card shadow-sm">
+            <div class="border-b bg-muted/50 px-4 py-3">
+                <h2 class="text-sm font-semibold text-foreground">Attendance Rules</h2>
+            </div>
+            <div class="p-4 space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-muted-foreground">Mark Absent if No Punch</span>
+                    <span class="font-medium">
+                        {% if config.mark_absent_if_no_punch %}
+                            <span class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-full border border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300">
+                                Yes
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-full border border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-900/20 dark:text-gray-300">
+                                No
+                            </span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-muted-foreground">Mark Late if After Grace</span>
+                    <span class="font-medium">
+                        {% if config.mark_late_if_after_grace %}
+                            <span class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-full border border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300">
+                                Yes
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-full border border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-900/20 dark:text-gray-300">
+                                No
+                            </span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-muted-foreground">Mark Half Day if Below Threshold</span>
+                    <span class="font-medium">
+                        {% if config.mark_half_day_if_below_threshold %}
+                            <span class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-full border border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300">
+                                Yes
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-full border border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-900/20 dark:text-gray-300">
+                                No
+                            </span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+    
+        <div class="rounded-lg border bg-card shadow-sm">
+            <div class="border-b bg-muted/50 px-4 py-3">
+                <h2 class="text-sm font-semibold text-foreground">Additional Settings</h2>
+            </div>
+            <div class="p-4 space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-muted-foreground">Calculate Overtime</span>
+                    <span class="font-medium">
+                        {% if config.calculate_overtime %}
+                            <span class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-full border border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300">
+                                Yes
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-full border border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-900/20 dark:text-gray-300">
+                                No
+                            </span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-muted-foreground">Mark Early Departure</span>
+                    <span class="font-medium">
+                        {% if config.mark_early_departure %}
+                            <span class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-full border border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300">
+                                Yes
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-full border border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-900/20 dark:text-gray-300">
+                                No
+                            </span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <a href="{% url 'zkteco:config_list' %}" class="inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-accent">Back to list</a>
+    </div>
+</div>
+{% endblock %}

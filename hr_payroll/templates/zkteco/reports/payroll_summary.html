@@ -1,0 +1,387 @@
+{% extends 'base.html' %}
+
+{% block title %}পে-রোল সামারি রিপোর্ট{% endblock %}
+{% block page_title %}পে-রোল সামারি রিপোর্ট{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between print:hidden">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-foreground">পে-রোল সামারি প্রতিবেদন</h1>
+            <p class="text-muted-foreground mt-1">বিস্তারিত স্যালারি শিট - বেসিক স্যালারি, ভাতা, ওভারটাইম, ডিডাকশন এবং নেট পে</p>
+        </div>
+        <button onclick="printReport()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-primary-foreground bg-primary hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all">
+            <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+            </svg>
+            প্রিন্ট করুন
+        </button>
+    </div>
+
+    <!-- Filter Form Card -->
+    <div class="bg-card rounded-lg shadow-sm border border-border p-4 print:hidden">
+        <form method="GET" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                    <label for="start_date" class="block text-sm font-medium text-foreground mb-1">শুরুর তারিখ</label>
+                    <input type="date" name="start_date" id="start_date" value="{{ start_date|date:'Y-m-d' }}" 
+                           class="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all">
+                </div>
+                
+                <div>
+                    <label for="end_date" class="block text-sm font-medium text-foreground mb-1">শেষের তারিখ</label>
+                    <input type="date" name="end_date" id="end_date" value="{{ end_date|date:'Y-m-d' }}" 
+                           class="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all">
+                </div>
+
+                <div>
+                    <label for="department" class="block text-sm font-medium text-foreground mb-1">বিভাগ</label>
+                    <select name="department" id="department"
+                            class="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all">
+                        <option value="">সকল বিভাগ</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept.id }}" {% if dept.id|stringformat:"s" == selected_department %}selected{% endif %}>{{ dept.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="flex items-end">
+                    <button type="submit" class="w-full inline-flex justify-center items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                        </svg>
+                        ফিল্টার করুন
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Summary Cards -->
+    {% if summary %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 print:hidden">
+        <div class="bg-card rounded-lg shadow-sm border border-border p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-muted-foreground">মোট কর্মচারী</p>
+                    <p class="text-2xl font-bold text-foreground mt-1">{{ summary.total_employees }}</p>
+                </div>
+                <div class="p-3 bg-primary/10 rounded-lg">
+                    <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-card rounded-lg shadow-sm border border-border p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-muted-foreground">মোট বেসিক স্যালারি</p>
+                    <p class="text-2xl font-bold text-foreground mt-1">৳{{ summary.total_basic_salary|floatformat:2 }}</p>
+                </div>
+                <div class="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-card rounded-lg shadow-sm border border-border p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-muted-foreground">মোট ভাতা</p>
+                    <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">
+                        ৳{{ summary.total_house_rent|add:summary.total_medical|add:summary.total_conveyance|add:summary.total_food|add:summary.total_attendance_bonus|add:summary.total_festival_bonus|floatformat:2 }}
+                    </p>
+                </div>
+                <div class="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                    <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-card rounded-lg shadow-sm border border-border p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-muted-foreground">মোট ওভারটাইম পে</p>
+                    <p class="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">৳{{ summary.total_overtime_pay|floatformat:2 }}</p>
+                </div>
+                <div class="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                    <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-card rounded-lg shadow-sm border border-border p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-muted-foreground">মোট ডিডাকশন</p>
+                    <p class="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">৳{{ summary.total_deductions|floatformat:2 }}</p>
+                </div>
+                <div class="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                    <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-card rounded-lg shadow-sm border border-border p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-muted-foreground">মোট নেট পে</p>
+                    <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">৳{{ summary.total_net_pay|floatformat:2 }}</p>
+                </div>
+                <div class="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                    <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Report Table Card -->
+    <div id="printable-area" class="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
+        <!-- Print Header -->
+        <div id="print-header" class="hidden print:block p-6 text-center border-b border-border">
+            <h1 class="text-2xl font-bold text-foreground mb-2">{{ company.name }}</h1>
+            <h2 class="text-xl font-semibold text-muted-foreground mb-1">পে-রোল সামারি প্রতিবেদন</h2>
+            <p class="text-sm text-muted-foreground">{{ start_date|date:"d F, Y" }} থেকে {{ end_date|date:"d F, Y" }}</p>
+            <p class="text-xs text-muted-foreground mt-2">জেনারেটেড: {% now "d F, Y H:i" %}</p>
+        </div>
+
+        {% if report_data %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-border">
+                    <thead class="bg-muted/50">
+                        <tr>
+                            <th rowspan="2" class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">কর্মচারী</th>
+                            <th colspan="6" class="px-3 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border">স্যালারি ও ভাতা</th>
+                            <th colspan="4" class="px-3 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border">কাজের সময় ও আয়</th>
+                            <th colspan="4" class="px-3 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border">ডিডাকশন</th>
+                            <th rowspan="2" class="px-3 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">নেট পে</th>
+                        </tr>
+                        <tr>
+                            <!-- Salary & Allowances -->
+                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">বেসিক</th>
+                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">বাড়ি ভাড়া</th>
+                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">মেডিকেল</th>
+                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">যাতায়াত</th>
+                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">খাদ্য</th>
+                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">বোনাস</th>
+                            
+                            <!-- Work & Earnings -->
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">কাজের ঘণ্টা</th>
+                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">ঘণ্টাভিত্তিক</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">ওভারটাইম</th>
+                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">ওভারটাইম পে</th>
+                            
+                            <!-- Deductions -->
+                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">পিএফ</th>
+                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">ট্যাক্স</th>
+                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">লোন</th>
+                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">অনুপস্থিতি</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-border">
+                        {% for data in report_data %}
+                            <tr class="hover:bg-accent/50 transition-colors">
+                                <!-- Employee Info -->
+                                <td class="px-3 py-3 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-foreground">{{ data.employee_id }}</div>
+                                    <div class="text-xs text-muted-foreground">{{ data.employee_name }}</div>
+                                    <div class="text-xs text-muted-foreground">{{ data.department }}</div>
+                                </td>
+                                
+                                <!-- Salary & Allowances -->
+                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-foreground">৳{{ data.basic_salary|floatformat:0 }}</td>
+                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-foreground">৳{{ data.house_rent|floatformat:0 }}</td>
+                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-foreground">৳{{ data.medical|floatformat:0 }}</td>
+                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-foreground">৳{{ data.conveyance|floatformat:0 }}</td>
+                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-foreground">৳{{ data.food|floatformat:0 }}</td>
+                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-foreground">
+                                    ৳{{ data.attendance_bonus|add:data.festival_bonus|floatformat:0 }}
+                                </td>
+                                
+                                <!-- Work & Earnings -->
+                                <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-foreground">
+                                    {{ data.work_hours|floatformat:1 }}
+                                    <div class="text-xs text-muted-foreground">
+                                        ({{ data.present_days }}/{{ data.working_days_in_period }} দিন)
+                                    </div>
+                                </td>
+                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-orange-600 dark:text-orange-400">
+                                    ৳{{ data.hourly_pay|floatformat:0 }}
+                                </td>
+                                <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-foreground">
+                                    {{ data.overtime_hours|floatformat:1 }}
+                                </td>
+                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-purple-600 dark:text-purple-400">
+                                    ৳{{ data.overtime_pay|floatformat:0 }}
+                                </td>
+                                
+                                <!-- Deductions -->
+                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-red-600 dark:text-red-400">
+                                    ৳{{ data.provident_fund|floatformat:0 }}
+                                </td>
+                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-red-600 dark:text-red-400">
+                                    ৳{{ data.tax_deduction|floatformat:0 }}
+                                </td>
+                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-red-600 dark:text-red-400">
+                                    ৳{{ data.loan_deduction|floatformat:0 }}
+                                </td>
+                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-red-600 dark:text-red-400">
+                                    <div>৳{{ data.absence_deduction|floatformat:0 }}</div>
+                                    <div class="text-xs text-muted-foreground">({{ data.absent_days }} দিন)</div>
+                                </td>
+                                
+                                <!-- Net Pay -->
+                                <td class="px-3 py-3 whitespace-nowrap text-sm text-right font-bold text-green-600 dark:text-green-400">
+                                    ৳{{ data.net_pay|floatformat:0 }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="bg-muted/50 font-bold">
+                        <tr>
+                            <td class="px-3 py-3 text-sm text-foreground">মোট</td>
+                            
+                            <!-- Salary & Allowances -->
+                            <td class="px-2 py-3 text-sm text-right text-foreground">৳{{ summary.total_basic_salary|floatformat:0 }}</td>
+                            <td class="px-2 py-3 text-sm text-right text-foreground">৳{{ summary.total_house_rent|floatformat:0 }}</td>
+                            <td class="px-2 py-3 text-sm text-right text-foreground">৳{{ summary.total_medical|floatformat:0 }}</td>
+                            <td class="px-2 py-3 text-sm text-right text-foreground">৳{{ summary.total_conveyance|floatformat:0 }}</td>
+                            <td class="px-2 py-3 text-sm text-right text-foreground">৳{{ summary.total_food|floatformat:0 }}</td>
+                            <td class="px-2 py-3 text-sm text-right text-foreground">
+                                ৳{{ summary.total_attendance_bonus|add:summary.total_festival_bonus|floatformat:0 }}
+                            </td>
+                            
+                            <!-- Work & Earnings -->
+                            <td class="px-2 py-3 text-sm text-center text-foreground">{{ summary.total_work_hours|floatformat:1 }}</td>
+                            <td class="px-2 py-3 text-sm text-right text-orange-600 dark:text-orange-400">৳{{ summary.total_hourly_pay|floatformat:0 }}</td>
+                            <td class="px-2 py-3 text-sm text-center text-foreground">{{ summary.total_overtime_hours|floatformat:1 }}</td>
+                            <td class="px-2 py-3 text-sm text-right text-purple-600 dark:text-purple-400">৳{{ summary.total_overtime_pay|floatformat:0 }}</td>
+                            
+                            <!-- Deductions -->
+                            <td class="px-2 py-3 text-sm text-right text-red-600 dark:text-red-400">৳{{ summary.total_provident_fund|floatformat:0 }}</td>
+                            <td class="px-2 py-3 text-sm text-right text-red-600 dark:text-red-400">৳{{ summary.total_tax_deduction|floatformat:0 }}</td>
+                            <td class="px-2 py-3 text-sm text-right text-red-600 dark:text-red-400">৳{{ summary.total_loan_deduction|floatformat:0 }}</td>
+                            <td class="px-2 py-3 text-sm text-right text-red-600 dark:text-red-400">৳{{ summary.total_absence_deduction|floatformat:0 }}</td>
+                            
+                            <!-- Net Pay -->
+                            <td class="px-3 py-3 text-sm text-right text-green-600 dark:text-green-400">৳{{ summary.total_net_pay|floatformat:0 }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        {% else %}
+            <div class="p-8 text-center">
+                <svg class="mx-auto h-12 w-12 text-muted-foreground mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <p class="text-muted-foreground text-sm">নির্বাচিত মানদণ্ডের জন্য কোনো পে-রোল রেকর্ড পাওয়া যায়নি।</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    @media print {
+        @page {
+            size: A4 landscape;
+            margin: 0.5cm;
+        }
+        
+        body {
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+            font-size: 10px;
+        }
+        
+        .print\:hidden {
+            display: none !important;
+        }
+        
+        .print\:block {
+            display: block !important;
+        }
+        
+        #printable-area {
+            box-shadow: none !important;
+            border: none !important;
+        }
+        
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 8px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 4px 6px;
+        }
+        
+        th {
+            background-color: #f3f4f6 !important;
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        
+        tfoot tr {
+            background-color: #f3f4f6 !important;
+            font-weight: bold;
+        }
+        
+        #print-header {
+            display: block !important;
+            text-align: center;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        #print-header h1 {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        
+        #print-header h2 {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 2px;
+            color: #6b7280;
+        }
+        
+        #print-header p {
+            font-size: 9px;
+            color: #9ca3af;
+        }
+    }
+</style>
+
+<script>
+function printReport() {
+    const printContent = document.getElementById('printable-area').innerHTML;
+    const originalContent = document.body.innerHTML;
+    
+    document.body.innerHTML = printContent;
+    window.print();
+    document.body.innerHTML = originalContent;
+    window.location.reload();
+}
+</script>
+{% endblock %}

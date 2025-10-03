@@ -1,426 +1,406 @@
 {% extends 'base.html' %}
 
 {% block title %}{{ employee.name }} - Hourly Attendance Detail - {{ block.super }}{% endblock %}
+{% block page_title %}Hourly Attendance Detail{% endblock %}
 
 {% block content %}
-<div class="space-y-4 animate-fade-in-up">
-  <!-- Compact Header with Breadcrumb -->
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-    <div>
-      <!-- Breadcrumb -->
-      <nav class="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-        <a href="{% url 'zkteco:hourly_attendance_report' %}" class="hover:text-foreground transition-colors">Hourly Reports</a>
-        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-        </svg>
-        <span class="text-foreground">{{ employee.name }}</span>
-      </nav>
-      
-      <h1 class="text-xl font-bold text-heading">{{ employee.name }}</h1>
-      <p class="text-xs text-muted-foreground mt-0.5">{{ month_name }} - Detailed daily attendance breakdown</p>
-    </div>
-    <div class="flex items-center gap-2">
-      <button onclick="window.print()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg focus-ring">
-        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-        </svg>
-        Print
-      </button>
-      <a href="{% url 'zkteco:hourly_attendance_report' %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-accent-foreground bg-accent hover:bg-accent/80 rounded-lg transition-all duration-200 focus-ring">
-        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-        </svg>
-        Back to Report
-      </a>
-    </div>
-  </div>
-
-  <!-- Employee Info Card -->
-  <div class="glass-effect rounded-lg p-4 card-elevated animate-scale-in">
-    <div class="flex items-start gap-4">
-      <div class="relative">
-        <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-          <span class="text-white font-bold text-lg">{{ employee.name|slice:":1"|upper }}</span>
-        </div>
-        <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-4 border-card"></div>
-      </div>
-      <div class="flex-1 min-w-0">
-        <div class="flex items-start justify-between">
-          <div>
-            <h2 class="text-lg font-bold text-foreground">{{ employee.name }}</h2>
-            <div class="flex items-center gap-4 text-xs text-muted-foreground mt-1">
-              <span class="font-mono">ID: {{ employee.employee_id }}</span>
-              {% if employee.department %}
-                <span>{{ employee.department.name }}</span>
-              {% endif %}
-              {% if employee.designation %}
-                <span>{{ employee.designation.name }}</span>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Summary Statistics -->
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-    <div class="glass-effect rounded-lg p-3 card-elevated animate-scale-in">
-      <div class="flex items-center justify-between">
+<div class="space-y-6">
+    <!-- Header Section -->
+    <div class="flex items-center justify-between">
         <div>
-          <p class="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Total Hours</p>
-          <p class="text-lg font-bold text-foreground">{{ monthly_data.total_hours|floatformat:1 }}h</p>
-        </div>
-        <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-md">
-          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12,6 12,12 16,14"></polyline>
-          </svg>
-        </div>
-      </div>
-    </div>
-
-    <div class="glass-effect rounded-lg p-3 card-elevated animate-scale-in">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Present Days</p>
-          <p class="text-lg font-bold text-foreground">{{ monthly_data.present_days }}/{{ monthly_data.total_days }}</p>
-        </div>
-        <div class="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-md">
-          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-        </div>
-      </div>
-    </div>
-
-    <div class="glass-effect rounded-lg p-3 card-elevated animate-scale-in">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Avg Hours/Day</p>
-          <p class="text-lg font-bold text-foreground">{{ statistics.avg_hours_per_day|floatformat:1 }}h</p>
-        </div>
-        <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
-          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-          </svg>
-        </div>
-      </div>
-    </div>
-
-    <div class="glass-effect rounded-lg p-3 card-elevated animate-scale-in">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Attendance Rate</p>
-          <p class="text-lg font-bold text-foreground">{{ statistics.attendance_percentage }}%</p>
-        </div>
-        <div class="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center shadow-md">
-          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-          </svg>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Daily Attendance Calendar/Table -->
-  <div class="glass-effect rounded-lg card-elevated">
-    <div class="px-4 py-3 border-b border-border">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <div class="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-md flex items-center justify-center">
-            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-            </svg>
-          </div>
-          <div>
-            <h3 class="text-sm font-semibold text-heading">Daily Attendance Breakdown</h3>
-            <p class="text-xs text-muted-foreground">{{ month_name }} daily work hours and punch details</p>
-          </div>
+            <nav class="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                <a href="{% url 'zkteco:hourly_attendance_report' %}" class="hover:text-foreground transition-colors">Hourly Reports</a>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+                <span class="text-foreground font-medium">{{ employee.name }}</span>
+            </nav>
+            <h1 class="text-3xl font-bold tracking-tight text-foreground">{{ employee.name }}</h1>
+            <p class="text-muted-foreground">{{ month_name }} - Detailed daily attendance breakdown</p>
         </div>
         <div class="flex items-center gap-2">
-          <!-- Legend -->
-          <div class="flex items-center gap-3 text-xs">
-            <div class="flex items-center gap-1">
-              <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span class="text-muted-foreground">Present</span>
-            </div>
-            <div class="flex items-center gap-1">
-              <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
-              <span class="text-muted-foreground">Absent</span>
-            </div>
-          </div>
+            <button onclick="window.print()" class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                </svg>
+                Print Report
+            </button>
+            <a href="{% url 'zkteco:hourly_attendance_report' %}" class="inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-accent">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back to Report
+            </a>
         </div>
-      </div>
     </div>
 
-    <div class="overflow-x-auto">
-      <table class="min-w-full">
-        <thead class="bg-muted/50">
-          <tr class="border-b border-border">
-            <th class="px-4 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wide">Date</th>
-            <th class="px-4 py-3 text-center text-xs font-medium text-foreground uppercase tracking-wide">Day</th>
-            <th class="px-4 py-3 text-center text-xs font-medium text-foreground uppercase tracking-wide">First Punch</th>
-            <th class="px-4 py-3 text-center text-xs font-medium text-foreground uppercase tracking-wide">Last Punch</th>
-            <th class="px-4 py-3 text-center text-xs font-medium text-foreground uppercase tracking-wide">Total Punches</th>
-            <th class="px-4 py-3 text-center text-xs font-medium text-foreground uppercase tracking-wide">Work Hours</th>
-            <th class="px-4 py-3 text-center text-xs font-medium text-foreground uppercase tracking-wide">Status</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-border">
-          {% for date, day_data in monthly_data.daily_data.items %}
-          <tr class="hover:bg-accent/30 transition-all duration-200 group">
-            <td class="px-4 py-3">
-              <div class="flex items-center gap-2">
+    <!-- Employee Info Card -->
+    <div class="rounded-lg border bg-card shadow-sm">
+        <div class="p-6">
+            <div class="flex items-start gap-4">
                 <div class="relative">
-                  {% if day_data.is_present %}
-                  <div class="w-6 h-6 bg-green-100 rounded-md flex items-center justify-center">
-                    <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                  </div>
-                  {% else %}
-                  <div class="w-6 h-6 bg-gray-100 rounded-md flex items-center justify-center">
-                    <div class="w-3 h-3 bg-gray-300 rounded-full"></div>
-                  </div>
-                  {% endif %}
+                    <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-lg">
+                        <span class="text-white font-bold text-2xl">{{ employee.name|slice:":1"|upper }}</span>
+                    </div>
+                    <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-4 border-card"></div>
                 </div>
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-xl font-bold text-foreground">{{ employee.name }}</h2>
+                    <div class="flex items-center gap-6 text-sm text-muted-foreground mt-2">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
+                            </svg>
+                            <span class="font-mono">ID: {{ employee.employee_id }}</span>
+                        </div>
+                        {% if employee.department %}
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                            </svg>
+                            <span>{{ employee.department.name }}</span>
+                        </div>
+                        {% endif %}
+                        {% if employee.designation %}
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                            <span>{{ employee.designation.name }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="relative overflow-hidden p-3 rounded-lg border border-border bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/20 dark:to-indigo-900/20">
+            <div class="flex items-center justify-between">
                 <div>
-                  <div class="font-medium text-foreground text-xs">{{ date|date:"M d" }}</div>
-                  <div class="text-xs text-muted-foreground">{{ date|date:"Y" }}</div>
+                    <p class="text-xs font-medium text-muted-foreground">Total Hours</p>
+                    <p class="text-xl font-bold text-foreground">{{ monthly_data.total_hours|floatformat:1 }}h</p>
                 </div>
-              </div>
-            </td>
-            
-            <td class="px-4 py-3 text-center">
-              <div class="text-xs font-medium text-foreground">{{ date|date:"D" }}</div>
-            </td>
-            
-            <td class="px-4 py-3 text-center">
-              {% if day_data.first_punch %}
-              <div class="text-xs font-mono text-foreground">{{ day_data.first_punch|date:"H:i:s" }}</div>
-              <div class="text-xs text-muted-foreground">{{ day_data.first_punch|date:"M d" }}</div>
-              {% else %}
-              <span class="text-xs text-muted-foreground">--:--:--</span>
-              {% endif %}
-            </td>
-            
-            <td class="px-4 py-3 text-center">
-              {% if day_data.last_punch %}
-              <div class="text-xs font-mono text-foreground">{{ day_data.last_punch|date:"H:i:s" }}</div>
-              <div class="text-xs text-muted-foreground">{{ day_data.last_punch|date:"M d" }}</div>
-              {% else %}
-              <span class="text-xs text-muted-foreground">--:--:--</span>
-              {% endif %}
-            </td>
-            
-            <td class="px-4 py-3 text-center">
-              <div class="inline-flex items-center justify-center w-6 h-6 text-xs font-bold {% if day_data.punch_count > 0 %}bg-blue-100 text-blue-700{% else %}bg-gray-100 text-gray-500{% endif %} rounded-full">
-                {{ day_data.punch_count }}
-              </div>
-              {% if day_data.punch_count|divisibleby:"2" %}{% else %}
-              <div class="text-xs text-orange-600 mt-0.5">Odd punches</div>
-              {% endif %}
-            </td>
-            
-            <td class="px-4 py-3 text-center">
-              <div class="font-bold text-foreground text-sm">
-                {% if day_data.work_hours > 0 %}
-                  {{ day_data.work_hours|floatformat:1 }}h
-                {% else %}
-                  0.0h
-                {% endif %}
-              </div>
-              {% if day_data.work_hours > 0 %}
-              <div class="w-12 h-1 bg-muted rounded-full overflow-hidden mx-auto mt-1">
-                {% widthratio day_data.work_hours 12 100 as hour_percentage %}
-                <div class="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full transition-all duration-500" 
-                     style="width: {% if hour_percentage > 100 %}100{% else %}{{ hour_percentage }}{% endif %}%"></div>
-              </div>
-              {% endif %}
-            </td>
-            
-            <td class="px-4 py-3 text-center">
-              {% if day_data.is_present %}
-                {% if day_data.work_hours >= 8 %}
-                <div class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded-full border border-green-200">
-                  <div class="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                  Full Day
+                <div class="w-8 h-8 bg-blue-500/20 dark:bg-blue-400/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12,6 12,12 16,14"></polyline>
+                    </svg>
                 </div>
-                {% elif day_data.work_hours >= 4 %}
-                <div class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full border border-yellow-200">
-                  <div class="w-1.5 h-1.5 bg-yellow-500 rounded-full"></div>
-                  Half Day
+            </div>
+        </div>
+
+        <div class="relative overflow-hidden p-3 rounded-lg border border-border bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950/20 dark:to-emerald-900/20">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-muted-foreground">Present Days</p>
+                    <p class="text-xl font-bold text-foreground">{{ monthly_data.present_days }}/{{ monthly_data.total_days }}</p>
                 </div>
-                {% else %}
-                <div class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-orange-100 text-orange-700 rounded-full border border-orange-200">
-                  <div class="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>
-                  Short Day
+                <div class="w-8 h-8 bg-green-500/20 dark:bg-green-400/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
                 </div>
-                {% endif %}
-              {% else %}
-              <div class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full border border-gray-200">
-                <div class="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
-                Absent
-              </div>
-              {% endif %}
-            </td>
-          </tr>
-          
-          <!-- Expandable punch details row -->
-          {% if day_data.punches %}
-          <tr class="punch-details hidden bg-accent/10">
-            <td colspan="7" class="px-4 py-2">
-              <div class="text-xs">
-                <div class="font-medium text-foreground mb-2">Punch Details for {{ date|date:"M d, Y" }}:</div>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  {% for punch in day_data.punches %}
-                  <div class="flex items-center gap-2 p-2 bg-card rounded-md border border-border">
-                    <div class="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                      <span class="text-white text-xs font-bold">{{ forloop.counter }}</span>
+            </div>
+        </div>
+
+        <div class="relative overflow-hidden p-3 rounded-lg border border-border bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-950/20 dark:to-violet-900/20">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-muted-foreground">Avg Hours/Day</p>
+                    <p class="text-xl font-bold text-foreground">{{ statistics.avg_hours_per_day|floatformat:1 }}h</p>
+                </div>
+                <div class="w-8 h-8 bg-purple-500/20 dark:bg-purple-400/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="relative overflow-hidden p-3 rounded-lg border border-border bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-950/20 dark:to-amber-900/20">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-muted-foreground">Attendance Rate</p>
+                    <p class="text-xl font-bold text-foreground">{{ statistics.attendance_percentage }}%</p>
+                </div>
+                <div class="w-8 h-8 bg-orange-500/20 dark:bg-orange-400/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Attendance Table -->
+    <div class="rounded-lg border bg-card shadow-sm">
+        <div class="border-b bg-muted/50 px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-md flex items-center justify-center">
+                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
                     </div>
                     <div>
-                      <div class="font-mono text-foreground">{{ punch.timestamp|date:"H:i:s" }}</div>
-                      <div class="text-muted-foreground">{{ punch.device }}</div>
+                        <h3 class="text-sm font-semibold text-foreground">Daily Attendance Breakdown</h3>
+                        <p class="text-xs text-muted-foreground">{{ month_name }} daily work hours and punch details</p>
                     </div>
-                  </div>
-                  {% endfor %}
                 </div>
-              </div>
-            </td>
-          </tr>
-          {% endif %}
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
+                <div class="flex items-center gap-3 text-xs">
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span class="text-muted-foreground">Present</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
+                        <span class="text-muted-foreground">Absent</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-  <!-- Additional Statistics -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div class="glass-effect rounded-lg p-4 card-elevated">
-      <h4 class="text-sm font-semibold text-heading mb-3">Work Pattern Analysis</h4>
-      <div class="space-y-3 text-xs">
-        <div class="flex justify-between items-center">
-          <span class="text-muted-foreground">Maximum hours in a day:</span>
-          <span class="font-bold text-foreground">{{ statistics.max_hours_day|floatformat:1 }}h</span>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="border-b bg-muted/30">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Date</th>
+                        <th class="px-6 py-3 text-center text-sm font-semibold text-foreground">Day</th>
+                        <th class="px-6 py-3 text-center text-sm font-semibold text-foreground">First Punch</th>
+                        <th class="px-6 py-3 text-center text-sm font-semibold text-foreground">Last Punch</th>
+                        <th class="px-6 py-3 text-center text-sm font-semibold text-foreground">Total Punches</th>
+                        <th class="px-6 py-3 text-center text-sm font-semibold text-foreground">Work Hours</th>
+                        <th class="px-6 py-3 text-center text-sm font-semibold text-foreground">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                    {% for date, day_data in monthly_data.daily_data.items %}
+                    <tr class="hover:bg-muted/50 transition-colors group cursor-pointer" onclick="this.nextElementSibling?.classList.toggle('hidden')">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                {% if day_data.is_present %}
+                                <div class="w-8 h-8 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
+                                    <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                </div>
+                                {% else %}
+                                <div class="w-8 h-8 bg-gray-100 dark:bg-gray-900/20 rounded-lg flex items-center justify-center">
+                                    <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <div class="font-medium text-foreground text-sm">{{ date|date:"M d" }}</div>
+                                    <div class="text-xs text-muted-foreground">{{ date|date:"Y" }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <td class="px-6 py-4 text-center">
+                            <div class="text-sm font-medium text-foreground">{{ date|date:"D" }}</div>
+                        </td>
+                        
+                        <td class="px-6 py-4 text-center">
+                            {% if day_data.first_punch %}
+                            <div class="text-sm font-mono text-foreground">{{ day_data.first_punch|date:"H:i:s" }}</div>
+                            <div class="text-xs text-muted-foreground">{{ day_data.first_punch|date:"M d" }}</div>
+                            {% else %}
+                            <span class="text-sm text-muted-foreground">--:--:--</span>
+                            {% endif %}
+                        </td>
+                        
+                        <td class="px-6 py-4 text-center">
+                            {% if day_data.last_punch %}
+                            <div class="text-sm font-mono text-foreground">{{ day_data.last_punch|date:"H:i:s" }}</div>
+                            <div class="text-xs text-muted-foreground">{{ day_data.last_punch|date:"M d" }}</div>
+                            {% else %}
+                            <span class="text-sm text-muted-foreground">--:--:--</span>
+                            {% endif %}
+                        </td>
+                        
+                        <td class="px-6 py-4 text-center">
+                            <div class="inline-flex flex-col items-center">
+                                <div class="inline-flex items-center justify-center w-8 h-8 text-sm font-bold {% if day_data.punch_count > 0 %}bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400{% else %}bg-gray-100 text-gray-500 dark:bg-gray-900/20{% endif %} rounded-full">
+                                    {{ day_data.punch_count }}
+                                </div>
+                                {% if day_data.punch_count > 0 and not day_data.punch_count|divisibleby:"2" %}
+                                <div class="text-xs text-orange-600 dark:text-orange-400 mt-1">Odd</div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        
+                        <td class="px-6 py-4 text-center">
+                            <div class="font-bold text-foreground text-sm">
+                                {% if day_data.work_hours > 0 %}
+                                    {{ day_data.work_hours|floatformat:1 }}h
+                                {% else %}
+                                    0.0h
+                                {% endif %}
+                            </div>
+                            {% if day_data.work_hours > 0 %}
+                            <div class="w-16 h-1.5 bg-muted rounded-full overflow-hidden mx-auto mt-2">
+                                {% widthratio day_data.work_hours 12 100 as hour_percentage %}
+                                <div class="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full transition-all duration-500" 
+                                     style="width: {% if hour_percentage > 100 %}100{% else %}{{ hour_percentage }}{% endif %}%"></div>
+                            </div>
+                            {% endif %}
+                        </td>
+                        
+                        <td class="px-6 py-4 text-center">
+                            {% if day_data.is_present %}
+                                {% if day_data.work_hours >= 8 %}
+                                <div class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded-full border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800">
+                                    <div class="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                                    Full Day
+                                </div>
+                                {% elif day_data.work_hours >= 4 %}
+                                <div class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full border border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800">
+                                    <div class="w-1.5 h-1.5 bg-yellow-500 rounded-full"></div>
+                                    Half Day
+                                </div>
+                                {% else %}
+                                <div class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium bg-orange-100 text-orange-700 rounded-full border border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800">
+                                    <div class="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>
+                                    Short Day
+                                </div>
+                                {% endif %}
+                            {% else %}
+                            <div class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full border border-gray-200 dark:bg-gray-900/20 dark:text-gray-400 dark:border-gray-800">
+                                <div class="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                                Absent
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    
+                    <!-- Expandable punch details row -->
+                    {% if day_data.punches %}
+                    <tr class="hidden bg-accent/30">
+                        <td colspan="7" class="px-6 py-4">
+                            <div class="text-sm">
+                                <div class="font-medium text-foreground mb-3">Punch Details for {{ date|date:"M d, Y" }}:</div>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    {% for punch in day_data.punches %}
+                                    <div class="flex items-center gap-3 p-3 bg-card rounded-lg border border-border shadow-sm">
+                                        <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+                                            <span class="text-blue-600 dark:text-blue-400 text-xs font-bold">{{ forloop.counter }}</span>
+                                        </div>
+                                        <div>
+                                            <div class="font-mono text-foreground text-sm font-medium">{{ punch.timestamp|date:"H:i:s" }}</div>
+                                            <div class="text-xs text-muted-foreground">{{ punch.device }}</div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        <div class="flex justify-between items-center">
-          <span class="text-muted-foreground">Minimum hours in a day:</span>
-          <span class="font-bold text-foreground">{{ statistics.min_hours_day|floatformat:1 }}h</span>
-        </div>
-        <div class="flex justify-between items-center">
-          <span class="text-muted-foreground">Expected hours per month:</span>
-<span class="font-bold">{{ summary_stats.expected_hours }}h</span>
-        </div>
-        <div class="flex justify-between items-center">
-          <span class="text-muted-foreground">Actual vs Expected:</span>
-          {% widthratio monthly_data.total_hours 240 100 as completion_rate %}
-          <span class="font-bold {% if completion_rate >= 90 %}text-green-600{% elif completion_rate >= 70 %}text-yellow-600{% else %}text-red-600{% endif %}">
-            {{ completion_rate }}%
-          </span>
-        </div>
-      </div>
     </div>
 
-    <div class="glass-effect rounded-lg p-4 card-elevated">
-      <h4 class="text-sm font-semibold text-heading mb-3">Quick Actions</h4>
-      <div class="space-y-2">
-        <button onclick="togglePunchDetails()" class="w-full text-left px-3 py-2 text-xs font-medium text-accent-foreground bg-accent hover:bg-accent/80 rounded-lg transition-all duration-200 focus-ring">
-          <div class="flex items-center gap-2">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            Toggle Punch Details
-          </div>
-        </button>
-        
-        <a href="{% url 'zkteco:attendance_logs' %}?employee={{ employee.id }}&start_date={{ year }}-{{ month|stringformat:"02d" }}-01" 
-           class="block w-full text-left px-3 py-2 text-xs font-medium text-accent-foreground bg-accent hover:bg-accent/80 rounded-lg transition-all duration-200 focus-ring">
-          <div class="flex items-center gap-2">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            View Raw Attendance Logs
-          </div>
-        </a>
-      </div>
+    <!-- Additional Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="rounded-lg border bg-card shadow-sm">
+            <div class="border-b bg-muted/50 px-6 py-4">
+                <h4 class="text-sm font-semibold text-foreground">Work Pattern Analysis</h4>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4 text-sm">
+                    <div class="flex justify-between items-center">
+                        <span class="text-muted-foreground">Maximum hours in a day:</span>
+                        <span class="font-bold text-foreground">{{ statistics.max_hours_day|floatformat:1 }}h</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-muted-foreground">Minimum hours in a day:</span>
+                        <span class="font-bold text-foreground">{{ statistics.min_hours_day|floatformat:1 }}h</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-muted-foreground">Expected hours per month:</span>
+                        <span class="font-bold text-foreground">{{ summary_stats.expected_hours }}h</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-3 border-t border-border">
+                        <span class="text-muted-foreground">Actual vs Expected:</span>
+                        {% widthratio monthly_data.total_hours 240 100 as completion_rate %}
+                        <span class="font-bold {% if completion_rate >= 90 %}text-green-600{% elif completion_rate >= 70 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                            {{ completion_rate }}%
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="rounded-lg border bg-card shadow-sm">
+            <div class="border-b bg-muted/50 px-6 py-4">
+                <h4 class="text-sm font-semibold text-foreground">Quick Actions</h4>
+            </div>
+            <div class="p-6">
+                <div class="space-y-3">
+                    <button onclick="togglePunchDetails()" class="w-full text-left px-4 py-3 text-sm font-medium text-accent-foreground bg-accent hover:bg-accent/80 rounded-lg transition-all duration-200 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Toggle All Punch Details
+                    </button>
+                    
+                    <a href="{% url 'zkteco:attendance_logs' %}?employee={{ employee.id }}&start_date={{ year }}-{{ month|stringformat:"02d" }}-01" 
+                       class="block w-full text-left px-4 py-3 text-sm font-medium text-accent-foreground bg-accent hover:bg-accent/80 rounded-lg transition-all duration-200 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        View Raw Attendance Logs
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Print styles
-  const printStyles = `
-    <style media="print">
-      .no-print, .focus-ring, button, .hover\\:bg-accent { display: none !important; }
-      body { font-size: 12px !important; }
-      .glass-effect { border: 1px solid #ccc !important; background: white !important; }
-      .card-elevated { box-shadow: none !important; }
-      .text-muted-foreground { color: #666 !important; }
-      .text-foreground { color: #000 !important; }
-      table { page-break-inside: avoid; }
-      tr { page-break-inside: avoid; }
-    </style>
-  `;
-  document.head.insertAdjacentHTML('beforeend', printStyles);
-
-  // Progress bar animations
-  const progressBars = document.querySelectorAll('[style*="width:"]');
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.style.transform = 'scaleX(1)';
-        entry.target.style.transformOrigin = 'left';
-      }
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey || e.metaKey) {
+            switch(e.key) {
+                case 'p':
+                    e.preventDefault();
+                    window.print();
+                    break;
+                case 'b':
+                    e.preventDefault();
+                    window.history.back();
+                    break;
+            }
+        }
     });
-  });
-  
-  progressBars.forEach(bar => {
-    bar.style.transform = 'scaleX(0)';
-    bar.style.transition = 'transform 0.8s ease-out';
-    observer.observe(bar);
-  });
-
-  // Row click to show punch details
-  document.querySelectorAll('tbody tr:not(.punch-details)').forEach(row => {
-    row.addEventListener('click', function() {
-      const nextRow = this.nextElementSibling;
-      if (nextRow && nextRow.classList.contains('punch-details')) {
-        nextRow.classList.toggle('hidden');
-      }
-    });
-  });
-
-  // Keyboard shortcuts
-  document.addEventListener('keydown', function(e) {
-    if (e.ctrlKey || e.metaKey) {
-      switch(e.key) {
-        case 'p':
-          e.preventDefault();
-          window.print();
-          break;
-        case 'b':
-          e.preventDefault();
-          window.history.back();
-          break;
-      }
-    }
-  });
 });
 
 function togglePunchDetails() {
-  const punchDetailRows = document.querySelectorAll('.punch-details');
-  const allHidden = Array.from(punchDetailRows).every(row => row.classList.contains('hidden'));
-  
-  punchDetailRows.forEach(row => {
-    if (allHidden) {
-      row.classList.remove('hidden');
-    } else {
-      row.classList.add('hidden');
-    }
-  });
+    const punchDetailRows = document.querySelectorAll('tr.hidden.bg-accent\\/30');
+    const allHidden = Array.from(punchDetailRows).every(row => row.classList.contains('hidden'));
+    
+    punchDetailRows.forEach(row => {
+        if (allHidden) {
+            row.classList.remove('hidden');
+        } else {
+            row.classList.add('hidden');
+        }
+    });
 }
 </script>
+
+<style>
+@media print {
+    .no-print, button, .hover\:bg-accent { display: none !important; }
+    body { font-size: 12px !important; background: white !important; }
+    .rounded-lg { border: 1px solid #ccc !important; }
+    .shadow-sm { box-shadow: none !important; }
+    table { page-break-inside: avoid; }
+    tr { page-break-inside: avoid; }
+}
+</style>
 {% endblock %}

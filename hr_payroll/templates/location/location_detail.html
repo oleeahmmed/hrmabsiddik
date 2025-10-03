@@ -1,0 +1,488 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ location.name }} - Location Details - {{ block.super }}{% endblock %}
+{% block page_title %}Location Details{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header Section -->
+    <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight text-foreground">{{ location.name }}</h1>
+                <p class="text-muted-foreground">Location details and management</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'zkteco:location_list' %}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Back to List
+            </a>
+            <a href="{% url 'zkteco:location_update' location.pk %}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                Edit Location
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Card -->
+    <div class="rounded-lg border bg-card shadow-sm">
+        <div class="p-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <span class="relative flex h-4 w-4">
+                            {% if location.is_active %}
+                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
+                            <span class="relative inline-flex h-4 w-4 rounded-full bg-green-500"></span>
+                            {% else %}
+                            <span class="relative inline-flex h-4 w-4 rounded-full bg-red-500"></span>
+                            {% endif %}
+                        </span>
+                        <span class="text-lg font-semibold {% if location.is_active %}text-green-600{% else %}text-red-600{% endif %}">
+                            {% if location.is_active %}Active Location{% else %}Inactive Location{% endif %}
+                        </span>
+                    </div>
+                </div>
+                <button onclick="toggleLocationStatus()" class="inline-flex items-center gap-2 rounded-md {% if location.is_active %}bg-orange-600 hover:bg-orange-700{% else %}bg-green-600 hover:bg-green-700{% endif %} px-4 py-2 text-sm font-medium text-white shadow transition-colors">
+                    {% if location.is_active %}
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Deactivate
+                    {% else %}
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Activate
+                    {% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Information Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Basic Information -->
+        <div class="rounded-lg border bg-card shadow-sm">
+            <div class="border-b bg-muted/50 px-6 py-4">
+                <h2 class="text-lg font-semibold text-foreground">Basic Information</h2>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-primary mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                    </svg>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-muted-foreground">Location Name</div>
+                        <div class="text-lg font-semibold text-foreground">{{ location.name }}</div>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-primary mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-muted-foreground">Address</div>
+                        <div class="text-foreground">{{ location.address|default:"No address provided" }}</div>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-primary mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-muted-foreground">Created</div>
+                        <div class="text-foreground">{{ location.created_at|date:"F d, Y \a\t g:i A" }}</div>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-primary mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-muted-foreground">Last Updated</div>
+                        <div class="text-foreground">{{ location.updated_at|date:"F d, Y \a\t g:i A" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Geographic Information -->
+        <div class="rounded-lg border bg-card shadow-sm">
+            <div class="border-b bg-muted/50 px-6 py-4">
+                <h2 class="text-lg font-semibold text-foreground">Geographic Information</h2>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-primary mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                    </svg>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-muted-foreground">Coordinates</div>
+                        <div class="text-foreground font-mono">
+                            <div>Latitude: {{ location.latitude|floatformat:6 }}°</div>
+                            <div>Longitude: {{ location.longitude|floatformat:6 }}°</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-primary mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                    </svg>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-muted-foreground">Attendance Radius</div>
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                                {{ location.radius }} meters
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4">
+                    <button onclick="showLocationOnMap()" class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-blue-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                        </svg>
+                        View on Map
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="rounded-lg border bg-card p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-muted-foreground">Assigned Users</p>
+                    <p class="text-2xl font-bold text-foreground">{{ assigned_users.count }}</p>
+                </div>
+                <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="rounded-lg border bg-card p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-muted-foreground">Total Attendance</p>
+                    <p class="text-2xl font-bold text-foreground">0</p>
+                </div>
+                <div class="w-10 h-10 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="rounded-lg border bg-card p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-muted-foreground">This Month</p>
+                    <p class="text-2xl font-bold text-foreground">0</p>
+                </div>
+                <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="rounded-lg border bg-card p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-muted-foreground">Today</p>
+                    <p class="text-2xl font-bold text-foreground">0</p>
+                </div>
+                <div class="w-10 h-10 bg-orange-100 dark:bg-orange-900/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assigned Users -->
+    <div class="rounded-lg border bg-card shadow-sm">
+        <div class="border-b bg-muted/50 px-6 py-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-foreground">Assigned Users</h2>
+                <a href="{% url 'zkteco:user_location_create' %}" class="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Assign User
+                </a>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="border-b bg-muted/30">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">User</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Email</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Primary</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Assigned Date</th>
+                        <th class="px-6 py-3 text-center text-sm font-semibold text-foreground">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for user_location in assigned_users %}
+                    <tr class="hover:bg-muted/50 transition-colors">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold">
+                                    {{ user_location.user.username|slice:":2"|upper }}
+                                </div>
+                                <div>
+                                    <div class="font-medium text-foreground">{{ user_location.user.get_full_name|default:user_location.user.username }}</div>
+                                    <div class="text-sm text-muted-foreground">@{{ user_location.user.username }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-foreground">{{ user_location.user.email|default:"No email" }}</td>
+                        <td class="px-6 py-4">
+                            {% if user_location.is_primary %}
+                            <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                                Primary
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400">
+                                Secondary
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-muted-foreground">{{ user_location.created_at|date:"M d, Y" }}</td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center justify-center gap-2">
+                                <a href="{% url 'zkteco:user_location_update' user_location.pk %}" 
+                                   class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+                                   title="Edit Assignment">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </a>
+                                <a href="{% url 'zkteco:user_location_delete' user_location.pk %}" 
+                                   class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-destructive hover:text-destructive-foreground h-8 w-8"
+                                   title="Remove Assignment"
+                                   onclick="return confirm('Are you sure you want to remove this user assignment?')">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center">
+                            <div class="flex flex-col items-center justify-center gap-3">
+                                <svg class="h-12 w-12 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                                </svg>
+                                <div class="text-lg font-medium text-muted-foreground">No users assigned</div>
+                                <p class="text-sm text-muted-foreground">Assign users to this location to enable attendance tracking</p>
+                                <a href="{% url 'zkteco:user_location_create' %}" class="mt-2 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-3">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                    Assign First User
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex items-center justify-between pt-6 border-t border-border">
+        <div class="flex items-center gap-3">
+            <a href="{% url 'zkteco:attendance_log_list' %}?location={{ location.id }}" class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-blue-700 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                View Attendance Logs
+            </a>
+            <a href="{% url 'zkteco:user_location_list' %}?location={{ location.id }}" class="inline-flex items-center gap-2 rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-purple-700 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                </svg>
+                Manage Assignments
+            </a>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'zkteco:location_delete' location.pk %}" 
+               class="inline-flex items-center gap-2 rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground shadow hover:bg-destructive/90 transition-colors"
+               onclick="return confirm('Are you sure you want to delete this location? This action cannot be undone.')">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                Delete Location
+            </a>
+        </div>
+    </div>
+
+    <!-- Map Modal -->
+    <div class="fixed inset-0 z-50 hidden items-center justify-center bg-background/80 backdrop-blur-sm" id="map-modal">
+        <div class="w-full max-w-4xl rounded-lg border bg-card shadow-lg">
+            <div class="border-b px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-semibold text-foreground">{{ location.name }} - Map View</h2>
+                        <p class="text-sm text-muted-foreground">Location and coverage area</p>
+                    </div>
+                    <button onclick="closeMapModal()" class="text-muted-foreground hover:text-foreground transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <div id="map-container" class="w-full h-96 rounded-lg border bg-muted flex items-center justify-center">
+                    <div class="text-center">
+                        <svg class="w-12 h-12 text-muted-foreground mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                        </svg>
+                        <p class="text-sm text-muted-foreground">Map integration would be displayed here</p>
+                        <p class="text-xs text-muted-foreground mt-1">Coordinates: {{ location.latitude|floatformat:6 }}°, {{ location.longitude|floatformat:6 }}°</p>
+                        <p class="text-xs text-muted-foreground">Radius: {{ location.radius }}m</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// CSRF Token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
+// Show location on map
+function showLocationOnMap() {
+    document.getElementById('map-modal').classList.remove('hidden');
+    document.getElementById('map-modal').classList.add('flex');
+}
+
+// Close map modal
+function closeMapModal() {
+    document.getElementById('map-modal').classList.add('hidden');
+    document.getElementById('map-modal').classList.remove('flex');
+}
+
+// Toggle location status
+async function toggleLocationStatus() {
+    const isActive = {{ location.is_active|yesno:'true,false' }};
+    const action = isActive ? 'deactivate' : 'activate';
+    
+    if (!confirm(`Are you sure you want to ${action} this location?`)) {
+        return;
+    }
+
+    try {
+        // This would need to be implemented in your views
+        const response = await fetch(`/locations/{{ location.pk }}/toggle-status/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast(`Location ${action}d successfully!`, 'success');
+            // Refresh the page to show updated status
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showToast(data.error || `Failed to ${action} location`, 'error');
+        }
+    } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+    }
+}
+
+// Toast Notifications
+function showToast(message, type = 'success', duration = 3000) {
+    const toast = document.createElement('div');
+    const toastId = 'toast-' + Date.now();
+    toast.id = toastId;
+    
+    const colors = {
+        success: 'border-green-200 bg-green-50 text-green-900 dark:border-green-800 dark:bg-green-950 dark:text-green-100',
+        error: 'border-red-200 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-100',
+        warning: 'border-yellow-200 bg-yellow-50 text-yellow-900 dark:border-yellow-800 dark:bg-yellow-950 dark:text-yellow-100',
+        info: 'border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-100'
+    };
+    
+    toast.className = `fixed top-4 right-4 z-50 min-w-80 rounded-lg border p-4 shadow-lg ${colors[type]}`;
+    toast.innerHTML = `
+        <div class="flex items-start gap-3">
+            <div class="flex-1 text-sm font-medium">${message}</div>
+            <button onclick="document.getElementById('${toastId}').remove()" class="flex-shrink-0 opacity-70 hover:opacity-100">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, duration);
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeMapModal();
+    }
+});
+</script>
+{% endblock %}

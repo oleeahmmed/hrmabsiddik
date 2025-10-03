@@ -1,1081 +1,1176 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}ZKTeco Device Management{% endblock %}</title>
-  
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Google Fonts: Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-
-  <!-- Alpine.js -->
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
-  <style>
-    /* Enhanced Dark Color System */
-    :root {
-      --background: #0a0a0b;
-      --foreground: #fafafa;
-      --card: #111113;
-      --card-foreground: #fafafa;
-      --popover: #111113;
-      --popover-foreground: #fafafa;
-      --primary: #1e293b;
-      --primary-foreground: #f8fafc;
-      --secondary: #1e1e20;
-      --secondary-foreground: #fafafa;
-      --muted: #1e1e20;
-      --muted-foreground: #a1a1aa;
-      --accent: #27272a;
-      --accent-foreground: #fafafa;
-      --destructive: #dc2626;
-      --destructive-foreground: #fafafa;
-      --border: #27272a;
-      --input: #27272a;
-      --ring: #3b82f6;
-      --radius: 0.75rem;
-      --sidebar-bg: #0f0f10;
-      --sidebar-border: #1e1e20;
-      --menu-hover: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-      --menu-active: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-      --glass-bg: rgba(17, 17, 19, 0.8);
-      --glass-border: rgba(39, 39, 42, 0.5);
-      --button-bg: #1e1e20;
-      --button-hover: #27272a;
-      --table-row: #111113;
-      --table-row-hover: #1a1a1c;
-    }
-
-    .light {
-      --background: #ffffff;
-      --foreground: #0a0a0b;
-      --card: #ffffff;
-      --card-foreground: #0a0a0b;
-      --popover: #ffffff;
-      --popover-foreground: #0a0a0b;
-      --primary: #1e293b;
-      --primary-foreground: #f8fafc;
-      --secondary: #f8fafc;
-      --secondary-foreground: #0a0a0b;
-      --muted: #f8fafc;
-      --muted-foreground: #71717a;
-      --accent: #f1f5f9;
-      --accent-foreground: #0a0a0b;
-      --destructive: #dc2626;
-      --destructive-foreground: #fafafa;
-      --border: #e4e4e7;
-      --input: #f1f5f9;
-      --ring: #3b82f6;
-      --sidebar-bg: #fafafa;
-      --sidebar-border: #e4e4e7;
-      --menu-hover: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-      --menu-active: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-      --glass-bg: rgba(255, 255, 255, 0.9);
-      --glass-border: rgba(228, 228, 231, 0.5);
-      --button-bg: #f8fafc;
-      --button-hover: #f1f5f9;
-      --table-row: #ffffff;
-      --table-row-hover: #f8fafc;
-    }
-
-    /* Pure Black Theme */
-    .pure-black {
-      --background: #000000;
-      --foreground: #ffffff;
-      --card: #0a0a0a;
-      --card-foreground: #ffffff;
-      --popover: #0a0a0a;
-      --popover-foreground: #ffffff;
-      --primary: #ffffff;
-      --primary-foreground: #000000;
-      --secondary: #1a1a1a;
-      --secondary-foreground: #ffffff;
-      --muted: #1a1a1a;
-      --muted-foreground: #a1a1aa;
-      --accent: #1f1f1f;
-      --accent-foreground: #ffffff;
-      --destructive: #ff4444;
-      --destructive-foreground: #ffffff;
-      --border: #1f1f1f;
-      --input: #1a1a1a;
-      --ring: #ffffff;
-      --sidebar-bg: #000000;
-      --sidebar-border: #1a1a1a;
-      --menu-hover: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-      --menu-active: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
-      --glass-bg: rgba(10, 10, 10, 0.95);
-      --glass-border: rgba(31, 31, 31, 0.5);
-      --button-bg: #1a1a1a;
-      --button-hover: #2a2a2a;
-      --table-row: #0a0a0a;
-      --table-row-hover: #1a1a1a;
-    }
-
-    /* Pure White Theme */
-    .pure-white {
-      --background: #ffffff;
-      --foreground: #000000;
-      --card: #ffffff;
-      --card-foreground: #000000;
-      --popover: #ffffff;
-      --popover-foreground: #000000;
-      --primary: #000000;
-      --primary-foreground: #ffffff;
-      --secondary: #f5f5f5;
-      --secondary-foreground: #000000;
-      --muted: #f5f5f5;
-      --muted-foreground: #666666;
-      --accent: #f0f0f0;
-      --accent-foreground: #000000;
-      --destructive: #dc2626;
-      --destructive-foreground: #ffffff;
-      --border: #e0e0e0;
-      --input: #f5f5f5;
-      --ring: #000000;
-      --sidebar-bg: #ffffff;
-      --sidebar-border: #e0e0e0;
-      --menu-hover: linear-gradient(135deg, #f5f5f5 0%, #e5e5e5 100%);
-      --menu-active: linear-gradient(135deg, #000000 0%, #333333 100%);
-      --glass-bg: rgba(255, 255, 255, 0.95);
-      --glass-border: rgba(224, 224, 224, 0.5);
-      --button-bg: #f5f5f5;
-      --button-hover: #e5e5e5;
-      --table-row: #ffffff;
-      --table-row-hover: #f5f5f5;
-    }
-
-    /* Modern Color Theme Variants */
-    .theme-slate { --primary: #475569; --ring: #475569; --menu-active: linear-gradient(135deg, #475569 0%, #334155 100%); }
-    .theme-blue { --primary: #3b82f6; --ring: #3b82f6; --menu-active: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
-    .theme-violet { --primary: #8b5cf6; --ring: #8b5cf6; --menu-active: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
-    .theme-emerald { --primary: #10b981; --ring: #10b981; --menu-active: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-    .theme-orange { --primary: #f97316; --ring: #f97316; --menu-active: linear-gradient(135deg, #f97316 0%, #ea580c 100%); }
-    .theme-rose { --primary: #f43f5e; --ring: #f43f5e; --menu-active: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%); }
-    .theme-indigo { --primary: #6366f1; --ring: #6366f1; --menu-active: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); }
-    .theme-purple { --primary: #a855f7; --ring: #a855f7; --menu-active: linear-gradient(135deg, #a855f7 0%, #9333ea 100%); }
-    .theme-pink { --primary: #ec4899; --ring: #ec4899; --menu-active: linear-gradient(135deg, #ec4899 0%, #db2777 100%); }
-    .theme-cyan { --primary: #06b6d4; --ring: #06b6d4; --menu-active: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
-    .theme-teal { --primary: #14b8a6; --ring: #14b8a6; --menu-active: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); }
-    .theme-lime { --primary: #84cc16; --ring: #84cc16; --menu-active: linear-gradient(135deg, #84cc16 0%, #65a30d 100%); }
-    .theme-amber { --primary: #f59e0b; --ring: #f59e0b; --menu-active: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
-    .theme-red { --primary: #ef4444; --ring: #ef4444; --menu-active: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
-    .theme-gray { --primary: #6b7280; --ring: #6b7280; --menu-active: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); }
-    .theme-zinc { --primary: #71717a; --ring: #71717a; --menu-active: linear-gradient(135deg, #71717a 0%, #52525b 100%); }
-
-    /* Enhanced Scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { 
-      background: var(--border); 
-      border-radius: 6px;
-      border: 1px solid var(--background);
-    }
-    ::-webkit-scrollbar-thumb:hover { 
-      background: var(--muted-foreground); 
-    }
-
-    /* Smooth transitions */
-    * {
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    [x-cloak] { display: none !important; }
-
-    /* Premium Glass Effects */
-    .glass-effect {
-      background: var(--card);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--border);
-    }
-
-    /* Enhanced Menu Styles */
-    .menu-item {
-      position: relative;
-      overflow: hidden;
-      background: transparent;
-      color: var(--muted-foreground);
-      border: 1px solid transparent;
-    }
-
-    .menu-item::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: var(--accent);
-      opacity: 0;
-      transform: translateX(-100%);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .menu-item:hover::before {
-      opacity: 1;
-      transform: translateX(0);
-    }
-
-    .menu-item:hover {
-      color: var(--accent-foreground);
-      border-color: var(--border);
-    }
-
-    .menu-item.active {
-      background: var(--primary);
-      color: var(--primary-foreground);
-      border-color: var(--primary);
-      box-shadow: 0 4px 12px var(--primary);
-    }
-
-    .menu-item.active::before {
-      display: none;
-    }
-
-    .menu-item > * {
-      position: relative;
-      z-index: 1;
-    }
-
-    /* Enhanced Card Shadows */
-    .card-elevated {
-      box-shadow: 
-        0 4px 6px -1px rgba(0, 0, 0, 0.1),
-        0 2px 4px -1px rgba(0, 0, 0, 0.06),
-        0 0 0 1px rgba(255, 255, 255, 0.05);
-    }
-
-    .light .card-elevated {
-      box-shadow: 
-        0 4px 6px -1px rgba(0, 0, 0, 0.05),
-        0 2px 4px -1px rgba(0, 0, 0, 0.03),
-        0 0 0 1px rgba(0, 0, 0, 0.05);
-    }
-
-    .pure-black .card-elevated {
-      box-shadow: 
-        0 4px 6px -1px rgba(255, 255, 255, 0.1),
-        0 2px 4px -1px rgba(255, 255, 255, 0.05),
-        0 0 0 1px rgba(255, 255, 255, 0.1);
-    }
-
-    .pure-white .card-elevated {
-      box-shadow: 
-        0 4px 6px -1px rgba(0, 0, 0, 0.08),
-        0 2px 4px -1px rgba(0, 0, 0, 0.04),
-        0 0 0 1px rgba(0, 0, 0, 0.08);
-    }
-
-    /* Enhanced Button Styles */
-    .btn {
-      background: var(--button-bg);
-      color: var(--foreground);
-      border: 1px solid var(--border);
-      padding: 0.5rem 1rem;
-      border-radius: var(--radius);
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .btn:hover {
-      background: var(--button-hover);
-      transform: translateY(-1px);
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: var(--primary-foreground);
-      border-color: var(--primary);
-    }
-
-    .btn-primary:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-    }
-
-    /* Enhanced Table Styles */
-    .table-row {
-      background: var(--table-row);
-      border-bottom: 1px solid var(--border);
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .table-row:hover {
-      background: var(--table-row-hover);
-    }
-
-    /* Enhanced Form Inputs */
-    .form-input {
-      background: var(--input);
-      border: 1px solid var(--border);
-      color: var(--foreground);
-      padding: 0.5rem 0.75rem;
-      border-radius: var(--radius);
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .form-input:focus {
-      border-color: var(--ring);
-      box-shadow: 0 0 0 3px rgba(var(--ring), 0.1);
-      outline: none;
-    }
-
-    .form-input::placeholder {
-      color: var(--muted-foreground);
-    }
-
-    /* Focus States */
-    .focus-ring:focus {
-      outline: 2px solid var(--ring);
-      outline-offset: 2px;
-    }
-
-    /* Premium Animations */
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes slideInRight {
-      from {
-        opacity: 0;
-        transform: translateX(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
-
-    @keyframes scaleIn {
-      from {
-        opacity: 0;
-        transform: scale(0.95);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
-    .animate-fade-in-up { animation: fadeInUp 0.3s ease-out; }
-    .animate-slide-in-right { animation: slideInRight 0.3s ease-out; }
-    .animate-scale-in { animation: scaleIn 0.2s ease-out; }
-
-    /* Enhanced Typography */
-    .text-heading {
-      font-weight: 600;
-      letter-spacing: -0.025em;
-      line-height: 1.25;
-    }
-
-    .text-body {
-      font-weight: 400;
-      line-height: 1.6;
-    }
-
-    /* Custom Badge */
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.75rem;
-      font-weight: 500;
-      line-height: 1;
-      padding: 0.25rem 0.5rem;
-      border-radius: 9999px;
-      background: var(--primary);
-      color: var(--primary-foreground);
-      min-width: 1.25rem;
-      height: 1.25rem;
-    }
-
-    /* Notification Dot */
-    .notification-dot {
-      position: absolute;
-      top: -2px;
-      right: -2px;
-      width: 8px;
-      height: 8px;
-      background: var(--destructive);
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    /* Fix z-index issues */
-    .dropdown-high-z {
-      z-index: 9999 !important;
-    }
-
-    /* .header-high-z {
-      z-index: 9999 !important;
-    } */
-
-    /* Color picker grid improvements */
-    .color-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0.75rem;
-    }
-
-    @media (min-width: 640px) {
-      .color-grid {
-        grid-template-columns: repeat(6, 1fr);
-      }
-    }
-
-    .color-item {
-      position: relative;
-      aspect-ratio: 1;
-      border-radius: 0.75rem;
-      cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      border: 2px solid transparent;
-    }
-
-    .color-item:hover {
-      transform: scale(1.1);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    }
-
-    .color-item.active {
-      transform: scale(1.1);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
-      border-color: var(--ring);
-    }
-
-    .color-item .checkmark {
-      position: absolute;
-      top: -4px;
-      right: -4px;
-      width: 18px;
-      height: 18px;
-      background: #10b981;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 2px solid var(--background);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    }
-  </style>
-
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            border: 'var(--border)',
-            input: 'var(--input)',
-            ring: 'var(--ring)',
-            background: 'var(--background)',
-            foreground: 'var(--foreground)',
-            primary: {
-              DEFAULT: 'var(--primary)',
-              foreground: 'var(--primary-foreground)'
-            },
-            secondary: {
-              DEFAULT: 'var(--secondary)',
-              foreground: 'var(--secondary-foreground)'
-            },
-            destructive: {
-              DEFAULT: 'var(--destructive)',
-              foreground: 'var(--destructive-foreground)'
-            },
-            muted: {
-              DEFAULT: 'var(--muted)',
-              foreground: 'var(--muted-foreground)'
-            },
-            accent: {
-              DEFAULT: 'var(--accent)',
-              foreground: 'var(--accent-foreground)'
-            },
-            popover: {
-              DEFAULT: 'var(--popover)',
-              foreground: 'var(--popover-foreground)'
-            },
-            card: {
-              DEFAULT: 'var(--card)',
-              foreground: 'var(--card-foreground)'
-            },
-          },
-          borderRadius: {
-            lg: "var(--radius)",
-            md: "calc(var(--radius) - 2px)",
-            sm: "calc(var(--radius) - 4px)"
-          },
-          fontFamily: {
-            sans: ['Inter', 'system-ui', 'sans-serif']
-          }
-        },
-      },
-    }
-  </script>
-  {% block extra_css %}{% endblock %}
-</head>
-<body
-  x-data="{
-    sidebarOpen: false,
-    themeMode: localStorage.getItem('themeMode') || 'dark',
-    colorTheme: localStorage.getItem('colorTheme') || 'slate',
-    searchQuery: '',
-    activeMenu: 'devices',
-    reportsExpanded: false,
-    showThemeCustomizer: false,
-    showProfileDropdown: false,
-    themeModes: [
-        { name: 'light', label: 'Light', icon: 'sun' },
-        { name: 'dark', label: 'Dark', icon: 'moon' },
-        { name: 'pure-white', label: 'Pure White', icon: 'circle' },
-        { name: 'pure-black', label: 'Pure Black', icon: 'circle-dot' }
-    ],
-    themes: [
-        { name: 'slate', color: '#475569', label: 'Slate', gradient: 'from-slate-500 to-slate-600' },
-        { name: 'blue', color: '#3b82f6', label: 'Blue', gradient: 'from-blue-500 to-blue-600' },
-        { name: 'violet', color: '#8b5cf6', label: 'Violet', gradient: 'from-violet-500 to-violet-600' },
-        { name: 'emerald', color: '#10b981', label: 'Emerald', gradient: 'from-emerald-500 to-emerald-600' },
-        { name: 'orange', color: '#f97316', label: 'Orange', gradient: 'from-orange-500 to-orange-600' },
-        { name: 'rose', color: '#f43f5e', label: 'Rose', gradient: 'from-rose-500 to-rose-600' },
-        { name: 'indigo', color: '#6366f1', label: 'Indigo', gradient: 'from-indigo-500 to-indigo-600' },
-        { name: 'purple', color: '#a855f7', label: 'Purple', gradient: 'from-purple-500 to-purple-600' },
-        { name: 'pink', color: '#ec4899', label: 'Pink', gradient: 'from-pink-500 to-pink-600' },
-        { name: 'cyan', color: '#06b6d4', label: 'Cyan', gradient: 'from-cyan-500 to-cyan-600' },
-        { name: 'teal', color: '#14b8a6', label: 'Teal', gradient: 'from-teal-500 to-teal-600' },
-        { name: 'lime', color: '#84cc16', label: 'Lime', gradient: 'from-lime-500 to-lime-600' },
-        { name: 'amber', color: '#f59e0b', label: 'Amber', gradient: 'from-amber-500 to-amber-600' },
-        { name: 'red', color: '#ef4444', label: 'Red', gradient: 'from-red-500 to-red-600' },
-        { name: 'gray', color: '#6b7280', label: 'Gray', gradient: 'from-gray-500 to-gray-600' },
-        { name: 'zinc', color: '#71717a', label: 'Zinc', gradient: 'from-zinc-500 to-zinc-600' }
-    ],
-    setTheme(themeName) {
-        this.colorTheme = themeName;
-        localStorage.setItem('colorTheme', themeName);
-        this.updateHtmlClass();
-    },
-    setThemeMode(mode) {
-        this.themeMode = mode;
-        localStorage.setItem('themeMode', mode);
-        this.updateHtmlClass();
-    },
-    toggleTheme() {
-        const modes = ['light', 'dark', 'pure-white', 'pure-black'];
-        const currentIndex = modes.indexOf(this.themeMode);
-        const nextIndex = (currentIndex + 1) % modes.length;
-        this.setThemeMode(modes[nextIndex]);
-    },
-    updateHtmlClass() {
-        const html = document.documentElement;
-        html.className = `${this.themeMode} theme-${this.colorTheme}`;
-    },
-    setActiveMenu(menu) {
-        this.activeMenu = menu;
-        if (window.innerWidth < 1024) {
-            this.sidebarOpen = false;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Device Management{% endblock %}</title>
+    <meta name="description" content="Modern dashboard with analytics, user management, and data visualization">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        border: 'hsl(var(--border))',
+                        input: 'hsl(var(--input))',
+                        ring: 'hsl(var(--ring))',
+                        background: 'hsl(var(--background))',
+                        foreground: 'hsl(var(--foreground))',
+                        primary: {
+                            DEFAULT: 'hsl(var(--primary))',
+                            foreground: 'hsl(var(--primary-foreground))'
+                        },
+                        secondary: {
+                            DEFAULT: 'hsl(var(--secondary))',
+                            foreground: 'hsl(var(--secondary-foreground))'
+                        },
+                        destructive: {
+                            DEFAULT: 'hsl(var(--destructive))',
+                            foreground: 'hsl(var(--destructive-foreground))'
+                        },
+                        muted: {
+                            DEFAULT: 'hsl(var(--muted))',
+                            foreground: 'hsl(var(--muted-foreground))'
+                        },
+                        accent: {
+                            DEFAULT: 'hsl(var(--accent))',
+                            foreground: 'hsl(var(--accent-foreground))'
+                        },
+                        popover: {
+                            DEFAULT: 'hsl(var(--popover))',
+                            foreground: 'hsl(var(--popover-foreground))'
+                        },
+                        card: {
+                            DEFAULT: 'hsl(var(--card))',
+                            foreground: 'hsl(var(--card-foreground))'
+                        }
+                    },
+                    borderRadius: {
+                        lg: 'var(--radius)',
+                        md: 'calc(var(--radius) - 2px)',
+                        sm: 'calc(var(--radius) - 4px)'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 222.2 84% 4.9%;
+            --popover: 0 0% 100%;
+            --popover-foreground: 222.2 84% 4.9%;
+            --primary: 222.2 47.4% 11.2%;
+            --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96%;
+            --secondary-foreground: 222.2 84% 4.9%;
+            --muted: 210 40% 96%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96%;
+            --accent-foreground: 222.2 84% 4.9%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%;
+            --input: 214.3 31.8% 91.4%;
+            --ring: 222.2 84% 4.9%;
+            --radius: 0.5rem;
         }
-    },
-    closeAllDropdowns() {
-        this.showThemeCustomizer = false;
-        this.showProfileDropdown = false;
-    }
-  }"
-  x-init="$watch('themeMode', () => updateHtmlClass()); updateHtmlClass()"
-  class="font-sans bg-background text-foreground antialiased"
-  style="background: var(--background);"
-  x-cloak
->
-  <div class="flex h-screen overflow-hidden">
-    <!-- Enhanced Sidebar -->
-    <aside
-      :class="{ '-translate-x-full': !sidebarOpen }"
-      class="fixed inset-y-0 left-0 z-50 w-72 flex-col lg:flex lg:static lg:inset-auto lg:translate-x-0 transform transition-all duration-300 ease-out"
-      style="background: var(--card); border-right: 1px solid var(--border);"
-    >
-      <!-- Premium Logo Section -->
-      <div class="flex items-center justify-between h-16 px-6" style="border-bottom: 1px solid var(--border);">
-        <a href="/" class="flex items-center gap-3 group">
-          <div class="relative">
-            <div class="w-8 h-8 bg-primary rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-primary/25 transition-all duration-300">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <div class="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-card animate-pulse"></div>
-          </div>
-          <div>
-            <span class="font-bold text-base text-card-foreground">{% block logo_text %}ZKTeco{% endblock %}</span>
-            <div class="text-xs text-muted-foreground">Device Manager</div>
-          </div>
-        </a>
-        <button @click="sidebarOpen = false" class="lg:hidden p-2 -m-2 rounded-xl hover:bg-accent transition-colors">
-   
+        
+        .dark {
+            --background: 222.2 84% 4.9%;
+            --foreground: 210 40% 98%;
+            --card: 222.2 84% 4.9%;
+            --card-foreground: 210 40% 98%;
+            --popover: 222.2 84% 4.9%;
+            --popover-foreground: 210 40% 98%;
+            --primary: 210 40% 98%;
+            --primary-foreground: 222.2 84% 4.9%;
+            --secondary: 217.2 32.6% 17.5%;
+            --secondary-foreground: 210 40% 98%;
+            --muted: 217.2 32.6% 17.5%;
+            --muted-foreground: 215 20.2% 65.1%;
+            --accent: 217.2 32.6% 17.5%;
+            --accent-foreground: 210 40% 98%;
+            --destructive: 0 62.8% 30.6%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 217.2 32.6% 17.5%;
+            --input: 217.2 32.6% 17.5%;
+            --ring: 212.7 26.8% 83.9%;
+        }
+        
+        /* Theme Colors */
+        .theme-default {
+            --primary: 222.2 47.4% 11.2%;
+            --primary-foreground: 210 40% 98%;
+        }
+        
+        .theme-red {
+            --primary: 0 72.2% 50.6%;
+            --primary-foreground: 0 85.7% 97.3%;
+        }
+        
+        .theme-rose {
+            --primary: 346.8 77.2% 49.8%;
+            --primary-foreground: 355.7 100% 97.3%;
+        }
+        
+        .theme-orange {
+            --primary: 24.6 95% 53.1%;
+            --primary-foreground: 60 9.1% 97.8%;
+        }
+        
+        .theme-green {
+            --primary: 142.1 76.2% 36.3%;
+            --primary-foreground: 355.7 100% 97.3%;
+        }
+        
+        .theme-blue {
+            --primary: 221.2 83.2% 53.3%;
+            --primary-foreground: 210 40% 98%;
+        }
+        
+        .theme-yellow {
+            --primary: 47.9 95.8% 53.1%;
+            --primary-foreground: 26 83.3% 14.1%;
+        }
+        
+        .theme-violet {
+            --primary: 262.1 83.3% 57.8%;
+            --primary-foreground: 210 40% 98%;
+        }
+        
+        .dark.theme-default {
+            --primary: 210 40% 98%;
+            --primary-foreground: 222.2 84% 4.9%;
+        }
+        
+        .dark.theme-red {
+            --primary: 0 72.2% 50.6%;
+            --primary-foreground: 0 85.7% 97.3%;
+        }
+        
+        .dark.theme-rose {
+            --primary: 346.8 77.2% 49.8%;
+            --primary-foreground: 355.7 100% 97.3%;
+        }
+        
+        .dark.theme-orange {
+            --primary: 24.6 95% 53.1%;
+            --primary-foreground: 60 9.1% 97.8%;
+        }
+        
+        .dark.theme-green {
+            --primary: 142.1 76.2% 36.3%;
+            --primary-foreground: 355.7 100% 97.3%;
+        }
+        
+        .dark.theme-blue {
+            --primary: 217.2 91.2% 59.8%;
+            --primary-foreground: 222.2 84% 4.9%;
+        }
+        
+        .dark.theme-yellow {
+            --primary: 47.9 95.8% 53.1%;
+            --primary-foreground: 26 83.3% 14.1%;
+        }
+        
+        .dark.theme-violet {
+            --primary: 262.1 83.3% 57.8%;
+            --primary-foreground: 210 40% 98%;
+        }
 
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-muted-foreground opacity-70 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                  </svg>
-        </button>
-      </div>
+        /* Toast Styles */
+        .toast {
+            transform: translateX(calc(100% + 1rem));
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            opacity: 0;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .toast.hide {
+            transform: translateX(calc(100% + 1rem));
+            opacity: 0;
+        }
 
-      <!-- Enhanced Navigation -->
-      <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-        <!-- Main Navigation -->
-<div class="space-y-1">
-  <div class="px-1 py-1">
-    <div class="space-y-1">
-      <!-- Devices -->
-      <a href="{% url 'zkteco:device_list' %}" 
-         @click="setActiveMenu('devices')"
-         class="menu-item flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-200 group {% if request.resolver_match.url_name == 'device_list' %}active{% endif %}">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          {% if request.resolver_match.url_name == 'device_list' %}
-            <!-- Active SVG for Devices (Different Icon) -->
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10 3v2H6v4h4v2H6v4h4v2H6v4h8V3h-4z"/>
-          {% else %}
-            <!-- Default SVG for Devices -->
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-          {% endif %}
-        </svg>
-        <span class="flex-1">Devices</span>
-        {% if total_devices %}
-          <span class="inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium bg-primary text-primary-foreground rounded-full min-w-[16px] h-4">{{ total_devices }}</span>
-        {% endif %}
-      </a>
+        /* Switch Styles */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: hsl(var(--muted));
+            transition: 0.3s;
+            border-radius: 24px;
+            border: 1px solid hsl(var(--border));
+        }
+        
+        .switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .switch input:checked + .switch-slider {
+            background-color: hsl(var(--primary));
+            border-color: hsl(var(--primary));
+        }
+        
+        .switch input:checked + .switch-slider:before {
+            transform: translateX(20px);
+        }
+        
+        .switch input:focus + .switch-slider {
+            box-shadow: 0 0 0 2px hsl(var(--ring));
+        }
+        
+        .switch input:disabled + .switch-slider {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
 
-      <!-- Attendance Logs -->
-      <a href="{% url 'zkteco:attendance_logs' %}" 
-         @click="setActiveMenu('attendance')"
-         class="menu-item flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-200 group {% if request.resolver_match.url_name == 'attendance_logs' %}active{% endif %}">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          {% if request.resolver_match.url_name == 'attendance_logs' %}
-            <!-- Active SVG for Attendance Logs (Different Icon) -->
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 5h18M3 10h18M3 15h18M3 20h18"/>
-          {% else %}
-            <!-- Default SVG for Attendance Logs -->
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-          {% endif %}
-        </svg>
-        <span class="flex-1">Attendance Logs</span>
-      </a>
+        /* Active Navigation Styles */
+        .nav-link.active {
+            background-color: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+        }
+        
+        .nav-link.active:hover {
+            background-color: hsl(var(--primary) / 0.9);
+            color: hsl(var(--primary-foreground));
+        }
+        
+        .nav-link.active svg {
+            color: hsl(var(--primary-foreground));
+        }
+        
+        /* Enhanced hover effects for navigation */
+        .nav-link:hover {
+            background-color: hsl(var(--accent));
+            color: hsl(var(--accent-foreground));
+            transform: translateX(2px);
+        }
+        
+        .nav-link {
+            transition: all 0.2s ease-in-out;
+            border-left: 2px solid transparent;
+            color: hsl(var(--muted-foreground));
+        }
+        
+        .nav-link:hover {
+            color: hsl(var(--foreground));
+        }
+        
+        .nav-link.active {
+            border-left-color: hsl(var(--primary-foreground));
+        }
+        
+        .nav-link:hover {
+            border-left-color: hsl(var(--primary));
+        }
 
-      <!-- Generate Reports -->
-      <a href="{% url 'zkteco:simple_attendance_generation' %}" 
-         @click="setActiveMenu('reports')"
-         class="menu-item flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-200 group {% if request.resolver_match.url_name == 'simple_attendance_generation' %}active{% endif %}">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          {% if request.resolver_match.url_name == 'simple_attendance_generation' %}
-            <!-- Active SVG for Generate Reports (Different Icon) -->
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-          {% else %}
-            <!-- Default SVG for Generate Reports -->
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-          {% endif %}
-        </svg>
-        <span class="flex-1">Generate Reports</span>
-      </a>
+        /* Submenu section headers */
+        .submenu-header {
+            color: hsl(var(--muted-foreground));
+            font-weight: 500;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+            padding: 0.25rem 0.5rem;
+        }
 
-      <!-- Hourly Report -->
-      <a href="{% url 'zkteco:hourly_attendance_report' %}" 
-         @click="setActiveMenu('hourly')"
-         class="menu-item flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-200 group {% if request.resolver_match.url_name == 'hourly_attendance_report' %}active{% endif %}">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                  </svg>
-        <span class="flex-1">Hourly Report</span>
-      </a>
+        /* Enhanced navigation styles with better hover effects and active states */
+        .nav-link {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            color: hsl(var(--muted-foreground));
+        }
+        
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: hsl(var(--primary));
+            transform: scaleY(0);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .nav-link:hover {
+            background-color: hsl(var(--accent));
+            color: hsl(var(--foreground));
+            transform: translateX(2px);
+        }
+        
+        .nav-link.active {
+            background-color: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+            font-weight: 500;
+        }
+        
+        .nav-link.active::before {
+            transform: scaleY(1);
+        }
+        
+        .nav-link.active svg {
+            color: hsl(var(--primary-foreground));
+        }
+        
+        .nav-link:hover svg {
+            transform: scale(1.1);
+            transition: transform 0.2s ease;
+        }
 
-      <!-- Report -->
-      <a href="{% url 'zkteco:attendance_reports_main' %}" 
-         @click="setActiveMenu('hourly')"
-         class="menu-item flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-200 group {% if request.resolver_match.url_name == 'attendance_reports_main' %}active{% endif %}">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                  </svg>
-        <span class="flex-1">Report</span>
-      </a>
-    </div>
-  </div>
-</div>
+        /* Submenu section headers with better styling */
+        .submenu-header {
+            color: hsl(var(--muted-foreground));
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .submenu-header::before {
+            content: '';
+            height: 1px;
+            flex: 1;
+            background: hsl(var(--border));
+        }
 
+        /* Enhanced submenu toggle button */
+        .submenu-toggle {
+            transition: all 0.2s ease;
+        }
+        
+        .submenu-toggle:hover {
+            background-color: hsl(var(--accent));
+        }
+        
+        .submenu-toggle svg {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .submenu-toggle.expanded svg {
+            transform: rotate(90deg);
+        }
 
+        /* Enhanced toast styles with better animations */
+        .toast {
+            transform: translateX(calc(100% + 1rem));
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            opacity: 0;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .toast.hide {
+            transform: translateX(calc(100% + 1rem));
+            opacity: 0;
+        }
 
-        <!-- Enhanced Analytics Dropdown -->
-        <!-- <div class="space-y-1">
-          <div class="px-1 py-1">
-            <h2 class="mb-2 px-2 text-xs font-medium tracking-wide text-muted-foreground uppercase opacity-70">
-              Analytics
-            </h2>
-            <div class="space-y-1">
-              <button @click="reportsExpanded = !reportsExpanded" 
-                      class="menu-item w-full flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-200 group">
-                <div class="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                  </svg>
-                  <span class="flex-1 text-left">Reports</span>
+        /* Enhanced sidebar with subtle shadow */
+        #sidebar {
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .dark #sidebar {
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Smooth scrollbar for sidebar */
+        #sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        #sidebar::-webkit-scrollbar-thumb {
+            background: hsl(var(--border));
+            border-radius: 3px;
+        }
+        
+        #sidebar::-webkit-scrollbar-thumb:hover {
+            background: hsl(var(--muted-foreground));
+        }
+
+        /* Enhanced header with subtle shadow */
+        header {
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .dark header {
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Better focus states for accessibility */
+        button:focus-visible,
+        a:focus-visible,
+        input:focus-visible {
+            outline: 2px solid hsl(var(--ring));
+            outline-offset: 2px;
+        }
+
+        /* Smooth transitions for dropdowns */
+        .dropdown-menu {
+            animation: slideDown 0.2s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground font-sans antialiased">
+     Sidebar 
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-card border-r border-border transition-transform duration-300 ease-in-out z-40 lg:translate-x-0 -translate-x-full overflow-hidden">
+        <div class="flex flex-col h-full">
+             
+            <div class="p-4 border-b border-border bg-gradient-to-r from-primary/5 to-transparent">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm">
+                            <svg class="w-4 h-4 text-primary-foreground" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="text-base font-bold text-foreground">Acme Inc.</h1>
+                            <p class="text-xs text-muted-foreground font-medium">Enterprise</p>
+                        </div>
+                    </div>
+                    <button id="sidebar-close" class="p-1.5 hover:bg-accent rounded-md transition-colors lg:hidden">
+                        <svg class="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
                 </div>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 transition-transform duration-200 text-muted-foreground" :class="{ 'rotate-90': reportsExpanded }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-                </svg>
-              </button>
-              
-              <div x-show="reportsExpanded" 
-                   x-transition:enter="transition ease-out duration-300"
-                   x-transition:enter-start="opacity-0 -translate-y-2"
-                   x-transition:enter-end="opacity-100 translate-y-0"
-                   x-transition:leave="transition ease-in duration-200"
-                   x-transition:leave-start="opacity-100 translate-y-0"
-                   x-transition:leave-end="opacity-0 -translate-y-2"
-                   class="ml-4 space-y-0.5" 
-                   style="border-left: 1px solid var(--border); padding-left: 0.75rem;">
-                <a href="#" class="flex items-center gap-2 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:text-accent-foreground hover:bg-accent transition-all duration-200">
-                  <div class="w-1.5 h-1.5 rounded-full bg-muted-foreground"></div>
-                  Daily Summary
-                </a>
-                <a href="#" class="flex items-center gap-2 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:text-accent-foreground hover:bg-accent transition-all duration-200">
-                  <div class="w-1.5 h-1.5 rounded-full bg-muted-foreground"></div>
-                  Monthly Report
-                </a>
-                <a href="#" class="flex items-center gap-2 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:text-accent-foreground hover:bg-accent transition-all duration-200">
-                  <div class="w-1.5 h-1.5 rounded-full bg-muted-foreground"></div>
-                  Analytics
-                </a>
-              </div>
             </div>
-          </div>
-        </div> -->
-      </nav>
+            
+             
+            <div class="flex-1 overflow-y-auto p-3">
+                <div class="mb-4">
+                    <button id="playground-toggle" data-submenu-toggle data-submenu-target="#playground-submenu" data-chevron="#playground-chevron" class="submenu-toggle flex items-center justify-between w-full px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-accent rounded-lg transition-colors">
+                        <div class="flex items-center space-x-2.5">
+                            <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            <span>HR Management</span>
+                        </div>
+                        <svg id="playground-chevron" class="w-4 h-4 text-muted-foreground transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                    
+                      
+                    <div id="playground-submenu" class="mt-2 ml-2 space-y-1 hidden" data-submenu>
+                        <div class="mb-3">
+                            <p class="submenu-header">Devices</p>
+                            <a href="{% url 'zkteco:device_list' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:device_list' %}">
+                                <div class="flex items-center space-x-2.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+                                    </svg>
+                                    <span>Device List</span>
+                                </div>
+                            </a>
+                        </div>
 
-      <!-- Enhanced Sidebar Footer -->
-      <div class="p-3" style="border-top: 1px solid var(--border);">
-        <div class="glass-effect rounded-lg p-2">
-          <div class="flex items-center gap-2">
-            <div class="relative">
-              <img class="h-6 w-6 rounded-md object-cover" src="{% block user_avatar %}https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80{% endblock %}" alt="User Avatar">
-              <div class="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full border border-card"></div>
+                        <div class="mb-3">
+                            <p class="submenu-header">Attendance</p>
+                            <a href="{% url 'zkteco:attendance_logs' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:attendance_logs' %}">
+                                <div class="flex items-center space-x-2.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                    <span>Attendance Logs</span>
+                                </div>
+                            </a>
+                            <a href="{% url 'zkteco:mobile_attendance' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:mobile_attendance' %}">
+                                <div class="flex items-center space-x-2.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a1 1 0 001-1V4a1 1 0 00-1-1H8a1 1 0 00-1 1v16a1 1 0 001 1z"/>
+                                    </svg>
+                                    <span>Mobile Attendance</span>
+                                </div>
+                            </a>
+                            <a href="{% url 'zkteco:leave_list' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:leave_list' %}">
+                                <div class="flex items-center space-x-2.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    <span>Leaves</span>
+                                </div>
+                            </a>
+                            <a href="{% url 'zkteco:config_list' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:config_list' %}">
+                                <div class="flex items-center space-x-2.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                    <span>Configurations</span>
+                                </div>
+                            </a>
+                        </div>
+
+                          
+                        <div class="mb-3">
+                            <p class="submenu-header">Employees</p>
+                            <a href="{% url 'zkteco:employee_list' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:employee_list' %}">
+                                <div class="flex items-center space-x-2.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                    <span>Employee List</span>
+                                </div>
+                            </a>
+                        </div>
+
+                          
+                        <div class="mb-3">
+                            <p class="submenu-header">Locations</p>
+                            <a href="{% url 'zkteco:location_list' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:location_list' %}">
+                                <div class="flex items-center space-x-2.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                    <span>Locations</span>
+                                </div>
+                            </a>
+                            <a href="{% url 'zkteco:user_location_list' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:user_location_list' %}">
+                                <div class="flex items-center space-x-2.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                                    </svg>
+                                    <span>User Locations</span>
+                                </div>
+                            </a>
+                        </div>
+
+                         
+                        <div class="mb-3">
+                            <p class="submenu-header">Reports</p>
+                            <a href="{% url 'zkteco:attendance_reports_main' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:attendance_reports_main' %}">
+                                <div class="flex items-center space-x-2.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                    </svg>
+                                    <span>All Reports</span>
+                                </div>
+                            </a>
+                            <a href="{% url 'zkteco:hourly_attendance_report' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:hourly_attendance_report' %}">
+                                <div class="flex items-center space-x-2.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span>Hourly Report</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="flex-1 overflow-hidden">
-              <p class="truncate text-xs font-medium text-card-foreground">{% block user_name %}Admin User{% endblock %}</p>
-              <p class="truncate text-xs text-muted-foreground">{% block user_status %}Online{% endblock %}</p>
+            
+             
+            <div class="p-3 border-t border-border bg-gradient-to-r from-primary/5 to-transparent">
+                <div class="relative">
+                    <button id="profile-menu-btn" class="flex items-center space-x-3 w-full px-3 py-2.5 rounded-lg hover:bg-accent transition-all duration-200 group">
+                        <img src="https://c.animaapp.com/mg3sa3qcvOpm0S/img/ai_2.png" alt="User avatar" class="w-8 h-8 rounded-full ring-2 ring-border group-hover:ring-primary transition-all">
+                        <div class="flex-1 text-left">
+                            <p class="text-sm font-semibold text-foreground">shadcn</p>
+                            <p class="text-xs text-muted-foreground">m@example.com</p>
+                        </div>
+                        <svg class="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/>
+                        </svg>
+                    </button>
+                    <div id="profile-dropdown" class="dropdown-menu absolute bottom-full left-0 right-0 mb-2 bg-popover border border-border rounded-lg shadow-lg z-50 hidden">
+                        <div class="p-1.5">
+                            <div class="px-3 py-2 text-xs text-muted-foreground border-b border-border mb-1">
+                                <div class="font-semibold text-foreground">shadcn</div>
+                                <div>m@example.com</div>
+                            </div>
+                            <button class="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md flex items-center space-x-2.5 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                                </svg>
+                                <span>Upgrade to Pro</span>
+                            </button>
+                            <button class="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md flex items-center space-x-2.5 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                                <span>Account</span>
+                            </button>
+                            <button class="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md flex items-center space-x-2.5 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                </svg>
+                                <span>Billing</span>
+                            </button>
+                            <button class="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md flex items-center space-x-2.5 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                </svg>
+                                <span>Notifications</span>
+                            </button>
+                            <hr class="my-1.5 border-border">
+                            <button class="w-full text-left px-3 py-2 text-sm hover:bg-destructive/10 rounded-md text-destructive transition-colors font-medium">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                </svg>
+                                <span>Log out</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
     </aside>
 
-    <!-- Main Content Area -->
-    <div class="flex-1 flex flex-col relative">
-      <!-- Mobile Sidebar Backdrop -->
-      <div x-show="sidebarOpen" 
-           @click="sidebarOpen = false" 
-           class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden" 
-           x-transition:enter="transition-opacity ease-out duration-300"
-           x-transition:enter-start="opacity-0"
-           x-transition:enter-end="opacity-100"
-           x-transition:leave="transition-opacity ease-in duration-200"
-           x-transition:leave-start="opacity-100"
-           x-transition:leave-end="opacity-0">
-      </div>
+     
+    <div id="drawer-overlay" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 hidden"></div>
 
-      <!-- Enhanced Header with High Z-Index -->
-      <header class="header-high-z flex items-center justify-between h-16 px-6 bg-card border-b border-border flex-shrink-0 card-elevated relative">
-        <div class="flex items-center gap-4">
-          <button @click.stop="sidebarOpen = !sidebarOpen" class="lg:hidden p-2 -m-2 rounded-xl hover:bg-accent transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          
-          <!-- Enhanced Search -->
-          <div class="relative w-full max-w-md">
-            <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-            <input 
-              x-model="searchQuery"
-              type="search" 
-              placeholder="Search devices, logs..." 
-              class="w-full rounded-xl pl-10 pr-4 py-2 text-sm bg-input border border-border focus:border-ring focus:ring-2 focus:ring-ring/20 focus:outline-none transition-all duration-200"
-            />
-            <kbd class="pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 hidden h-5 select-none items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-xs font-medium text-muted-foreground opacity-100 sm:flex">
-              <span class="text-xs">⌘</span>K
-            </kbd>
-          </div>
-        </div>
+     
+    <div id="toast-container" class="fixed bottom-4 right-4 z-[100] space-y-2"></div>
 
-        <div class="flex items-center gap-2">
-          <!-- Enhanced Notifications -->
-          <button class="relative p-2 rounded-xl hover:bg-accent transition-colors focus-ring">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-            </svg>
-            <div class="notification-dot"></div>
-          </button>
-
-          <!-- Theme Toggle -->
-          <button @click="toggleTheme()" class="p-2 rounded-xl hover:bg-accent transition-colors focus-ring">
-            <svg x-show="themeMode === 'light'" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-            </svg>
-            <svg x-show="themeMode === 'dark'" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-            </svg>
-            <svg x-show="themeMode === 'pure-white'" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <svg x-show="themeMode === 'pure-black'" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10"/>
-            </svg>
-          </button>
-
-          <!-- Enhanced Theme Customizer with High Z-Index -->
-          <div class="relative">
-            <button @click="showThemeCustomizer = !showThemeCustomizer; showProfileDropdown = false" class="p-2 rounded-xl hover:bg-accent transition-colors focus-ring">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
-              </svg>
-            </button>
-            <div x-show="showThemeCustomizer" 
-                 @click.away="showThemeCustomizer = false" 
-                 x-transition:enter="transition ease-out duration-200"
-                 x-transition:enter-start="opacity-0 scale-95"
-                 x-transition:enter-end="opacity-100 scale-100"
-                 x-transition:leave="transition ease-in duration-75"
-                 x-transition:leave-start="opacity-100 scale-100"
-                 x-transition:leave-end="opacity-0 scale-95"
-                 class="dropdown-high-z absolute right-0 mt-2 w-96 glass-effect rounded-xl shadow-2xl p-6 animate-scale-in">
-              <div class="space-y-6">
-                <div>
-                  <h4 class="text-base font-semibold mb-2 text-heading">Theme Colors</h4>
-                  <p class="text-xs text-muted-foreground mb-4">Choose your preferred color scheme from our modern palette.</p>
-                  <div class="color-grid">
-                    <template x-for="t in themes" :key="t.name">
-                      <button @click="setTheme(t.name)" 
-                              class="color-item group focus-ring" 
-                              :class="{ 'active': colorTheme === t.name }"
-                              :title="t.label">
-                        <div class="w-full h-full rounded-xl bg-gradient-to-br transition-all duration-300 group-hover:shadow-lg" 
-                             :class="`${t.gradient} shadow-${t.name}-500/25`">
+     
+    <div class="min-h-screen lg:ml-64 ml-0 transition-all duration-300 ease-in-out">
+         
+        <header class="bg-card border-b border-border px-4 py-3 sticky top-0 z-30">
+            <div class="flex items-center justify-between">
+                
+                <div class="flex items-center space-x-4">
+                    <button id="sidebar-trigger" class="p-2 rounded-lg hover:bg-accent transition-all duration-200 hover:scale-105">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                    <nav aria-label="Breadcrumb">
+                        <ol class="flex items-center space-x-2 text-sm text-muted-foreground">
+                            <li><a href="#" class="hover:text-foreground transition-colors font-medium">Home</a></li>
+                            <li>/</li>
+                            <li class="text-foreground font-semibold">{% block page_title %}Dashboard{% endblock %}</li>
+                        </ol>
+                    </nav>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                     
+                    <div class="relative">
+                        <input type="search" placeholder="Search..." class="w-64 pl-10 pr-4 py-2 text-sm border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all">
+                        <svg class="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    
+                     
+                    <button id="theme-toggle" class="p-2 text-muted-foreground hover:text-foreground transition-all duration-200 rounded-lg hover:bg-accent hover:scale-105">
+                        <svg id="theme-icon" class="w-5 h-5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                        </svg>
+                    </button>
+                    
+                     
+                    <div class="relative">
+                        <button id="theme-color-toggle" class="p-2 text-muted-foreground hover:text-foreground transition-all duration-200 rounded-lg hover:bg-accent hover:scale-105">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"/>
+                            </svg>
+                        </button>
+                        <div id="theme-color-dropdown" class="dropdown-menu absolute right-0 mt-2 w-52 bg-popover border border-border rounded-lg shadow-lg z-50 hidden">
+                            <div class="p-2">
+                                <div class="px-3 py-2 text-xs font-semibold text-muted-foreground border-b border-border mb-1">Theme Colors</div>
+                                <button class="theme-color-option w-full text-left px-3 py-2.5 text-sm hover:bg-accent rounded-md flex items-center space-x-3 transition-colors" data-color="default">
+                                    <div class="w-4 h-4 bg-slate-900 rounded-full ring-2 ring-border"></div>
+                                    <span>Default</span>
+                                </button>
+                                <button class="theme-color-option w-full text-left px-3 py-2.5 text-sm hover:bg-accent rounded-md flex items-center space-x-3 transition-colors" data-color="red">
+                                    <div class="w-4 h-4 bg-red-500 rounded-full ring-2 ring-border"></div>
+                                    <span>Red</span>
+                                </button>
+                                <button class="theme-color-option w-full text-left px-3 py-2.5 text-sm hover:bg-accent rounded-md flex items-center space-x-3 transition-colors" data-color="rose">
+                                    <div class="w-4 h-4 bg-rose-500 rounded-full ring-2 ring-border"></div>
+                                    <span>Rose</span>
+                                </button>
+                                <button class="theme-color-option w-full text-left px-3 py-2.5 text-sm hover:bg-accent rounded-md flex items-center space-x-3 transition-colors" data-color="orange">
+                                    <div class="w-4 h-4 bg-orange-500 rounded-full ring-2 ring-border"></div>
+                                    <span>Orange</span>
+                                </button>
+                                <button class="theme-color-option w-full text-left px-3 py-2.5 text-sm hover:bg-accent rounded-md flex items-center space-x-3 transition-colors" data-color="green">
+                                    <div class="w-4 h-4 bg-green-500 rounded-full ring-2 ring-border"></div>
+                                    <span>Green</span>
+                                </button>
+                                <button class="theme-color-option w-full text-left px-3 py-2.5 text-sm hover:bg-accent rounded-md flex items-center space-x-3 transition-colors" data-color="blue">
+                                    <div class="w-4 h-4 bg-blue-500 rounded-full ring-2 ring-border"></div>
+                                    <span>Blue</span>
+                                </button>
+                                <button class="theme-color-option w-full text-left px-3 py-2.5 text-sm hover:bg-accent rounded-md flex items-center space-x-3 transition-colors" data-color="yellow">
+                                    <div class="w-4 h-4 bg-yellow-500 rounded-full ring-2 ring-border"></div>
+                                    <span>Yellow</span>
+                                </button>
+                                <button class="theme-color-option w-full text-left px-3 py-2.5 text-sm hover:bg-accent rounded-md flex items-center space-x-3 transition-colors" data-color="violet">
+                                    <div class="w-4 h-4 bg-violet-500 rounded-full ring-2 ring-border"></div>
+                                    <span>Violet</span>
+                                </button>
+                            </div>
                         </div>
-                        <div x-show="colorTheme === t.name" class="checkmark animate-scale-in">
-                          <svg class="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 8 8">
-                            <path d="m6.564.75-3.59 3.612-1.538-1.55L0 4.26 2.974 7.25 8 2.193z"/>
-                          </svg>
+                    </div>
+                    
+                
+                    <div class="relative">
+                        <button id="user-menu-btn" class="flex items-center space-x-2 px-2 py-1.5 rounded-lg hover:bg-accent transition-all duration-200 group">
+                            <img src="https://c.animaapp.com/mg3sa3qcvOpm0S/img/ai_2.png" alt="User avatar" class="w-7 h-7 rounded-full ring-2 ring-border group-hover:ring-primary transition-all">
+                            <span class="text-sm font-semibold text-foreground hidden sm:block">John Doe</span>
+                            <svg class="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <div id="user-dropdown" class="dropdown-menu absolute right-0 mt-2 w-52 bg-popover border border-border rounded-lg shadow-lg z-50 hidden">
+                            <div class="p-2">
+                                <div class="px-3 py-2.5 text-sm text-muted-foreground border-b border-border mb-1">
+                                    <div class="font-semibold text-foreground">John Doe</div>
+                                    <div class="text-xs">john@example.com</div>
+                                </div>
+                                <button class="w-full text-left px-3 py-2.5 text-sm hover:bg-accent rounded-md transition-colors">Profile</button>
+                                <button class="w-full text-left px-3 py-2.5 text-sm hover:bg-accent rounded-md transition-colors">Settings</button>
+                                <button class="w-full text-left px-3 py-2.5 text-sm hover:bg-accent rounded-md transition-colors">Billing</button>
+                                <hr class="my-1.5 border-border">
+                                <button class="w-full text-left px-3 py-2.5 text-sm hover:bg-destructive/10 rounded-md text-destructive transition-colors font-medium">Sign Out</button>
+                            </div>
                         </div>
-                      </button>
-                    </template>
-                  </div>
+                    </div>
                 </div>
-                <div>
-                  <h4 class="text-sm font-medium mb-3 text-heading">Appearance Mode</h4>
-                  <div class="grid grid-cols-2 gap-2">
-                    <template x-for="mode in themeModes" :key="mode.name">
-                      <button @click="setThemeMode(mode.name)" 
-                              class="flex items-center justify-center gap-2 rounded-lg border border-border px-3 py-2.5 text-xs transition-all duration-200 focus-ring" 
-                              :class="themeMode === mode.name ? 'bg-primary text-primary-foreground shadow-md' : 'hover:bg-accent hover:text-accent-foreground'">
-                        <svg x-show="mode.icon === 'sun'" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-                        </svg>
-                        <svg x-show="mode.icon === 'moon'" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                        </svg>
-                        <svg x-show="mode.icon === 'circle'" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <svg x-show="mode.icon === 'circle-dot'" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
-                          <circle cx="12" cy="12" r="10"/>
-                        </svg>
-                        <span x-text="mode.label"></span>
-                      </button>
-                    </template>
-                  </div>
-                </div>
-                <div class="pt-2 border-t border-border">
-                  <div class="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Current: <span class="font-medium capitalize text-foreground" x-text="`${themes.find(t => t.name === colorTheme)?.label || colorTheme} ${themeModes.find(t => t.name === themeMode)?.label || themeMode}`"></span></span>
-                    <button @click="closeAllDropdowns()" class="text-xs hover:text-foreground transition-colors">Close</button>
-                  </div>
-                </div>
-              </div>
             </div>
-          </div>
-          
-          <!-- Enhanced Profile Dropdown with High Z-Index -->
-          <div class="relative">
-            <button @click="showProfileDropdown = !showProfileDropdown; showThemeCustomizer = false" class="flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-accent transition-colors focus-ring">
-              <img class="h-7 w-7 rounded-lg object-cover" src="{% block profile_avatar %}https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80{% endblock %}" alt="User Avatar">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-              </svg>
-            </button>
-            <div x-show="showProfileDropdown" 
-                 @click.away="showProfileDropdown = false" 
-                 x-transition:enter="transition ease-out duration-200"
-                 x-transition:enter-start="opacity-0 scale-95"
-                 x-transition:enter-end="opacity-100 scale-100"
-                 x-transition:leave="transition ease-in duration-75"
-                 x-transition:leave-start="opacity-100 scale-100"
-                 x-transition:leave-end="opacity-0 scale-95"
-                 class="dropdown-high-z absolute right-0 mt-2 w-64 glass-effect rounded-xl shadow-2xl py-2 animate-scale-in">
-              <div class="px-4 py-3 border-b border-border">
-                <div class="flex items-center gap-3">
-                  <img class="h-10 w-10 rounded-lg object-cover" src="{% block dropdown_avatar %}https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80{% endblock %}" alt="User Avatar">
-                  <div>
-                    <p class="font-medium text-foreground text-heading">{% block profile_name %}Admin User{% endblock %}</p>
-                    <p class="text-xs text-muted-foreground">{% block profile_email %}admin@zkteco.com{% endblock %}</p>
-                  </div>
-                </div>
-              </div>
-              <div class="py-2">
-                <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-accent/50 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                  </svg>
-                  Profile Settings
-                </a>
-                <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-accent/50 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                  </svg>
-                  Preferences
-                </a>
-                <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-accent/50 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                  Help & Support
-                </a>
-              </div>
-              <div class="border-t border-border pt-2">
-                <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                  </svg>
-                  Sign Out
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+        </header>
 
-      <!-- Enhanced Main Content -->
-      <main class="flex-1 p-6 overflow-y-auto bg-background">
-        <div class="animate-fade-in-up">
-          {% block content %}
-          <div class="glass-effect rounded-2xl p-8 card-elevated max-w-2xl mx-auto">
-            <div class="flex flex-col items-center justify-center text-center space-y-6">
-              <div class="relative">
-                <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-xl shadow-blue-500/25">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                  </svg>
-                </div>
-                <div class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-background animate-pulse"></div>
-              </div>
-              <div class="space-y-3">
-                <h3 class="text-2xl font-bold text-heading">Welcome to ZKTeco</h3>
-                <p class="text-muted-foreground max-w-md text-body leading-relaxed">
-                  Premium device management system with sophisticated design and powerful features. Your dashboard content will be displayed here.
-                </p>
-              </div>
-              <div class="flex gap-3 mt-6">
-                <button class="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors shadow-lg hover:shadow-xl focus-ring">
-                  Get Started
-                </button>
-                <button class="px-6 py-2.5 bg-accent text-accent-foreground rounded-xl font-medium hover:bg-accent/80 transition-colors focus-ring">
-                  Learn More
-                </button>
-              </div>
-            </div>
-          </div>
-          {% endblock %}
-        </div>
-      </main>
+        
+        <main class="p-6">
+            {% block content %}{% endblock %}
+        </main>
     </div>
-  </div>
 
-  {% block extra_js %}{% endblock %}
-
-  <!-- Enhanced JavaScript -->
-  <script>
-    // Enhanced keyboard shortcuts
-    document.addEventListener('keydown', function(e) {
-      // Cmd/Ctrl + K for search
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        const searchInput = document.querySelector('input[type="search"]');
-        if (searchInput) {
-          searchInput.focus();
-          searchInput.select();
+    <script>
+        // Theme management
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const themeColorToggle = document.getElementById('theme-color-toggle');
+        const themeColorDropdown = document.getElementById('theme-color-dropdown');
+        const themeColorOptions = document.querySelectorAll('.theme-color-option');
+        
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        const savedColor = localStorage.getItem('color-theme') || 'default';
+        
+        function applyTheme(theme, color) {
+            document.documentElement.className = '';
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+            document.documentElement.classList.add(`theme-${color}`);
         }
-      }
-      
-      // Escape to close all dropdowns
-      if (e.key === 'Escape') {
-        // Use Alpine.js data to close dropdowns
-        const alpineComponent = document.querySelector('[x-data]');
-        if (alpineComponent && alpineComponent._x_dataStack) {
-          const data = alpineComponent._x_dataStack[0];
-          if (data.closeAllDropdowns) {
-            data.closeAllDropdowns();
-          }
+        
+        function updateThemeIcon(theme) {
+            if (theme === 'dark') {
+                // Show moon icon for dark mode
+                themeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>';
+                themeToggle.classList.add('text-primary', 'bg-accent');
+                themeToggle.classList.remove('text-muted-foreground');
+            } else {
+                // Show sun icon for light mode
+                themeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>';
+                themeToggle.classList.remove('text-primary', 'bg-accent');
+                themeToggle.classList.add('text-muted-foreground');
+            }
         }
-      }
-    });
-
-    // Enhanced focus management
-    document.addEventListener('focusin', function(e) {
-      if (e.target.matches('button, a, input, select, textarea, [tabindex]')) {
-        e.target.classList.add('focus-visible');
-      }
-    });
-
-    document.addEventListener('focusout', function(e) {
-      e.target.classList.remove('focus-visible');
-    });
-
-    // Performance optimization - Intersection Observer for animations
-    const observeElements = document.querySelectorAll('.animate-fade-in-up, .animate-slide-in-right');
-    if (observeElements.length > 0) {
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.style.animationPlayState = 'running';
-          }
+        
+        // Apply saved theme on load
+        applyTheme(savedTheme, savedColor);
+        updateThemeIcon(savedTheme);
+        
+        // Theme toggle button
+        themeToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            localStorage.setItem('theme', newTheme);
+            applyTheme(newTheme, savedColor);
+            updateThemeIcon(newTheme);
+            
+            // showToast(`Switched to ${newTheme} mode`, 'success', 1500);
         });
-      }, { threshold: 0.1 });
-
-      observeElements.forEach((el) => {
-        el.style.animationPlayState = 'paused';
-        observer.observe(el);
-      });
-    }
-
-    // Handle dropdown z-index issues by ensuring they're always on top
-    document.addEventListener('DOMContentLoaded', function() {
-      const dropdowns = document.querySelectorAll('.dropdown-high-z');
-      dropdowns.forEach(dropdown => {
-        dropdown.addEventListener('click', function(e) {
-          e.stopPropagation();
+        
+        // Theme color dropdown toggle
+        themeColorToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            themeColorDropdown.classList.toggle('hidden');
         });
-      });
-    });
-  </script>
+        
+        // Handle theme color options
+        themeColorOptions.forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const color = option.dataset.color;
+                
+                localStorage.setItem('color-theme', color);
+                applyTheme(savedTheme, color);
+                
+                themeColorDropdown.classList.add('hidden');
+                // showToast(`Theme color changed to ${color}`, 'success', 1500);
+            });
+        });
+
+        // User dropdown
+        const userMenuBtn = document.getElementById('user-menu-btn');
+        const userDropdown = document.getElementById('user-dropdown');
+        
+        userMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('hidden');
+        });
+
+        // Profile dropdown in sidebar
+        const profileMenuBtn = document.getElementById('profile-menu-btn');
+        const profileDropdown = document.getElementById('profile-dropdown');
+        
+        profileMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('hidden');
+        });
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', () => {
+            themeColorDropdown.classList.add('hidden');
+            userDropdown.classList.add('hidden');
+            profileDropdown.classList.add('hidden');
+        });
+
+        // Enhanced Sidebar functionality with state persistence
+        const sidebarTrigger = document.getElementById('sidebar-trigger');
+        const sidebarClose = document.getElementById('sidebar-close');
+        const sidebar = document.getElementById('sidebar');
+        const drawerOverlay = document.getElementById('drawer-overlay');
+        const mainContent = document.querySelector('.min-h-screen');
+
+        // Load saved sidebar state
+        const savedSidebarState = localStorage.getItem('sidebar-open') !== 'false';
+        let sidebarOpen = savedSidebarState;
+
+        function updateSidebarState(isOpen) {
+            const isMobile = window.innerWidth < 1024; // lg breakpoint
+            
+            if (isOpen) {
+                // Show sidebar
+                sidebar.classList.remove('-translate-x-full');
+                if (isMobile) {
+                    drawerOverlay.classList.remove('hidden');
+                } else {
+                    mainContent.classList.remove('ml-0');
+                    mainContent.classList.add('ml-64');
+                }
+                sidebarOpen = true;
+                // Update trigger button appearance
+                sidebarTrigger.classList.add('bg-accent', 'text-accent-foreground');
+            } else {
+                // Hide sidebar
+                sidebar.classList.add('-translate-x-full');
+                if (isMobile) {
+                    drawerOverlay.classList.add('hidden');
+                } else {
+                    mainContent.classList.remove('ml-64');
+                    mainContent.classList.add('ml-0');
+                }
+                sidebarOpen = false;
+                // Update trigger button appearance
+                sidebarTrigger.classList.remove('bg-accent', 'text-accent-foreground');
+            }
+            
+            // Save state to localStorage
+            localStorage.setItem('sidebar-open', sidebarOpen);
+        }
+
+        function toggleSidebar() {
+            updateSidebarState(!sidebarOpen);
+            showToast(sidebarOpen ? 'Sidebar opened' : 'Sidebar closed', 'info', 1000);
+        }
+
+        function closeSidebar() {
+            updateSidebarState(false);
+        }
+
+        function openSidebar() {
+            updateSidebarState(true);
+        }
+
+        // Initialize sidebar state on page load
+        function initializeSidebar() {
+            const isMobile = window.innerWidth < 1024;
+            
+            // On mobile, always start closed
+            if (isMobile) {
+                updateSidebarState(false);
+            } else {
+                // On desktop, use saved state
+                updateSidebarState(savedSidebarState);
+            }
+        }
+
+        // Event listeners
+        sidebarTrigger.addEventListener('click', toggleSidebar);
+        sidebarClose.addEventListener('click', closeSidebar);
+        drawerOverlay.addEventListener('click', closeSidebar);
+
+        function initSubmenus() {
+            document.querySelectorAll('[data-submenu-toggle]').forEach(btn => {
+                const submenuSelector = btn.getAttribute('data-submenu-target');
+                const chevronSelector = btn.getAttribute('data-chevron');
+                const submenu = submenuSelector ? document.querySelector(submenuSelector) : null;
+                const chevron = chevronSelector ? document.querySelector(chevronSelector) : null;
+                if (!submenu) return;
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    submenu.classList.toggle('hidden');
+                    btn.classList.toggle('expanded');
+                    if (chevron) chevron.classList.toggle('rotate-90');
+                });
+            });
+        }
+        initSubmenus();
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSidebar();
+            }
+            // Toggle sidebar with Ctrl/Cmd + B
+            if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+                e.preventDefault();
+                toggleSidebar();
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            const isMobile = window.innerWidth < 1024;
+            
+            if (isMobile) {
+                // On mobile, always hide overlay when sidebar is closed
+                if (!sidebarOpen) {
+                    drawerOverlay.classList.add('hidden');
+                }
+                // Adjust main content margin
+                mainContent.classList.remove('ml-64');
+                mainContent.classList.add('ml-0');
+            } else {
+                // On desktop, always hide overlay
+                drawerOverlay.classList.add('hidden');
+                // Restore sidebar state for desktop
+                if (sidebarOpen) {
+                    mainContent.classList.remove('ml-0');
+                    mainContent.classList.add('ml-64');
+                } else {
+                    mainContent.classList.remove('ml-64');
+                    mainContent.classList.add('ml-0');
+                }
+            }
+        });
+
+        function showToast(message, type = 'success', duration = 3000) {
+            const container = document.getElementById('toast-container');
+            const toastId = 'toast-' + Date.now();
+            
+            const icons = {
+                success: `<svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>`,
+                error: `<svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>`,
+                warning: `<svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>`,
+                info: `<svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>`
+            };
+            
+            const colors = {
+                success: 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/50',
+                error: 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/50',
+                warning: 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/50',
+                info: 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/50'
+            };
+            
+            const toast = document.createElement('div');
+            toast.id = toastId;
+            toast.className = `toast min-w-80 max-w-md p-4 rounded-lg border-2 shadow-xl backdrop-blur-sm ${colors[type]}`;
+            toast.innerHTML = `
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0">
+                        ${icons[type]}
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold text-foreground">${message}</p>
+                    </div>
+                    <button onclick="hideToast('${toastId}')" class="flex-shrink-0 ml-4 text-muted-foreground hover:text-foreground transition-colors p-1 hover:bg-background/50 rounded">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+            
+            setTimeout(() => {
+                hideToast(toastId);
+            }, duration);
+        }
+        
+        function hideToast(toastId) {
+            const toast = document.getElementById(toastId);
+            if (toast) {
+                toast.classList.remove('show');
+                toast.classList.add('hide');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }
+        }
+
+        // Switch functionality
+        function initializeSwitches() {
+            const switches = document.querySelectorAll('.switch input[type="checkbox"]');
+            
+            switches.forEach(switchElement => {
+                switchElement.addEventListener('change', function() {
+                    const switchId = this.id;
+                    const isChecked = this.checked;
+                    const switchName = switchId.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                    
+                    // Show toast based on switch state
+                    if (isChecked) {
+                        showToast(`${switchName} enabled successfully!`, 'success', 2000);
+                    } else {
+                        showToast(`${switchName} disabled successfully!`, 'info', 2000);
+                    }
+                });
+            });
+        }
+
+        // Initialize switches
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSwitches();
+            setActiveNavigation();
+            initializeSidebar();
+        });
+
+        // Set active navigation based on current URL
+        function setActiveNavigation() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-link[data-url]');
+            
+            // Remove active class from all links
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Find matching link and set as active
+            let activeLink = null;
+            let maxMatchLength = 0;
+            
+            navLinks.forEach(link => {
+                const linkUrl = link.getAttribute('data-url');
+                if (linkUrl && currentPath.includes(linkUrl) && linkUrl.length > maxMatchLength) {
+                    maxMatchLength = linkUrl.length;
+                    activeLink = link;
+                }
+            });
+            
+            // Set the best matching link as active
+            if (activeLink) {
+                activeLink.classList.add('active');
+                
+                // Expand the parent submenu if the active link is inside it
+                const submenu = activeLink.closest('#playground-submenu');
+                if (submenu && submenu.classList.contains('hidden')) {
+                    submenu.classList.remove('hidden');
+                    const chevron = document.getElementById('playground-chevron');
+                    if (chevron) {
+                        chevron.classList.add('rotate-90');
+                    }
+                }
+            }
+        }
+
+        // Update active navigation when navigating via AJAX or pushState
+        window.addEventListener('popstate', setActiveNavigation);
+    </script>
 </body>
 </html>

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}কর্মচারী পারফরম্যান্স রিপোর্ট{% endblock %}
+{% block page_title %}কর্মচারী পারফরম্যান্স রিপোর্ট{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <h1 class="text-2xl font-bold">{{ report_title }}</h1>
+    
+    <!-- Filter Form -->
+    <div class="rounded-lg border bg-card shadow-sm p-4">
+        <form method="GET" class="grid md:grid-cols-4 gap-4 items-end">
+            <div>
+                <label class="block text-sm font-medium">শুরুর তারিখ</label>
+                <input type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" class="w-full border rounded-md p-2">
+            </div>
+            <div>
+                <label class="block text-sm font-medium">শেষের তারিখ</label>
+                <input type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" class="w-full border rounded-md p-2">
+            </div>
+            <div>
+                <label class="block text-sm font-medium">বিভাগ</label>
+                <select name="department" class="w-full border rounded-md p-2">
+                    <option value="">সকল বিভাগ</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept.id }}" {% if dept.id|stringformat:"s" == selected_department %}selected{% endif %}>{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="w-full bg-primary text-primary-foreground rounded-md py-2">ফিল্টার</button>
+        </form>
+    </div>
+
+    <!-- Report Table -->
+    <div class="rounded-lg border bg-card shadow-sm overflow-hidden">
+        <table class="min-w-full">
+            <thead class="bg-muted/50">
+                <tr>
+                    <th class="p-3 text-left text-sm font-semibold">কর্মচারী</th>
+                    <th class="p-3 text-left text-sm font-semibold">উপস্থিতির হার</th>
+                    <th class="p-3 text-left text-sm font-semibold">কাজের সময়</th>
+                    <th class="p-3 text-left text-sm font-semibold">ওভারটাইম</th>
+                    <th class="p-3 text-left text-sm font-semibold">বিলম্বে আগমন</th>
+                    <th class="p-3 text-left text-sm font-semibold">পারফরম্যান্স স্কোর</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in report_data %}
+                <tr class="border-b">
+                    <td class="p-3">{{ data.employee_name }} ({{ data.employee_id }})</td>
+                    <td class="p-3">{{ data.attendance_percentage }}%</td>
+                    <td class="p-3">{{ data.total_work_hours }} ঘণ্টা</td>
+                    <td class="p-3">{{ data.total_overtime_hours }} ঘণ্টা</td>
+                    <td class="p-3">{{ data.late_arrivals }} দিন</td>
+                    <td class="p-3 font-bold">{{ data.performance_score }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="p-4 text-center">কোনো তথ্য পাওয়া যায়নি।</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Employee - {{ block.super }}{% endblock %}
+{% block page_title %}Delete Employee{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto space-y-6">
+    <div class="rounded-lg border bg-card shadow-sm">
+        <div class="border-b bg-muted/50 px-6 py-4">
+            <h2 class="text-lg font-semibold text-foreground">Confirm Deletion</h2>
+        </div>
+        <div class="p-6 space-y-4">
+            <p class="text-sm text-muted-foreground">Are you sure you want to delete employee <span class="font-medium text-foreground">{{ object.name }}</span> (ID: {{ object.employee_id }})? This action cannot be undone.</p>
+            <form method="post" class="flex items-center justify-end gap-2">
+                {% csrf_token %}
+                <a href="{% url 'zkteco:employee_detail' object.pk %}" class="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</a>
+                <button type="submit" class="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

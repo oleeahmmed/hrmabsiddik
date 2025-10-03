@@ -213,11 +213,14 @@ class MobileAttendanceView(LoginRequiredMixin, TemplateView):
         # Check if user has any location assignments
         has_assignments = UserLocation.objects.filter(user=self.request.user).exists()
         
-        # Try to get employee record
+        # Try to get employee record: prefer FK to user, fallback to employee_id=username
         try:
-            employee = Employee.objects.get(employee_id=self.request.user.username)
+            employee = Employee.objects.get(user=self.request.user)
         except Employee.DoesNotExist:
-            employee = None
+            try:
+                employee = Employee.objects.get(employee_id=self.request.user.username)
+            except Employee.DoesNotExist:
+                employee = None
         
         context.update({
             'title': _('Mobile Attendance'),
@@ -327,7 +330,7 @@ class MarkAttendanceView(LoginRequiredMixin, View):
                     location=location
                 ).first()
                 
-                if not user_zkteco:
+                if not user_location:
                     logger.warning(
                         f"User {request.user.username} attempted to mark attendance at "
                         f"unassigned location {location.name}"

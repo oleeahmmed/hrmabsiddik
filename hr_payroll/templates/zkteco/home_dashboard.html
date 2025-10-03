@@ -1,0 +1,865 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}HRM Dashboard - {{ block.super }}{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<style>
+    /* Enhanced Dashboard Styles */
+    .dashboard-card {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: calc(var(--radius) - 2px);
+    }
+    
+    .dashboard-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    }
+    
+    .dark .dashboard-card:hover {
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    }
+    
+    .stats-card {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: calc(var(--radius) - 2px);
+        padding: 24px;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    }
+    
+    .dark .stats-card:hover {
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    }
+    
+    .stats-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 320px;
+        width: 100%;
+        background: hsl(var(--card));
+        border-radius: calc(var(--radius) - 2px);
+        padding: 24px;
+        border: 1px solid hsl(var(--border));
+    }
+
+    .chart-container canvas {
+        background: hsl(var(--card)) !important;
+    }
+    
+    .welcome-section {
+        background: linear-gradient(135deg, hsl(var(--primary) / 0.1), hsl(var(--accent) / 0.1));
+        border: 1px solid hsl(var(--border));
+        border-radius: calc(var(--radius) - 2px);
+        padding: 32px;
+        margin-bottom: 32px;
+    }
+    
+    .metric-card {
+        background: hsl(var(--muted) / 0.3);
+        border: 1px solid hsl(var(--border));
+        border-radius: calc(var(--radius) - 2px);
+        padding: 16px;
+        transition: all 0.2s ease;
+    }
+    
+    .metric-card:hover {
+        background: hsl(var(--muted) / 0.5);
+        transform: translateY(-1px);
+    }
+    
+    .pulse-animation {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+    
+    .fade-in {
+        animation: fadeIn 0.6s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<div class="space-y-8 fade-in">
+    <!-- Enhanced Welcome Section -->
+    <div class="welcome-section">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-foreground mb-2">Welcome back, {{ request.user.first_name|default:request.user.username }}! 👋</h1>
+                <p class="text-muted-foreground text-lg">Here's your HR dashboard overview for today</p>
+            </div>
+            <div class="hidden md:block">
+                <div class="text-right">
+                    <p class="text-sm text-muted-foreground">Current Time</p>
+                    <p class="text-2xl font-semibold text-foreground" id="current-time"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="stats-card">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-muted-foreground mb-1">Total Employees</p>
+                    <p class="text-3xl font-bold text-foreground">{{ stats.total_employees|default:0 }}</p>
+                    <div class="flex items-center mt-2">
+                        <svg class="w-4 h-4 text-green-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                        </svg>
+                        <span class="text-xs text-green-600 dark:text-green-400">Active</span>
+                    </div>
+                </div>
+                <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-muted-foreground mb-1">Today Present</p>
+                    <p class="text-3xl font-bold text-foreground">{{ stats.today_present|default:0 }}</p>
+                    <div class="flex items-center mt-2">
+                        <div class="w-2 h-2 bg-green-500 rounded-full mr-2 pulse-animation"></div>
+                        <span class="text-xs text-green-600 dark:text-green-400">Live</span>
+                    </div>
+                </div>
+                <div class="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-muted-foreground mb-1">Today Absent</p>
+                    <p class="text-3xl font-bold text-foreground">{{ stats.today_absent|default:0 }}</p>
+                    <div class="flex items-center mt-2">
+                        <svg class="w-4 h-4 text-red-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span class="text-xs text-red-600 dark:text-red-400">Attention</span>
+                    </div>
+                </div>
+                <div class="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-muted-foreground mb-1">On Leave</p>
+                    <p class="text-3xl font-bold text-foreground">{{ stats.today_leave|default:0 }}</p>
+                    <div class="flex items-center mt-2">
+                        <svg class="w-4 h-4 text-blue-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <span class="text-xs text-blue-600 dark:text-blue-400">Scheduled</span>
+                    </div>
+                </div>
+                <div class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main dashboard cards -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Enhanced Attendance Trend Chart -->
+        <div class="dashboard-card p-6">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-foreground">Attendance Trend</h3>
+                    <p class="text-sm text-muted-foreground">Last 7 days performance</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span class="text-sm text-muted-foreground">Live Data</span>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="attendanceChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Enhanced Pending Leaves -->
+        <div class="dashboard-card p-6">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-foreground">Pending Leave Approvals</h3>
+                    <p class="text-sm text-muted-foreground">Requires your attention</p>
+                </div>
+                <a href="#" class="text-primary text-sm font-medium hover:underline flex items-center">
+                    See All
+                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="space-y-4 h-80 overflow-y-auto">
+                {% for leave in pending_leaves %}
+                <div class="metric-card">
+                <div class="flex items-start space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center flex-shrink-0">
+                        <span class="text-sm font-bold text-yellow-600 dark:text-yellow-400">{{ leave.employee.name|slice:":1"|upper }}</span>
+                    </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-foreground truncate">{{ leave.employee.name }}</p>
+                            <p class="text-xs text-muted-foreground">{{ leave.leave_type.name }} • {{ leave.start_date|date:"M d" }} - {{ leave.end_date|date:"M d" }}</p>
+                            <div class="flex items-center mt-1">
+                                <span class="text-xs text-muted-foreground">{{ leave.created_at|timesince }} ago</span>
+                                <span class="ml-2 px-2 py-0.5 text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-full">Pending</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-12">
+                    <div class="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm text-muted-foreground">All caught up! No pending leave requests.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Additional Info cards -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Today's Late Comers -->
+        <div class="dashboard-card p-6">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-foreground">Today's Late Comers</h3>
+                    <p class="text-sm text-muted-foreground">Arrived after shift time</p>
+                </div>
+                <div class="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="space-y-3 h-56 overflow-y-auto">
+                {% for item in todays_late_comers %}
+                <div class="metric-card">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-foreground truncate">{{ item.employee.name }}</p>
+                        <p class="text-xs text-muted-foreground">{{ item.employee.designation.name|default:'N/A' }}</p>
+                    </div>
+                    <div class="text-right flex-shrink-0 ml-2">
+                        <p class="text-sm font-medium text-yellow-600 dark:text-yellow-400">{{ item.check_in|date:"H:i" }}</p>
+                        <p class="text-xs text-muted-foreground">Shift: {{ item.shift_start|time:"H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-8">
+                    <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm text-muted-foreground">Great! No late comers today.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Today's Early Leavers -->
+        <div class="dashboard-card p-6">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-foreground">Today's Early Leavers</h3>
+                    <p class="text-sm text-muted-foreground">Left before shift end</p>
+                </div>
+                <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="space-y-3 h-56 overflow-y-auto">
+                {% for item in todays_early_leavers %}
+                <div class="metric-card">
+                 <div class="flex items-center justify-between">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-foreground truncate">{{ item.employee.name }}</p>
+                        <p class="text-xs text-muted-foreground">{{ item.employee.designation.name|default:'N/A' }}</p>
+                    </div>
+                    <div class="text-right flex-shrink-0 ml-2">
+                            <p class="text-sm font-medium text-blue-600 dark:text-blue-400">{{ item.check_out|date:"H:i" }}</p>
+                        <p class="text-xs text-muted-foreground">Shift: {{ item.shift_end|time:"H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-8">
+                    <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm text-muted-foreground">Perfect! No early leavers today.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Upcoming Holidays -->
+        <div class="dashboard-card p-6">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-foreground">Upcoming Holidays</h3>
+                    <p class="text-sm text-muted-foreground">Next company holidays</p>
+                </div>
+                <div class="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="space-y-3 h-56 overflow-y-auto">
+                {% for holiday in upcoming_holidays %}
+                <div class="metric-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-foreground">{{ holiday.name }}</p>
+                        <p class="text-xs text-muted-foreground">{{ holiday.date|date:"F d, Y" }}</p>
+                    </div>
+                        <div class="text-right">
+                    <span class="text-xs text-muted-foreground">{{ holiday.date|timeuntil }} left</span>
+                            <div class="mt-1">
+                                <span class="px-2 py-0.5 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">Holiday</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-8">
+                    <div class="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm text-muted-foreground">No upcoming holidays scheduled.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Enhanced Charts Section -->
+    <div class="mt-12">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h2 class="text-2xl font-bold text-foreground">Analytics Overview</h2>
+                <p class="text-muted-foreground">Detailed insights and performance metrics</p>
+            </div>
+            <div class="flex items-center space-x-2">
+                <div class="w-2 h-2 bg-green-500 rounded-full pulse-animation"></div>
+                <span class="text-sm text-muted-foreground">Real-time Data</span>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Enhanced Department Distribution Chart -->
+            <div class="dashboard-card p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-foreground">Department Distribution</h3>
+                        <p class="text-sm text-muted-foreground">Employee count by department</p>
+                    </div>
+                    <div class="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="departmentChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Enhanced Today's Status Chart -->
+            <div class="dashboard-card p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-foreground">Today's Status</h3>
+                        <p class="text-sm text-muted-foreground">Current attendance breakdown</p>
+                    </div>
+                    <div class="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Current time display
+    function updateCurrentTime() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: true 
+        });
+        const timeElement = document.getElementById('current-time');
+        if (timeElement) {
+            timeElement.textContent = timeString;
+        }
+    }
+    
+    // Update time every second
+    updateCurrentTime();
+    setInterval(updateCurrentTime, 1000);
+
+    // Get shadcn theme colors from CSS variables - PERFECT THEME SYNC
+    function getShadcnColors() {
+        const computedStyle = getComputedStyle(document.documentElement);
+        
+        // Get primary color variations
+        const primary = computedStyle.getPropertyValue('--primary').trim();
+        const primaryForeground = computedStyle.getPropertyValue('--primary-foreground').trim();
+        
+        // Get secondary colors
+        const secondary = computedStyle.getPropertyValue('--secondary').trim();
+        const secondaryForeground = computedStyle.getPropertyValue('--secondary-foreground').trim();
+        
+        // Get accent colors
+        const accent = computedStyle.getPropertyValue('--accent').trim();
+        const accentForeground = computedStyle.getPropertyValue('--accent-foreground').trim();
+        
+        // Get muted colors
+        const muted = computedStyle.getPropertyValue('--muted').trim();
+        const mutedForeground = computedStyle.getPropertyValue('--muted-foreground').trim();
+        
+        // Get destructive colors
+        const destructive = computedStyle.getPropertyValue('--destructive').trim();
+        const destructiveForeground = computedStyle.getPropertyValue('--destructive-foreground').trim();
+        
+        // Get foreground and background
+        const foreground = computedStyle.getPropertyValue('--foreground').trim();
+        const background = computedStyle.getPropertyValue('--background').trim();
+        const card = computedStyle.getPropertyValue('--card').trim();
+        const border = computedStyle.getPropertyValue('--border').trim();
+        
+        return {
+            primary: `hsl(${primary})`,
+            primaryForeground: `hsl(${primaryForeground})`,
+            secondary: `hsl(${secondary})`,
+            secondaryForeground: `hsl(${secondaryForeground})`,
+            accent: `hsl(${accent})`,
+            accentForeground: `hsl(${accentForeground})`,
+            muted: `hsl(${muted})`,
+            mutedForeground: `hsl(${mutedForeground})`,
+            destructive: `hsl(${destructive})`,
+            destructiveForeground: `hsl(${destructiveForeground})`,
+            foreground: `hsl(${foreground})`,
+            background: `hsl(${background})`,
+            card: `hsl(${card})`,
+            border: `hsl(${border})`,
+            // Create variations for multiple datasets
+            primaryLight: `hsl(${primary} / 0.1)`,
+            secondaryLight: `hsl(${secondary} / 0.1)`,
+            accentLight: `hsl(${accent} / 0.1)`,
+            mutedLight: `hsl(${muted} / 0.1)`,
+            destructiveLight: `hsl(${destructive} / 0.1)`
+        };
+    }
+
+    // Enhanced shadcn-style chart configuration - PERFECT THEME SYNC
+    function getShadcnChartConfig() {
+        const colors = getShadcnColors();
+        
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            backgroundColor: colors.card,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            elements: {
+                point: {
+                    backgroundColor: colors.primary,
+                    borderColor: colors.card,
+                    borderWidth: 2
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    align: 'start',
+                    labels: {
+                        color: colors.foreground,
+                        usePointStyle: true,
+                        padding: 20,
+                        font: {
+                            family: 'Inter, sans-serif',
+                            size: 13,
+                            weight: '500'
+                        },
+                        boxWidth: 8,
+                        boxHeight: 8
+                    }
+                },
+                tooltip: {
+                    backgroundColor: colors.card,
+                    titleColor: colors.foreground,
+                    bodyColor: colors.foreground,
+                    borderColor: colors.border,
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: true,
+                    padding: 12,
+                    titleFont: {
+                        family: 'Inter, sans-serif',
+                        size: 13,
+                        weight: '600'
+                    },
+                    bodyFont: {
+                        family: 'Inter, sans-serif',
+                        size: 12
+                    },
+                    titleSpacing: 4,
+                    bodySpacing: 4
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    ticks: {
+                        color: colors.mutedForeground,
+                        font: {
+                            family: 'Inter, sans-serif',
+                            size: 12
+                        },
+                        padding: 8
+                    },
+                    grid: {
+                        color: colors.border,
+                        drawBorder: false,
+                        lineWidth: 1,
+                        drawTicks: false
+                    },
+                    border: {
+                        display: false
+                    }
+                },
+                y: {
+                    display: true,
+                    ticks: {
+                        color: colors.mutedForeground,
+                        font: {
+                            family: 'Inter, sans-serif',
+                            size: 12
+                        },
+                        padding: 8
+                    },
+                    grid: {
+                        color: colors.border,
+                        drawBorder: false,
+                        lineWidth: 1,
+                        drawTicks: false
+                    },
+                    border: {
+                        display: false
+                    }
+                }
+            }
+        };
+    }
+
+    function initializeCharts() {
+        // Destroy existing charts to prevent memory leaks
+        Chart.helpers.each(Chart.instances, function(instance) {
+            instance.destroy();
+        });
+        
+        const colors = getShadcnColors();
+        const config = getShadcnChartConfig();
+        
+        // Set canvas backgrounds to theme color
+        const canvases = document.querySelectorAll('.chart-container canvas');
+        canvases.forEach(canvas => {
+            canvas.style.backgroundColor = colors.card;
+        });
+        
+        // Enhanced Shadcn Attendance Trend Chart (Line) - PERFECT THEME SYNC
+        const attendanceCtx = document.getElementById('attendanceChart')?.getContext('2d');
+        if (attendanceCtx) {
+            new Chart(attendanceCtx, {
+                type: 'line',
+                data: {
+                    labels: {{ attendance_dates|safe }},
+                    datasets: [{
+                            label: 'Present',
+                            data: {{ present_counts|safe }},
+                        borderColor: colors.primary,
+                        backgroundColor: colors.primaryLight,
+                        borderWidth: 3,
+                        tension: 0.4,
+                            fill: true,
+                        pointBackgroundColor: colors.primary,
+                        pointBorderColor: colors.card,
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
+                        pointHoverBackgroundColor: colors.primary,
+                        pointHoverBorderColor: colors.card,
+                        pointHoverBorderWidth: 3,
+                        pointStyle: 'circle'
+                    }, {
+                            label: 'Absent',
+                            data: {{ absent_counts|safe }},
+                        borderColor: colors.destructive,
+                        backgroundColor: colors.destructiveLight,
+                        borderWidth: 3,
+                        tension: 0.4,
+                            fill: true,
+                        pointBackgroundColor: colors.destructive,
+                        pointBorderColor: colors.card,
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
+                        pointHoverBackgroundColor: colors.destructive,
+                        pointHoverBorderColor: colors.card,
+                        pointHoverBorderWidth: 3,
+                        pointStyle: 'circle'
+                    }]
+                },
+                options: config
+            });
+        }
+
+        // Enhanced Shadcn Department Distribution Chart (Doughnut) - PERFECT THEME SYNC
+        const departmentCtx = document.getElementById('departmentChart')?.getContext('2d');
+        if (departmentCtx) {
+            new Chart(departmentCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: {{ dept_names|safe }},
+                    datasets: [{
+                        data: {{ dept_counts|safe }},
+                        backgroundColor: [
+                            colors.primary,
+                            colors.secondary,
+                            colors.accent,
+                            colors.muted,
+                            colors.destructive,
+                            colors.primaryForeground
+                        ],
+                        borderColor: [colors.card],
+                        borderWidth: 2,
+                        hoverOffset: 8,
+                        hoverBackgroundColor: [
+                            colors.primary + '90',
+                            colors.secondary + '90',
+                            colors.accent + '90',
+                            colors.muted + '90',
+                            colors.destructive + '90',
+                            colors.primaryForeground + '90'
+                        ],
+                        hoverBorderColor: [colors.card],
+                        hoverBorderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    backgroundColor: colors.card,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            align: 'center',
+                            labels: {
+                                color: colors.foreground,
+                                usePointStyle: true,
+                                padding: 20,
+                                font: {
+                                    family: 'Inter, sans-serif',
+                                    size: 13,
+                                    weight: '500'
+                                },
+                                boxWidth: 8,
+                                boxHeight: 8
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: colors.card,
+                            titleColor: colors.foreground,
+                            bodyColor: colors.foreground,
+                            borderColor: colors.border,
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            displayColors: true,
+                            padding: 12,
+                            titleFont: {
+                                family: 'Inter, sans-serif',
+                                size: 13,
+                                weight: '600'
+                            },
+                            bodyFont: {
+                                family: 'Inter, sans-serif',
+                                size: 12
+                            },
+                            titleSpacing: 4,
+                            bodySpacing: 4
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Enhanced Shadcn Today's Status Chart (Pie) - PERFECT THEME SYNC
+        const statusCtx = document.getElementById('statusChart')?.getContext('2d');
+        if (statusCtx) {
+            new Chart(statusCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Present', 'Absent', 'On Leave'],
+                    datasets: [{
+                        data: [{{ stats.today_present|default:0 }}, {{ stats.today_absent|default:0 }}, {{ stats.today_leave|default:0 }}],
+                        backgroundColor: [
+                            colors.primary,
+                            colors.destructive,
+                            colors.accent
+                        ],
+                        borderColor: [colors.card],
+                        borderWidth: 2,
+                        hoverOffset: 8,
+                        hoverBackgroundColor: [
+                            colors.primary + '90',
+                            colors.destructive + '90',
+                            colors.accent + '90'
+                        ],
+                        hoverBorderColor: [colors.card],
+                        hoverBorderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    backgroundColor: colors.card,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            align: 'center',
+                            labels: {
+                                color: colors.foreground,
+                                usePointStyle: true,
+                                padding: 20,
+                                font: {
+                                    family: 'Inter, sans-serif',
+                                    size: 13,
+                                    weight: '500'
+                                },
+                                boxWidth: 8,
+                                boxHeight: 8
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: colors.card,
+                            titleColor: colors.foreground,
+                            bodyColor: colors.foreground,
+                            borderColor: colors.border,
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            displayColors: true,
+                            padding: 12,
+                            titleFont: {
+                                family: 'Inter, sans-serif',
+                                size: 13,
+                                weight: '600'
+                            },
+                            bodyFont: {
+                                family: 'Inter, sans-serif',
+                                size: 12
+                            },
+                            titleSpacing: 4,
+                            bodySpacing: 4
+                        }
+                    }
+                }
+            });
+        }
+    }
+    
+    // Initialize charts on page load
+    initializeCharts();
+    
+    // Re-initialize charts on theme change
+    const observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            if (mutation.attributeName === 'class') {
+                setTimeout(initializeCharts, 100);
+                break;
+            }
+        }
+    });
+    
+    observer.observe(document.documentElement, { attributes: true });
+});
+</script>
+{% endblock %}
+

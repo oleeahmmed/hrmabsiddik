@@ -44,7 +44,10 @@ INSTALLED_APPS = [
     'core',
     'hr_payroll',
 ]
-
+# Add these settings to your settings.py
+LOGIN_URL = '/login/'  # or 'zkteco:login' if you want to use named URL
+LOGIN_REDIRECT_URL = '/'  # This will redirect to home after login
+LOGOUT_REDIRECT_URL = '/login/'  # Redirect to login after logout
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # CORS
     'django.middleware.security.SecurityMiddleware',

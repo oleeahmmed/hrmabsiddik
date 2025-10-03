@@ -6,21 +6,17 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import transaction
-from django.db.models import Count, Q, Min, Max
 from django.utils import timezone
 from datetime import datetime, date, timedelta
 from django.core.cache import cache
-
 import json
 import logging
 import csv
-from decimal import Decimal, InvalidOperation
 
 from .models import (
-    AttendanceLog, Employee, Attendance, 
-    Department, AttendanceProcessorConfiguration
+    Employee, Attendance, AttendanceProcessorConfiguration,
+    Shift, Holiday, LeaveApplication
 )
-from .attendance_processor import EnhancedAttendanceProcessor
 from core.models import Company
 
 logger = logging.getLogger(__name__)
@@ -36,7 +32,7 @@ def get_company_from_request(request):
 
 @login_required
 def simple_attendance_generation(request):
-    """Simple attendance generation page using active configuration"""
+    """Simple attendance generation page"""
     try:
         company = get_company_from_request(request)
         if not company:
@@ -47,28 +43,64 @@ def simple_attendance_generation(request):
         active_config = AttendanceProcessorConfiguration.get_active_config(company)
         
         if not active_config:
-            messages.warning(request, "No active attendance configuration found. Please create one first.")
-            return redirect('/')
+            active_config = AttendanceProcessorConfiguration.objects.create(
+                company=company,
+                name="Default Configuration",
+                is_active=True,
+                created_by=request.user
+            )
+            messages.info(request, "Default configuration created successfully.")
         
-        # Get basic statistics
+        # Get statistics
         try:
-            logs_count = AttendanceLog.objects.filter(employee__company=company).count()
-            employees_count = Employee.objects.filter(company=company, is_active=True).count()
-            attendance_count = Attendance.objects.filter(employee__company=company).count()
-        except Exception:
-            logs_count = employees_count = attendance_count = 0
+            employees = Employee.objects.filter(company=company, is_active=True)
+            employees_count = employees.count()
+            
+            today = timezone.now().date()
+            first_day = today.replace(day=1)
+            
+            attendance_count = Attendance.objects.filter(
+                employee__company=company,
+                date__gte=first_day
+            ).count()
+            
+            present_count = Attendance.objects.filter(
+                employee__company=company,
+                date__gte=first_day,
+                status='P'
+            ).count()
+            
+            absent_count = Attendance.objects.filter(
+                employee__company=company,
+                date__gte=first_day,
+                status='A'
+            ).count()
+            
+        except Exception as e:
+            logger.error(f"Error getting stats: {str(e)}")
+            employees_count = attendance_count = present_count = absent_count = 0
+            employees = Employee.objects.none()
+        
+        # Get departments and shifts
+        from .models import Department
+        departments = Department.objects.filter(company=company)
+        shifts = Shift.objects.filter(company=company)
         
         stats = {
-            'total_logs': logs_count,
             'total_employees': employees_count,
             'total_attendance': attendance_count,
+            'present_count': present_count,
+            'absent_count': absent_count,
         }
         
         context = {
             'company': company,
             'config': active_config,
             'stats': stats,
-            'today': timezone.now().date(),
+            'today': today,
+            'all_employees': employees,
+            'departments': departments,
+            'shifts': shifts,
         }
         
         return render(request, 'zkteco/simple_attendance_generation.html', context)
@@ -82,10 +114,11 @@ def simple_attendance_generation(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def simple_attendance_preview(request):
-    """Generate attendance preview using active configuration"""
+    """Generate attendance preview"""
     try:
-        data = json.loads(request.body)
+        data = json.loads(request.body.decode('utf-8'))
         company = get_company_from_request(request)
+        
         if not company:
             return JsonResponse({'success': False, 'error': 'No company access found'})
         
@@ -99,132 +132,154 @@ def simple_attendance_preview(request):
         try:
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
             end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
-        except ValueError:
-            return JsonResponse({'success': False, 'error': 'Invalid date format'})
+        except ValueError as e:
+            return JsonResponse({'success': False, 'error': f'Invalid date format: {str(e)}'})
         
         if end_date < start_date:
             return JsonResponse({'success': False, 'error': 'End date must be after start date'})
         
-        # Check date range (max 31 days)
-        if (end_date - start_date).days > 31:
-            return JsonResponse({'success': False, 'error': 'Date range cannot exceed 31 days'})
+        # Get filter parameters
+        employee_ids = data.get('employee_ids', [])
+        department_ids = data.get('department_ids', [])
         
-        # Get active configuration
-        active_config = AttendanceProcessorConfiguration.get_active_config(company)
+        # Get employees
+        employees_query = Employee.objects.filter(company=company, is_active=True)
         
-        if not active_config:
-            return JsonResponse({'success': False, 'error': 'No active attendance configuration found'})
+        if employee_ids:
+            employees_query = employees_query.filter(id__in=employee_ids)
         
-        config_dict = active_config.get_config_dict()
+        if department_ids:
+            employees_query = employees_query.filter(department_id__in=department_ids)
         
-        # Initialize processor with configuration
-        try:
-            processor = EnhancedAttendanceProcessor(config_dict)
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': f'Configuration error: {str(e)}'})
+        employees = employees_query.select_related('department', 'default_shift')
         
-        # Get all active employees
-        try:
-            employees = list(Employee.objects.filter(
-                company=company, is_active=True
-            ).select_related('department', 'designation', 'default_shift'))
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': f'Error fetching employees: {str(e)}'})
+        if not employees.exists():
+            return JsonResponse({'success': False, 'error': 'No employees found matching the criteria'})
         
-        if not employees:
-            return JsonResponse({'success': False, 'error': 'No active employees found'})
-        
-        # Process attendance using configuration
-        try:
-            attendance_records = processor.process_bulk_attendance(
-                employees, start_date, end_date, company
-            )
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': f'Processing error: {str(e)}'})
-        
-        # Convert to preview format
+        # Generate preview data
         preview_data = []
-        summary = {
-            'total_records': 0,
-            'present_count': 0,
-            'absent_count': 0,
-            'late_count': 0,
-            'half_day_count': 0,
-            'holiday_count': 0,
-            'leave_count': 0,
-            'total_working_hours': 0,
-            'total_overtime_hours': 0,
-            'total_overtime_amount': 0
-        }
+        config = AttendanceProcessorConfiguration.get_active_config(company)
+        weekend_days = config.weekend_days if config else [4, 5]  # Friday, Saturday
         
-        for record in attendance_records:
-            try:
-                employee = record.get('employee')
-                if not employee:
-                    continue
-                
-                # Check existing record
+        # Get holidays
+        holidays = set(Holiday.objects.filter(
+            company=company,
+            date__range=[start_date, end_date]
+        ).values_list('date', flat=True))
+        
+        current_date = start_date
+        present_count = 0
+        absent_count = 0
+        late_count = 0
+        total_overtime = 0
+        
+        while current_date <= end_date:
+            is_weekend = current_date.weekday() in weekend_days
+            is_holiday = current_date in holidays
+            
+            for employee in employees:
+                # Check if attendance already exists
                 existing = Attendance.objects.filter(
                     employee=employee,
-                    date=record.get('date')
-                ).exists()
+                    date=current_date
+                ).first()
                 
-                # Calculate overtime amount
-                overtime_hours = float(record.get('overtime_hours', 0))
-                overtime_amount = 0.0
-                if overtime_hours > 0:
-                    try:
-                        overtime_rate = employee.get_overtime_rate()
-                        overtime_amount = overtime_hours * overtime_rate
-                    except:
-                        overtime_amount = overtime_hours * float(employee.per_hour_rate)
+                if existing and not data.get('regenerate_existing', False):
+                    continue
+                
+                # Determine status
+                if is_weekend:
+                    status = 'W'
+                    check_in = check_out = None
+                    working_hours = overtime_hours = 0
+                elif is_holiday:
+                    status = 'H'
+                    check_in = check_out = None
+                    working_hours = overtime_hours = 0
+                else:
+                    # Check for leave
+                    has_leave = LeaveApplication.objects.filter(
+                        employee=employee,
+                        start_date__lte=current_date,
+                        end_date__gte=current_date,
+                        status='A'
+                    ).exists()
+                    
+                    if has_leave:
+                        status = 'L'
+                        check_in = check_out = None
+                        working_hours = overtime_hours = 0
+                    else:
+                        # Get from attendance logs
+                        from .models import AttendanceLog
+                        logs = AttendanceLog.objects.filter(
+                            employee=employee,
+                            timestamp__date=current_date
+                        ).order_by('timestamp')
+                        
+                        if logs.exists():
+                            check_in = logs.first().timestamp
+                            check_out = logs.last().timestamp if logs.count() > 1 else None
+                            
+                            if check_out:
+                                delta = check_out - check_in
+                                working_hours = round(delta.total_seconds() / 3600, 2)
+                                
+                                # Calculate overtime
+                                expected_hours = employee.expected_working_hours
+                                if working_hours > expected_hours:
+                                    overtime_hours = round(working_hours - expected_hours, 2)
+                                    total_overtime += overtime_hours
+                                else:
+                                    overtime_hours = 0
+                                
+                                status = 'P'
+                                present_count += 1
+                            else:
+                                working_hours = overtime_hours = 0
+                                status = 'A'
+                                absent_count += 1
+                        else:
+                            status = 'A'
+                            check_in = check_out = None
+                            working_hours = overtime_hours = 0
+                            absent_count += 1
+                
+                shift_name = employee.default_shift.name if employee.default_shift else 'No Shift'
+                
+                overtime_amount = round(overtime_hours * float(employee.get_overtime_rate()), 2) if overtime_hours > 0 else 0
                 
                 preview_record = {
                     'employee_id': employee.id,
                     'employee_name': employee.name,
                     'employee_code': employee.employee_id,
-                    'department': employee.department.name if employee.department else 'N/A',
-                    'date': record.get('date').isoformat(),
-                    'check_in_time': record.get('in_time').strftime('%H:%M:%S') if record.get('in_time') else None,
-                    'check_out_time': record.get('out_time').strftime('%H:%M:%S') if record.get('out_time') else None,
-                    'working_hours': round(float(record.get('working_hours', 0)), 2),
-                    'overtime_hours': round(overtime_hours, 2),
-                    'overtime_amount': round(overtime_amount, 2),
-                    'status': record.get('status', 'A'),
-                    'shift_name': record.get('shift_name', 'Default'),
-                    'action': 'update' if existing else 'create',
-                    'existing_record': existing
+                    'department': employee.department.name if employee.department else 'General',
+                    'date': current_date.isoformat(),
+                    'check_in_time': check_in.strftime('%H:%M:%S') if check_in else None,
+                    'check_out_time': check_out.strftime('%H:%M:%S') if check_out else None,
+                    'working_hours': working_hours,
+                    'overtime_hours': overtime_hours,
+                    'overtime_amount': overtime_amount,
+                    'status': status,
+                    'shift_name': shift_name,
                 }
                 
                 preview_data.append(preview_record)
-                
-                # Update summary
-                summary['total_records'] += 1
-                status = record.get('status', 'A')
-                
-                if status == 'P':
-                    summary['present_count'] += 1
-                elif status == 'A':
-                    summary['absent_count'] += 1
-                elif status == 'LAT':
-                    summary['late_count'] += 1
-                elif status == 'HAL':
-                    summary['half_day_count'] += 1
-                elif status == 'H':
-                    summary['holiday_count'] += 1
-                elif status == 'L':
-                    summary['leave_count'] += 1
-                
-                summary['total_working_hours'] += float(record.get('working_hours', 0))
-                summary['total_overtime_hours'] += overtime_hours
-                summary['total_overtime_amount'] += overtime_amount
-                
-            except Exception as e:
-                logger.warning(f"Error processing record: {str(e)}")
-                continue
+            
+            current_date += timedelta(days=1)
+        
+        # Calculate summary
+        summary = {
+            'total_records': len(preview_data),
+            'present_count': present_count,
+            'absent_count': absent_count,
+            'late_count': late_count,
+            'total_overtime_hours': round(total_overtime, 2),
+            'total_overtime_amount': round(sum([r.get('overtime_amount', 0) for r in preview_data]), 2)
+        }
         
         # Cache preview data
-        cache_key = f"simple_preview_{request.user.id}_{company.id}"
+        cache_key = f"simple_preview_{request.user.id}"
         cache.set(cache_key, {
             'data': preview_data,
             'params': data,
@@ -235,11 +290,11 @@ def simple_attendance_preview(request):
             'success': True,
             'preview_data': preview_data,
             'summary': summary,
-            'config_name': active_config.name
+            'message': f'Successfully generated {len(preview_data)} preview records'
         })
         
-    except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'error': 'Invalid request format'})
+    except json.JSONDecodeError as e:
+        return JsonResponse({'success': False, 'error': f'Invalid JSON format: {str(e)}'})
     except Exception as e:
         logger.error(f"Error in preview: {str(e)}")
         return JsonResponse({'success': False, 'error': f'Preview failed: {str(e)}'})
@@ -248,108 +303,95 @@ def simple_attendance_preview(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def simple_generate_records(request):
-    """Generate attendance records from cached preview data"""
+    """Generate attendance records"""
     try:
+        data = json.loads(request.body.decode('utf-8'))
         company = get_company_from_request(request)
+        
         if not company:
             return JsonResponse({'success': False, 'error': 'No company access found'})
         
         # Get cached preview data
-        cache_key = f"simple_preview_{request.user.id}_{company.id}"
+        cache_key = f"simple_preview_{request.user.id}"
         cached_data = cache.get(cache_key)
         
         if not cached_data:
             return JsonResponse({'success': False, 'error': 'Preview data expired. Please generate preview again.'})
         
         preview_data = cached_data.get('data', [])
-        if not preview_data:
-            return JsonResponse({'success': False, 'error': 'No data available'})
         
-        # Generate records
+        if not preview_data:
+            return JsonResponse({'success': False, 'error': 'No data available to generate'})
+        
         generated_count = 0
         updated_count = 0
         error_count = 0
         
-        try:
-            with transaction.atomic():
-                for record in preview_data:
-                    try:
-                        employee = Employee.objects.get(id=record['employee_id'])
-                        date_obj = datetime.strptime(record['date'], '%Y-%m-%d').date()
-                        
-                        # Parse times
-                        check_in_time = None
-                        check_out_time = None
-                        
-                        if record.get('check_in_time'):
-                            check_in_datetime = datetime.combine(
-                                date_obj, 
-                                datetime.strptime(record['check_in_time'], '%H:%M:%S').time()
-                            )
-                            check_in_time = timezone.make_aware(check_in_datetime)
-                        
-                        if record.get('check_out_time'):
-                            check_out_datetime = datetime.combine(
-                                date_obj, 
-                                datetime.strptime(record['check_out_time'], '%H:%M:%S').time()
-                            )
-                            check_out_time = timezone.make_aware(check_out_datetime)
-                        
-                        overtime_hours = Decimal(str(record.get('overtime_hours', 0)))
-                        
-                        # Create or update
-                        attendance_data = {
-                            'employee': employee,
-                            'shift': employee.default_shift,
-                            'date': date_obj,
+        with transaction.atomic():
+            for record in preview_data:
+                try:
+                    employee = Employee.objects.get(id=record['employee_id'])
+                    date_obj = datetime.strptime(record['date'], '%Y-%m-%d').date()
+                    
+                    # Parse times
+                    check_in_time = None
+                    check_out_time = None
+                    
+                    if record.get('check_in_time'):
+                        check_in_time = datetime.strptime(
+                            f"{record['date']} {record['check_in_time']}", 
+                            '%Y-%m-%d %H:%M:%S'
+                        )
+                    
+                    if record.get('check_out_time'):
+                        check_out_time = datetime.strptime(
+                            f"{record['date']} {record['check_out_time']}", 
+                            '%Y-%m-%d %H:%M:%S'
+                        )
+                    
+                    # Create or update attendance
+                    attendance, created = Attendance.objects.update_or_create(
+                        employee=employee,
+                        date=date_obj,
+                        defaults={
                             'check_in_time': check_in_time,
                             'check_out_time': check_out_time,
-                            'status': record.get('status', 'A'),
-                            'overtime_hours': overtime_hours
+                            'status': record['status'],
+                            'overtime_hours': record.get('overtime_hours', 0),
+                            'shift': employee.default_shift,
                         }
+                    )
+                    
+                    if created:
+                        generated_count += 1
+                    else:
+                        updated_count += 1
                         
-                        existing = Attendance.objects.filter(
-                            employee=employee, date=date_obj
-                        ).first()
-                        
-                        if existing:
-                            for key, value in attendance_data.items():
-                                if key != 'employee':
-                                    setattr(existing, key, value)
-                            existing.save()
-                            updated_count += 1
-                        else:
-                            Attendance.objects.create(**attendance_data)
-                            generated_count += 1
-                        
-                    except Exception as e:
-                        error_count += 1
-                        logger.error(f"Error processing record: {str(e)}")
-                        
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': f'Generation failed: {str(e)}'})
+                except Exception as e:
+                    error_count += 1
+                    logger.error(f"Error processing record: {e}")
         
-        # Clear cache
+        # Clear cache after generation
         cache.delete(cache_key)
         
-        message = f'{generated_count} created, {updated_count} updated'
+        message = f'Successfully generated {generated_count} and updated {updated_count} attendance records'
         if error_count > 0:
-            message += f', {error_count} errors'
+            message += f' with {error_count} errors'
         
         return JsonResponse({
             'success': True,
-            'generated_count': generated_count,
-            'updated_count': updated_count,
+            'records_created': generated_count,
+            'records_updated': updated_count,
             'error_count': error_count,
             'message': message
         })
         
     except Exception as e:
-        logger.error(f"Error generating records: {str(e)}")
+        logger.error(f"Error in generate records: {str(e)}")
         return JsonResponse({'success': False, 'error': f'Generation failed: {str(e)}'})
 
 @login_required
-@require_http_methods(["POST"])
+@require_http_methods(["GET"])
 def simple_export_csv(request):
     """Export preview data to CSV"""
     try:
@@ -357,26 +399,30 @@ def simple_export_csv(request):
         if not company:
             return JsonResponse({'success': False, 'error': 'No company access found'})
         
-        cache_key = f"simple_preview_{request.user.id}_{company.id}"
+        cache_key = f"simple_preview_{request.user.id}"
         cached_data = cache.get(cache_key)
         
         if not cached_data:
-            return JsonResponse({'success': False, 'error': 'No preview data found'})
+            return JsonResponse({'success': False, 'error': 'No preview data found. Please generate preview first.'})
         
         preview_data = cached_data.get('data', [])
+        
         if not preview_data:
             return JsonResponse({'success': False, 'error': 'No data to export'})
         
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = f'attachment; filename="attendance_{timezone.now().strftime("%Y%m%d_%H%M")}.csv"'
+        response['Content-Disposition'] = f'attachment; filename="attendance_export_{timezone.now().strftime("%Y%m%d_%H%M%S")}.csv"'
         
         writer = csv.writer(response)
+        
+        # Write header
         writer.writerow([
             'Employee Code', 'Employee Name', 'Department', 'Date',
             'Check In', 'Check Out', 'Working Hours', 'Overtime Hours',
-            'Overtime Amount', 'Status', 'Shift', 'Action'
+            'Overtime Amount', 'Status', 'Shift'
         ])
         
+        # Write data
         for record in preview_data:
             writer.writerow([
                 record.get('employee_code', ''),
@@ -389,12 +435,11 @@ def simple_export_csv(request):
                 record.get('overtime_hours', 0),
                 record.get('overtime_amount', 0),
                 record.get('status', ''),
-                record.get('shift_name', ''),
-                record.get('action', '')
+                record.get('shift_name', '')
             ])
         
         return response
         
     except Exception as e:
         logger.error(f"Export error: {str(e)}")
-        return JsonResponse({'success': False, 'error': 'Export failed'})
+        return JsonResponse({'success': False, 'error': f'Export failed: {str(e)}'})

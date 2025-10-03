@@ -1,469 +1,391 @@
+<!-- hourly_attendance_report.html -->
 {% extends 'base.html' %}
 
 {% block title %}Hourly Attendance Report - {{ block.super }}{% endblock %}
-
-{% block extra_css %}
- <!-- Print.js CSS  -->
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/print-js@1.6.0/dist/print.min.css">
-
-<style>
-/* Enhanced Print Styles */
-@media print {
-  /* Hide all non-essential elements */
-  .no-print, .no-print * {
-    display: none !important;
-  }
-  
-  /* Print-specific layout */
-  body {
-    font-size: 12px;
-    line-height: 1.4;
-    color: #000;
-    background: white;
-  }
-  
-  /* Print header styling */
-  .print-header {
-    text-align: center;
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 2px solid #333;
-    page-break-after: avoid;
-  }
-  
-  .print-header h1 {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 8px;
-    color: #000;
-  }
-  
-  .print-header h2 {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 6px;
-    color: #333;
-  }
-  
-  .print-header p {
-    font-size: 12px;
-    margin: 4px 0;
-    color: #666;
-  }
-  
-  /* Table print optimization */
-  .print-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 10px;
-    page-break-inside: avoid;
-  }
-  
-  .print-table th,
-  .print-table td {
-    border: 1px solid #333;
-    padding: 6px 4px;
-    text-align: left;
-    vertical-align: top;
-  }
-  
-  .print-table th {
-    background-color: #f5f5f5;
-    font-weight: bold;
-    font-size: 9px;
-    text-transform: uppercase;
-  }
-  
-  .print-table tbody tr {
-    page-break-inside: avoid;
-    page-break-after: auto;
-  }
-  
-  .print-table tbody tr:nth-child(even) {
-    background-color: #f9f9f9;
-  }
-  
-  /* Prevent orphaned rows */
-  .print-table tbody tr {
-    break-inside: avoid;
-  }
-  
-  /* Page break controls */
-  .page-break-before {
-    page-break-before: always;
-  }
-  
-  .page-break-after {
-    page-break-after: always;
-  }
-  
-  .page-break-avoid {
-    page-break-inside: avoid;
-  }
-}
-
-/* Print button enhancement */
-.print-btn {
-  position: relative;
-  overflow: hidden;
-}
-
-.print-btn:hover {
-  transform: translateY(-1px);
-}
-
-.print-btn:active {
-  transform: translateY(0);
-}
-</style>
-{% endblock %}
+{% block page_title %}Hourly Attendance Report{% endblock %}
 
 {% block content %}
-<div class="space-y-4 animate-fade-in-up">
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-    <div>
-      <!-- <h1 class="text-xl font-bold text-heading">Hourly Attendance Report</h1>
-      <p class="text-xs text-muted-foreground mt-0.5">Comprehensive hourly attendance analysis for {{ month_name }}</p> -->
-    </div>
-    <div class="flex items-center gap-2 no-print">
-      <button onclick="printReport()" class="print-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-200 shadow-md hover:shadow-lg focus-ring">
-        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-        </svg>
-        Print Report
-      </button>
-    </div>
-  </div>
-
-  <div class="glass-effect rounded-lg card-elevated animate-slide-in-right no-print">
-    <div class="px-4 py-3 border-b border-border">
-      <div class="flex items-center gap-2">
-        <div class="w-6 h-6 bg-primary rounded-md flex items-center justify-center">
-          <svg class="w-3 h-3 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"></path>
-          </svg>
+<div class="space-y-6">
+    <!-- Loading Overlay -->
+    <div class="fixed inset-0 z-50 hidden items-center justify-center bg-background/80 backdrop-blur-sm" id="loading">
+        <div class="rounded-lg border bg-card p-6 shadow-lg">
+            <div class="flex items-center gap-4">
+                <svg class="h-8 w-8 animate-spin text-primary" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+                <div>
+                    <div class="text-lg font-semibold text-card-foreground">Processing...</div>
+                    <div class="text-sm text-muted-foreground">Please wait</div>
+                </div>
+            </div>
         </div>
+    </div>
+
+    <!-- Header Section -->
+    <div class="flex items-center justify-between">
         <div>
-          <h3 class="text-sm font-semibold text-heading">Select Month</h3>
-          <p class="text-xs text-muted-foreground">Choose a month to view attendance report</p>
+            <h1 class="text-3xl font-bold tracking-tight text-foreground">Hourly Attendance Report</h1>
+            <p class="text-muted-foreground">Comprehensive hourly attendance analysis for {{ month_name }}</p>
         </div>
-      </div>
-    </div>
-    
-    <div class="p-4">
-      <form method="GET" class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div class="space-y-1">
-            <label class="block text-xs font-medium text-foreground uppercase tracking-wide">Month & Year</label>
-            <input type="month" name="month_year" value="{{ current_filters.month_year }}" 
-                   class="w-full px-3 py-2 text-xs bg-input border border-border rounded-md text-foreground focus:border-ring focus:ring-1 focus:ring-ring/20 focus:outline-none transition-all duration-200">
-          </div>
-
-          <div class="flex items-end gap-2">
-            <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-200 shadow-md hover:shadow-lg focus-ring">
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.35-4.35"></path>
-              </svg>
-              Generate Report
+        <div class="flex items-center gap-2">
+            <button onclick="printReport()" class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                </svg>
+                Print Report
             </button>
-            
-            <a href="/zkteco/hourly-attendance-report/" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-accent-foreground bg-accent hover:bg-accent/80 rounded-lg transition-all duration-200 focus-ring">
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-              </svg>
-              Reset
-            </a>
-          </div>
         </div>
-      </form>
-    </div>
-  </div>
-
-   <!-- Print Content Container  -->
-  <div id="printable-content">
-     <!-- Print Header (Hidden on screen, visible on print)  -->
-    <div class="print-header" style="display: none;">
-      <h1>{% block company_name %}{{ user_company.name }}{% endblock %}</h1>
-      <h2>Hourly Attendance Report</h2>
-      <p><strong>{{ month_name }}</strong></p>
-      <p>Generated on: {% now "F d, Y" %} | Total Employees: {{ report_data|length }}</p>
     </div>
 
-     <!-- Main Report Table  -->
-    <div class="glass-effect rounded-lg card-elevated print:shadow-none print:border print:border-gray-400">
-      <div class="px-4 py-3 border-b border-border print:border-gray-400 no-print">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <div class="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-md flex items-center justify-center">
-              <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
-                <path d="M8 5v6m0 0l3 3m-3-3L5 8"></path>
-              </svg>
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="relative overflow-hidden p-3 rounded-lg border border-border bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/20 dark:to-indigo-900/20">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-muted-foreground">Total Employees</p>
+                    <p class="text-xl font-bold text-foreground">{{ report_data|length }}</p>
+                </div>
+                <div class="w-8 h-8 bg-blue-500/20 dark:bg-blue-400/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                    </svg>
+                </div>
             </div>
-            <div>
-              <h3 class="text-sm font-semibold text-heading">Hourly Attendance Summary - {{ month_name }}</h3>
-              <p class="text-xs text-muted-foreground">{{ report_data|length }} employees found</p>
-            </div>
-          </div>
-          <div class="badge">{{ report_data|length }}</div>
         </div>
-      </div>
 
-      {% if report_data %}
-      <div class="overflow-x-auto">
-        <table class="min-w-full border-collapse print-table">
-          <thead class="bg-muted/50">
-            <tr class="border-b border-border">
-              <th class="px-3 py-2 text-left text-xs font-medium text-foreground uppercase tracking-wide border-r border-border">Employee</th>
-              <th class="px-3 py-2 text-left text-xs font-medium text-foreground uppercase tracking-wide border-r border-border">Department</th>
-              <th class="px-3 py-2 text-left text-xs font-medium text-foreground uppercase tracking-wide border-r border-border">Rate/Hour</th>
-              <th class="px-3 py-2 text-left text-xs font-medium text-foreground uppercase tracking-wide border-r border-border">Present Days</th>
-              <th class="px-3 py-2 text-left text-xs font-medium text-foreground uppercase tracking-wide border-r border-border">Total Hours</th>
-              <th class="px-3 py-2 text-left text-xs font-medium text-foreground uppercase tracking-wide border-r border-border">Total Amount</th>
-              <th class="px-3 py-2 text-left text-xs font-medium text-foreground uppercase tracking-wide border-r border-border">Avg Hours/Day</th>
-              <th class="px-3 py-2 text-left text-xs font-medium text-foreground uppercase tracking-wide no-print">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-border">
-            {% for data in report_data %}
-            <tr class="hover:bg-accent/30 transition-all duration-200 group page-break-avoid">
-              <td class="px-3 py-2 border-r border-border">
-                <div class="flex items-center gap-2">
-                  <div class="relative no-print">
-                    <div class="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-emerald-500/25 transition-all duration-200">
-                      <span class="text-white font-bold text-xs">{{ data.employee.name|slice:":1"|upper }}</span>
-                    </div>
-                    <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-card"></div>
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <div class="font-medium text-foreground text-xs">{{ data.employee.name }}</div>
-                    <div class="text-xs text-muted-foreground font-mono">ID: {{ data.employee.employee_id }}</div>
-                  </div>
+        <div class="relative overflow-hidden p-3 rounded-lg border border-border bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950/20 dark:to-emerald-900/20">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-muted-foreground">Total Hours</p>
+                    <p class="text-xl font-bold text-foreground">{{ total_hours|floatformat:1 }}h</p>
                 </div>
-              </td>
-              
-              <td class="px-3 py-2 border-r border-border">
-                <div class="space-y-0.5">
-                  <div class="font-medium text-foreground text-xs">{{ data.employee.department.name|default:"-" }}</div>
-                  <div class="text-xs text-muted-foreground">{{ data.employee.designation.name|default:"-" }}</div>
+                <div class="w-8 h-8 bg-green-500/20 dark:bg-green-400/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12,6 12,12 16,14"></polyline>
+                    </svg>
                 </div>
-              </td>
+            </div>
+        </div>
 
-              <td class="px-3 py-2 border-r border-border">
-                <div class="flex items-center gap-1">
-                  <span class="text-xs font-medium text-green-600">৳{{ data.employee.per_hour_rate }}</span>
-                  <span class="text-xs text-muted-foreground">/hr</span>
+        <div class="relative overflow-hidden p-3 rounded-lg border border-border bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-950/20 dark:to-violet-900/20">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-muted-foreground">Avg Hours/Day</p>
+                    <p class="text-xl font-bold text-foreground">{{ avg_hours_per_day|floatformat:1 }}h</p>
                 </div>
-              </td>
-              
-              <td class="px-3 py-2 border-r border-border">
-                <div class="font-medium text-foreground text-xs">
-                  {{ data.monthly_data.present_days }}/{{ data.monthly_data.total_days }}
+                <div class="w-8 h-8 bg-purple-500/20 dark:bg-purple-400/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
                 </div>
-              </td>
-              
-              <td class="px-3 py-2 border-r border-border">
-                <div class="font-medium text-foreground text-xs">{{ data.monthly_data.total_hours }} hrs</div>
-              </td>
+            </div>
+        </div>
 
-              <td class="px-3 py-2 border-r border-border">
-                <div class="flex items-center gap-1">
-                  <span class="font-bold text-green-600 text-sm">৳{{ data.monthly_data.total_amount }}</span>
+        <div class="relative overflow-hidden p-3 rounded-lg border border-border bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-950/20 dark:to-amber-900/20">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-muted-foreground">Total Amount</p>
+                    <p class="text-xl font-bold text-foreground">৳{{ total_amount }}</p>
                 </div>
-              </td>
-              
-              <td class="px-3 py-2 border-r border-border">
-                <div class="text-xs text-foreground">{{ data.avg_hours_per_day }} hrs</div>
-              </td>
-              
-              <td class="px-3 py-2 no-print">
-                <a href="/hourly-report/{{ data.employee.id }}/{{ data.year }}-{{ data.month|stringformat:'02d' }}/" 
-                   class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-600 bg-blue-100 hover:bg-blue-200 rounded-md transition-colors">
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                  </svg>
-                  Details
-                </a>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      {% else %}
-       Empty State 
-      <div class="text-center py-12 no-print">
-        <div class="relative inline-flex items-center justify-center w-16 h-16 mx-auto mb-4">
-          <div class="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center">
-            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-          </div>
-          <div class="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full border-4 border-card flex items-center justify-center">
-            <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-          </div>
+                <div class="w-8 h-8 bg-orange-500/20 dark:bg-orange-400/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="rounded-lg border bg-card shadow-sm">
+        <div class="border-b bg-muted/50 px-6 py-4">
+            <div class="flex items-center gap-2">
+                <div class="w-6 h-6 bg-primary rounded-md flex items-center justify-center">
+                    <svg class="w-3 h-3 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-semibold text-foreground">Report Filters</h3>
+                    <p class="text-xs text-muted-foreground">Select month to view attendance report</p>
+                </div>
+            </div>
         </div>
         
-        <h3 class="text-lg font-bold text-heading mb-2">No attendance data found</h3>
-        <p class="text-muted-foreground mb-6 max-w-md mx-auto leading-relaxed">
-          {% if request.GET %}
-            No attendance records found for the selected month. Try selecting a different month.
-          {% else %}
-            Please select a month to view attendance data.
-          {% endif %}
-        </p>
-      </div>
-      {% endif %}
-    </div>
-  </div>
-</div>
-{% endblock %}
+        <div class="p-6">
+            <form method="GET" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="space-y-1">
+                        <label class="block text-xs font-medium text-foreground uppercase tracking-wide">Month & Year</label>
+                        <input type="month" name="month_year" value="{{ current_filters.month_year }}" 
+                               class="w-full px-3 py-2 text-sm bg-input border border-border rounded-md text-foreground focus:border-ring focus:ring-1 focus:ring-ring/20 focus:outline-none transition-all duration-200">
+                    </div>
 
-{% block extra_js %}
- Print.js Library 
-<script src="https://cdn.jsdelivr.net/npm/print-js@1.6.0/dist/print.min.js"></script>
+                    <div class="flex items-end gap-2">
+                        <button type="submit" class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            Generate Report
+                        </button>
+                        
+                        <a href="{% url 'zkteco:hourly_attendance_report' %}" class="inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-accent">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            Reset
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Data Table Card -->
+    <div class="rounded-lg border bg-card shadow-sm">
+        <div class="border-b bg-muted/50 px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-md flex items-center justify-center">
+                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/>
+                            <path d="M8 5v6m0 0l3 3m-3-3L5 8"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold text-foreground">Hourly Attendance Summary - {{ month_name }}</h3>
+                        <p class="text-xs text-muted-foreground">{{ report_data|length }} employees found</p>
+                    </div>
+                </div>
+                <div class="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">{{ report_data|length }}</div>
+            </div>
+        </div>
+
+        {% if report_data %}
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="border-b bg-muted/30">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Employee</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Department</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Rate/Hour</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Present Days</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Total Hours</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Total Amount</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Avg Hours/Day</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                    {% for data in report_data %}
+                    <tr class="hover:bg-muted/50 transition-colors group">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="relative">
+                                    <div class="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-emerald-500/25 transition-all duration-200">
+                                        <span class="text-white font-bold text-xs">{{ data.employee.name|slice:":1"|upper }}</span>
+                                    </div>
+                                    <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-card"></div>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="font-medium text-foreground text-sm">{{ data.employee.name }}</div>
+                                    <div class="text-xs text-muted-foreground font-mono">ID: {{ data.employee.employee_id }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <td class="px-6 py-4">
+                            <div class="space-y-0.5">
+                                <div class="font-medium text-foreground text-sm">{{ data.employee.department.name|default:"-" }}</div>
+                                <div class="text-xs text-muted-foreground">{{ data.employee.designation.name|default:"-" }}</div>
+                            </div>
+                        </td>
+
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-1">
+                                <span class="text-xs font-medium text-green-600">৳{{ data.employee.per_hour_rate }}</span>
+                                <span class="text-xs text-muted-foreground">/hr</span>
+                            </div>
+                        </td>
+                        
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-foreground text-sm">
+                                {{ data.monthly_data.present_days }}/{{ data.monthly_data.total_days }}
+                            </div>
+                        </td>
+                        
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-foreground text-sm">{{ data.monthly_data.total_hours }} hrs</div>
+                        </td>
+
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-1">
+                                <span class="font-bold text-green-600 text-sm">৳{{ data.monthly_data.total_amount }}</span>
+                            </div>
+                        </td>
+                        
+                        <td class="px-6 py-4">
+                            <div class="text-xs text-foreground">{{ data.avg_hours_per_day }} hrs</div>
+                        </td>
+                        
+                        <td class="px-6 py-4">
+                            <a href="/hourly-report/{{ data.employee.id }}/{{ data.year }}-{{ data.month|stringformat:'02d' }}/" 
+                               class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-600 bg-blue-100 hover:bg-blue-200 rounded-md transition-colors">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-12">
+            <div class="relative inline-flex items-center justify-center w-16 h-16 mx-auto mb-4">
+                <div class="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-xl flex items-center justify-center">
+                    <svg class="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <div class="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full border-4 border-card flex items-center justify-center">
+                    <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+            
+            <h3 class="text-lg font-bold text-foreground mb-2">No attendance data found</h3>
+            <p class="text-muted-foreground mb-6 max-w-md mx-auto leading-relaxed">
+                {% if request.GET %}
+                  No attendance records found for the selected month. Try selecting a different month.
+                {% else %}
+                  Please select a month to view attendance data.
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Auto-submit form when month changes
-  const monthSelect = document.querySelector('input[name="month_year"]');
-  if (monthSelect) {
-    monthSelect.addEventListener('change', function() {
-      this.closest('form').submit();
-    });
-  }
+    // Auto-submit form when month changes
+    const monthSelect = document.querySelector('input[name="month_year"]');
+    if (monthSelect) {
+        monthSelect.addEventListener('change', function() {
+            this.closest('form').submit();
+        });
+    }
 });
 
-// Enhanced Print Function using Print.js
 function printReport() {
-  // Show print header before printing
-  const printHeader = document.querySelector('.print-header');
-  if (printHeader) {
-    printHeader.style.display = 'block';
-  }
-  
-  // Check if there's data to print
-  const hasData = document.querySelector('.print-table tbody tr');
-  if (!hasData) {
-    alert('No data available to print. Please select a month with attendance records.');
-    return;
-  }
-  
-  // Use Print.js for better print handling
-  printJS({
-    printable: 'printable-content',
-    type: 'html',
-    targetStyles: ['*'],
-    style: `
-      @page {
-        size: A4;
-        margin: 15mm;
-      }
-      
-      body {
-        font-family: Arial, sans-serif;
+    window.print();
+}
+
+// Toast functionality from base.html
+function showToast(message, type = 'success', duration = 3000) {
+    // Use the existing toast functionality from base.html
+    if (typeof window.showToast === 'function') {
+        window.showToast(message, type, duration);
+    } else {
+        // Fallback if base.js is not loaded
+        console.log(`Toast (${type}): ${message}`);
+    }
+}
+</script>
+
+<style>
+@media print {
+    .no-print, .no-print * {
+        display: none !important;
+    }
+    
+    body {
         font-size: 12px;
         line-height: 1.4;
         color: #000;
-      }
-      
-      .print-header {
-        display: block !important;
+        background: white;
+    }
+    
+    .print-header {
         text-align: center;
         margin-bottom: 30px;
         padding-bottom: 20px;
         border-bottom: 2px solid #333;
         page-break-after: avoid;
-      }
-      
-      .print-header h1 {
+    }
+    
+    .print-header h1 {
         font-size: 24px;
         font-weight: bold;
-        margin: 0 0 8px 0;
+        margin-bottom: 8px;
         color: #000;
-      }
-      
-      .print-header h2 {
+    }
+    
+    .print-header h2 {
         font-size: 18px;
         font-weight: 600;
-        margin: 0 0 6px 0;
+        margin-bottom: 6px;
         color: #333;
-      }
-      
-      .print-header p {
+    }
+    
+    .print-header p {
         font-size: 12px;
         margin: 4px 0;
         color: #666;
-      }
-      
-      .print-table {
+    }
+    
+    .print-table {
         width: 100%;
         border-collapse: collapse;
         font-size: 10px;
-        margin-top: 20px;
-      }
-      
-      .print-table th,
-      .print-table td {
+        page-break-inside: avoid;
+    }
+    
+    .print-table th,
+    .print-table td {
         border: 1px solid #333;
         padding: 6px 4px;
         text-align: left;
         vertical-align: top;
-      }
-      
-      .print-table th {
+    }
+    
+    .print-table th {
         background-color: #f5f5f5;
         font-weight: bold;
         font-size: 9px;
         text-transform: uppercase;
-      }
-      
-      .print-table tbody tr {
+    }
+    
+    .print-table tbody tr {
         page-break-inside: avoid;
-      }
-      
-      .print-table tbody tr:nth-child(even) {
+        page-break-after: auto;
+    }
+    
+    .print-table tbody tr:nth-child(even) {
         background-color: #f9f9f9;
-      }
-      
-      .no-print {
-        display: none !important;
-      }
-    `,
-    scanStyles: false,
-    onPrintDialogClose: function() {
-      // Hide print header after printing
-      if (printHeader) {
-        printHeader.style.display = 'none';
-      }
     }
-  });
-}
-
-// Alternative fallback print function
-function fallbackPrint() {
-  const printHeader = document.querySelector('.print-header');
-  if (printHeader) {
-    printHeader.style.display = 'block';
-  }
-  
-  window.print();
-  
-  setTimeout(() => {
-    if (printHeader) {
-      printHeader.style.display = 'none';
+    
+    .page-break-before {
+        page-break-before: always;
     }
-  }, 1000);
+    
+    .page-break-after {
+        page-break-after: always;
+    }
+    
+    .page-break-avoid {
+        page-break-inside: avoid;
+    }
 }
-
-// Check if Print.js is loaded, otherwise use fallback
-if (typeof printJS === 'undefined') {
-  console.warn('Print.js not loaded, using fallback print method');
-  window.printReport = fallbackPrint;
-}
-</script>
+</style>
 {% endblock %}

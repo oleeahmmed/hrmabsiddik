@@ -22,10 +22,10 @@ import threading
 from collections import defaultdict
 from decimal import Decimal
 
-from .models import ZkDevice, AttendanceLog, Employee, Attendance, Shift, Department, Designation, Holiday, LeaveApplication
-from .zkteco_device_manager import ZKTecoDeviceManager
+from ..models import ZkDevice, AttendanceLog, Employee, Attendance, Shift, Department, Designation, Holiday, LeaveApplication
+from ..zkteco_device_manager import ZKTecoDeviceManager
 from core.models import Company
-from .forms import ZkDeviceForm
+from ..forms import ZkDeviceForm
 
 logger = logging.getLogger(__name__)
 
@@ -45,11 +45,225 @@ def get_company_from_request(request):
         return None
 
 # ==================== AUTH VIEWS ====================
+@login_required
+def home_dashboard(request):
+    """Main dashboard/home page"""
+    company = get_company_from_request(request)
+    if not company:
+        messages.error(request, "No company access found.")
+        return redirect('zkteco:login')
+    
+    today = timezone.now().date()
+    
+    # Get statistics
+    total_devices = ZkDevice.objects.filter(company=company).count()
+    active_devices = ZkDevice.objects.filter(company=company, is_active=True).count()
+    inactive_devices = total_devices - active_devices
+    
+    active_employees = Employee.objects.filter(company=company, is_active=True)
+    total_employees = active_employees.count()
+    
+    # --- আজকের অ্যাটেনডেন্স গণনার নতুন যুক্তি ---
+    employees_on_leave_today_ids = LeaveApplication.objects.filter(
+        employee__company=company,
+        status='A',
+        start_date__lte=today,
+        end_date__gte=today
+    ).values_list('employee_id', flat=True).distinct()
+    today_leave = len(employees_on_leave_today_ids)
+
+    employees_with_logs_today_ids = AttendanceLog.objects.filter(
+        employee__company=company,
+        timestamp__date=today
+    ).values_list('employee_id', flat=True).distinct()
+    today_present = len(employees_with_logs_today_ids)
+
+    present_or_on_leave_count = today_present + today_leave
+    today_absent = total_employees - present_or_on_leave_count
+    if today_absent < 0:
+        today_absent = 0
+
+    attendance_rate = round((today_present / total_employees * 100) if total_employees > 0 else 0, 1)
+    
+    # --- নতুন ড্যাশবোর্ড উইজেট ডেটা ---
+
+    # ১. আজকের লেট উপস্থিতি (Today's Late Comers)
+    todays_late_comers = []
+    first_check_ins = AttendanceLog.objects.filter(
+        employee__in=active_employees,
+        timestamp__date=today
+    ).values('employee_id').annotate(first_in=Min('timestamp'))
+
+    for check_in in first_check_ins:
+        try:
+            employee = active_employees.select_related('default_shift').get(id=check_in['employee_id'])
+            if employee.default_shift:
+                shift_start_time = employee.default_shift.start_time
+                grace_minutes = employee.default_shift.grace_time or 0
+                
+                shift_start_datetime = timezone.make_aware(datetime.combine(today, shift_start_time))
+                grace_deadline = shift_start_datetime + timedelta(minutes=grace_minutes)
+                
+                if check_in['first_in'] > grace_deadline:
+                    todays_late_comers.append({
+                        'employee': employee,
+                        'check_in': check_in['first_in'],
+                        'shift_start': shift_start_time
+                    })
+        except Employee.DoesNotExist:
+            continue
+
+    # ২. আজকের তাড়াতাড়ি প্রস্থানকারী (Today's Early Leavers)
+    todays_early_leavers = []
+    last_check_outs = AttendanceLog.objects.filter(
+        employee__in=active_employees,
+        timestamp__date=today
+    ).values('employee_id').annotate(
+        last_out=Max('timestamp'), 
+        log_count=Count('id')
+    ).filter(log_count__gt=1) # Ensure there's more than just a check-in
+
+    for check_out in last_check_outs:
+        try:
+            employee = active_employees.select_related('default_shift').get(id=check_out['employee_id'])
+            if employee.default_shift:
+                shift_end_time = employee.default_shift.end_time
+                shift_end_datetime = timezone.make_aware(datetime.combine(today, shift_end_time))
+
+                if check_out['last_out'] < shift_end_datetime:
+                    todays_early_leavers.append({
+                        'employee': employee,
+                        'check_out': check_out['last_out'],
+                        'shift_end': shift_end_time
+                    })
+        except Employee.DoesNotExist:
+            continue
+
+    # ৩. অনুমোদনের জন্য অপেক্ষারত ছুটির আবেদন (Pending Leave Approvals)
+    pending_leaves = LeaveApplication.objects.filter(
+        employee__company=company, status='P'
+    ).select_related('employee', 'leave_type').order_by('created_at')[:5]
+
+    # ৪. জন্মদিনের শুভেচ্ছা (Birthday Alerts) - Assuming Employee model has 'date_of_birth' field
+    # Note: Employee model needs a `date_of_birth = models.DateField(null=True, blank=True)` field.
+    # upcoming_birthdays = []
+    # if hasattr(Employee, 'date_of_birth'):
+    #     today_month_day = (today.month, today.day)
+    #     in_a_week_month_day = ((today + timedelta(days=7)).month, (today + timedelta(days=7)).day)
+    #     upcoming_birthdays = active_employees.filter(
+    #         date_of_birth__month=today.month, date_of_birth__day__gte=today.day
+    #     ).or(
+    #         active_employees.filter(date_of_birth__month=(today + timedelta(days=7)).month, date_of_birth__day__lte=(today + timedelta(days=7)).day)
+    #     ).order_by('date_of_birth__month', 'date_of_birth__day')[:5]
+
+
+    # --- বাকি পরিসংখ্যান ---
+    monthly_leaves = LeaveApplication.objects.filter(
+        employee__company=company,
+        status='A',
+        start_date__month=today.month,
+        start_date__year=today.year
+    ).count()
+    
+    upcoming_holidays = Holiday.objects.filter(
+        company=company, date__gte=today
+    ).order_by('date')[:5]
+    
+    total_shifts = Shift.objects.filter(company=company).count()
+    recent_leaves = LeaveApplication.objects.filter(
+        employee__company=company
+    ).select_related('employee', 'leave_type').order_by('-created_at')[:5]
+    
+    departments = Department.objects.filter(company=company).annotate(
+        employee_count=Count('employee', filter=Q(employee__is_active=True))
+    )[:6]
+    
+    # Weekly attendance trend
+    dates, present_counts, absent_counts = [], [], []
+    for i in range(6, -1, -1):
+        date_obj = today - timedelta(days=i)
+        dates.append(date_obj.strftime('%a'))
+        
+        day_present_count = AttendanceLog.objects.filter(
+            employee__company=company, timestamp__date=date_obj
+        ).values('employee_id').distinct().count()
+        
+        day_leave_count = LeaveApplication.objects.filter(
+            employee__company=company, status='A', start_date__lte=date_obj, end_date__gte=date_obj
+        ).values('employee_id').distinct().count()
+        
+        day_absent_count = total_employees - day_present_count - day_leave_count
+        present_counts.append(day_present_count)
+        absent_counts.append(max(0, day_absent_count))
+
+    dept_names = [dept.name for dept in departments]
+    dept_counts = [dept.employee_count for dept in departments]
+    
+    total_logs = AttendanceLog.objects.filter(device__company=company).count()
+    today_logs = AttendanceLog.objects.filter(
+        device__company=company, timestamp__date=today
+    ).count()
+    
+    recent_logs = AttendanceLog.objects.filter(
+        device__company=company
+    ).select_related('employee', 'device').order_by('-timestamp')[:10]
+    
+    system_health = round((active_devices / total_devices * 100) if total_employees > 0 else 100, 0)
+    
+    last_device_sync = ZkDevice.objects.filter(
+        company=company, last_synced__isnull=False
+    ).order_by('-last_synced').first()
+    
+    last_sync = "Never"
+    if last_device_sync and last_device_sync.last_synced:
+        time_diff = timezone.now() - last_device_sync.last_synced
+        seconds = time_diff.total_seconds()
+        if seconds < 60: last_sync = "Just now"
+        elif seconds < 3600: last_sync = f"{int(seconds / 60)}m ago"
+        else: last_sync = f"{int(seconds / 3600)}h ago"
+
+    stats = {
+        'total_devices': total_devices,
+        'active_devices': active_devices,
+        'total_employees': total_employees,
+        'today_present': today_present,
+        'today_absent': today_absent,
+        'today_leave': today_leave,
+        'attendance_rate': attendance_rate,
+        'monthly_leaves': monthly_leaves,
+        'total_shifts': total_shifts,
+        'total_logs': total_logs,
+        'today_logs': today_logs,
+        'system_health': system_health,
+        'last_sync': last_sync,
+    }
+    
+    context = {
+        'stats': stats,
+        'recent_logs': recent_logs,
+        'recent_leaves': recent_leaves,
+        'upcoming_holidays': upcoming_holidays,
+        'departments': departments,
+        'today': today,
+        'company': company,
+        'attendance_dates': dates,
+        'present_counts': present_counts,
+        'absent_counts': absent_counts,
+        'dept_names': dept_names,
+        'dept_counts': dept_counts,
+        # নতুন ডেটা কনটেক্সটে যোগ করা হলো
+        'todays_late_comers': todays_late_comers,
+        'todays_early_leavers': todays_early_leavers,
+        'pending_leaves': pending_leaves,
+        # 'upcoming_birthdays': upcoming_birthdays, # Uncomment when Employee model is updated
+    }
+    
+    return render(request, 'zkteco/home_dashboard.html', context)
 
 def login_view(request):
     """Custom login view"""
     if request.user.is_authenticated:
-        return redirect('zkteco:device_list')
+        return redirect('zkteco:home')  # Changed from device_list
     
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -60,7 +274,7 @@ def login_view(request):
             if user is not None:
                 login(request, user)
                 messages.success(request, f'Welcome back, {user.first_name or user.username}!')
-                next_url = request.GET.get('next', 'zkteco:device_list')
+                next_url = request.GET.get('next', 'zkteco:home')  # Changed from device_list
                 return redirect(next_url)
             else:
                 messages.error(request, 'Invalid username or password.')
@@ -68,7 +282,6 @@ def login_view(request):
             messages.error(request, 'Please provide both username and password.')
     
     return render(request, 'zkteco/auth/login.html')
-
 @login_required
 def logout_view(request):
     """Custom logout view"""

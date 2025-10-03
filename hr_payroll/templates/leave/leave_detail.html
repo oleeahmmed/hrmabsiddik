@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Leave Detail - {{ block.super }}{% endblock %}
+{% block page_title %}Leave Detail{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-foreground">{{ leave.employee.name }}</h1>
+            <p class="text-sm text-muted-foreground font-mono">ID: {{ leave.employee.employee_id }}</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'zkteco:leave_update' leave.pk %}" class="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Edit</a>
+            <a href="{% url 'zkteco:leave_delete' leave.pk %}" class="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90">Delete</a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="rounded-lg border bg-card shadow-sm">
+            <div class="border-b bg-muted/50 px-4 py-3">
+                <h2 class="text-sm font-semibold text-foreground">Overview</h2>
+            </div>
+            <div class="p-4 space-y-2 text-sm">
+                <div class="flex justify-between"><span class="text-muted-foreground">Type</span><span class="font-medium">{{ leave.leave_type.name }}</span></div>
+                <div class="flex justify-between"><span class="text-muted-foreground">Period</span><span class="font-medium">{{ leave.start_date }} → {{ leave.end_date }}</span></div>
+                <div class="flex justify-between"><span class="text-muted-foreground">Status</span><span class="font-medium">{% if leave.status == 'A' %}Approved{% elif leave.status == 'R' %}Rejected{% else %}Pending{% endif %}</span></div>
+            </div>
+        </div>
+        <div class="rounded-lg border bg-card shadow-sm">
+            <div class="border-b bg-muted/50 px-4 py-3">
+                <h2 class="text-sm font-semibold text-foreground">Reason</h2>
+            </div>
+            <div class="p-4 text-sm text-foreground whitespace-pre-line">{{ leave.reason|default:'-' }}</div>
+        </div>
+    </div>
+
+    <div>
+        <a href="{% url 'zkteco:leave_list' %}" class="inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-accent">Back to list</a>
+    </div>
+</div>
+{% endblock %}
+
+

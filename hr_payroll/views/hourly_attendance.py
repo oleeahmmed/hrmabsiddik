@@ -6,7 +6,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta, date, time
 from decimal import Decimal
 import calendar
-from .models import Employee, AttendanceLog, Department, Designation
+from ..models import Employee, AttendanceLog, Department, Designation
 from core.models import Company
 
 def calculate_work_hours_enhanced(punches):

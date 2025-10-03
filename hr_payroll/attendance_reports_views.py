@@ -48,114 +48,95 @@ def attendance_reports_main(request):
 
 @login_required
 def daily_attendance_report(request):
-    """Generate daily attendance report"""
+    """
+    Daily Attendance Report - Simple and effective version
+    Shows attendance records from Attendance model only
+    """
     company = get_company_from_request(request)
     if not company:
-        return JsonResponse({'success': False, 'error': 'No company access found'})
+        return render(request, 'zkteco/reports/daily_attendance.html', {
+            'error_message': 'No company access found'
+        })
     
-    # Get parameters
-    report_date = request.GET.get('date', timezone.now().date().strftime('%Y-%m-%d'))
+    # Get filter parameters
+    selected_date_str = request.GET.get('date', timezone.now().date().strftime('%Y-%m-%d'))
     department_id = request.GET.get('department', '')
+    employee_id = request.GET.get('employee', '')
+    status_filter = request.GET.get('status', '')
     
+    # Parse date
     try:
-        report_date = datetime.strptime(report_date, '%Y-%m-%d').date()
+        selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
     except ValueError:
-        return JsonResponse({'success': False, 'error': 'Invalid date format'})
+        selected_date = timezone.now().date()
     
-    # Base queryset for employees
-    employees_filter = Q(company=company, is_active=True)
-    if department_id:
-        employees_filter &= Q(department_id=department_id)
-    
-    # Get attendance records for the date
+    # Base queryset - get attendance records for selected date
     attendance_records = Attendance.objects.filter(
         employee__company=company,
-        date=report_date
-    ).select_related('employee', 'shift', 'employee__department')
+        date=selected_date
+    ).select_related(
+        'employee',
+        'employee__department',
+        'employee__designation',
+        'shift'
+    ).order_by('employee__employee_id')
     
+    # Apply filters
     if department_id:
         attendance_records = attendance_records.filter(employee__department_id=department_id)
     
-    # Get all active employees
-    all_employees = Employee.objects.filter(employees_filter)
+    if employee_id:
+        attendance_records = attendance_records.filter(employee_id=employee_id)
     
-    # Create report data
-    report_data = []
-    present_count = 0
-    absent_count = 0
-    leave_count = 0
-    holiday_count = 0
-    total_work_hours = 0
-    total_overtime_hours = 0
+    if status_filter:
+        attendance_records = attendance_records.filter(status=status_filter)
     
-    # Create attendance lookup
-    attendance_lookup = {record.employee_id: record for record in attendance_records}
+    # Calculate summary statistics
+    total_records = attendance_records.count()
+    present_count = attendance_records.filter(status='P').count()
+    absent_count = attendance_records.filter(status='A').count()
+    leave_count = attendance_records.filter(status='L').count()
+    holiday_count = attendance_records.filter(status='H').count()
     
-    for employee in all_employees:
-        attendance = attendance_lookup.get(employee.id)
-        
-        if attendance:
-            status = attendance.get_status_display()
-            check_in = attendance.check_in_time.strftime('%H:%M') if attendance.check_in_time else '-'
-            check_out = attendance.check_out_time.strftime('%H:%M') if attendance.check_out_time else '-'
-            work_hours = attendance.work_hours
-            overtime_hours = float(attendance.overtime_hours) if attendance.overtime_hours else 0
-            shift_name = attendance.shift.name if attendance.shift else 'No Shift'
-            
-            # Count statuses
-            if attendance.status == 'P':
-                present_count += 1
-            elif attendance.status == 'A':
-                absent_count += 1
-            elif attendance.status == 'L':
-                leave_count += 1
-            elif attendance.status == 'H':
-                holiday_count += 1
-            
-            total_work_hours += work_hours
-            total_overtime_hours += overtime_hours
-        else:
-            # Employee has no attendance record - mark as absent
-            status = 'Absent'
-            check_in = '-'
-            check_out = '-'
-            work_hours = 0
-            overtime_hours = 0
-            shift_name = employee.default_shift.name if employee.default_shift else 'No Shift'
-            absent_count += 1
-        
-        report_data.append({
-            'employee_id': employee.employee_id,
-            'employee_name': employee.name,
-            'department': employee.department.name if employee.department else 'No Department',
-            'shift': shift_name,
-            'check_in': check_in,
-            'check_out': check_out,
-            'status': status,
-            'work_hours': work_hours,
-            'overtime_hours': overtime_hours,
-        })
+    # Calculate attendance rate
+    attendance_rate = (present_count / total_records * 100) if total_records > 0 else 0
     
-    # Summary data
+    # Calculate total work hours and overtime
+    present_records = attendance_records.filter(status='P')
+    total_work_hours = sum([record.work_hours for record in present_records])
+    total_overtime = sum([float(record.overtime_hours or 0) for record in present_records])
+    
+    # Prepare summary data
     summary = {
-        'total_employees': all_employees.count(),
-        'present': present_count,
-        'absent': absent_count,
-        'leave': leave_count,
-        'holiday': holiday_count,
+        'total_employees': total_records,
+        'present_count': present_count,
+        'absent_count': absent_count,
+        'leave_count': leave_count,
+        'holiday_count': holiday_count,
+        'attendance_rate': round(attendance_rate, 1),
         'total_work_hours': round(total_work_hours, 2),
-        'total_overtime_hours': round(total_overtime_hours, 2),
-        'avg_work_hours': round(total_work_hours / max(present_count, 1), 2),
+        'total_overtime': round(total_overtime, 2),
     }
     
-    return JsonResponse({
-        'success': True,
-        'report_data': report_data,
+    # Get filter options
+    departments = Department.objects.filter(company=company).order_by('name')
+    employees = Employee.objects.filter(company=company, is_active=True).order_by('employee_id')
+    
+    # Prepare context
+    context = {
+        'company': company,
+        'attendance_records': attendance_records,
         'summary': summary,
-        'report_date': report_date.strftime('%Y-%m-%d'),
-        'report_title': f'Daily Attendance Report - {report_date.strftime("%B %d, %Y")}'
-    })
-
+        'selected_date': selected_date,
+        'current_date': selected_date_str,
+        'departments': departments,
+        'employees': employees,
+        'current_department': department_id,
+        'current_employee': employee_id,
+        'current_status': status_filter,
+    }
+    
+    return render(request, 'zkteco/reports/daily_attendance.html', context)
 @login_required
 def monthly_attendance_report(request):
     """Generate monthly attendance report"""

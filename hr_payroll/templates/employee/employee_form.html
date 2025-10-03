@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ view.object|default:'Create' }} Employee - {{ block.super }}{% endblock %}
+{% block page_title %}{{ view.object|default:'Create' }} Employee{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="rounded-lg border bg-card shadow-sm">
+        <div class="border-b bg-muted/50 px-6 py-4">
+            <h2 class="text-lg font-semibold text-foreground">Employee Information</h2>
+        </div>
+        <form method="post" class="p-6 space-y-6">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {{ form.non_field_errors }}
+                {% for field in form %}
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-foreground" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                    <p class="mt-1 text-xs text-muted-foreground">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% for error in field.errors %}
+                    <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="flex items-center justify-end gap-2 border-t border-border pt-4">
+                <a href="{% url 'zkteco:employee_list' %}" class="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</a>
+                <button type="submit" class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+

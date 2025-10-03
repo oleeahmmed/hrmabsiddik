@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Employees - {{ block.super }}{% endblock %}
+{% block page_title %}Employees{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-foreground">Employees</h1>
+            <p class="text-muted-foreground">Manage your employees</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'zkteco:employee_create' %}" class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Add Employee
+            </a>
+        </div>
+    </div>
+
+    <div class="rounded-lg border bg-card shadow-sm">
+        <div class="border-b bg-muted/50 px-6 py-4">
+            <form method="get" class="flex items-center gap-2">
+                <div class="relative flex-1">
+                    <input type="text" name="search" value="{{ request.GET.search|default:'' }}" placeholder="Search by name or ID..." class="w-full pl-8 pr-3 py-2 text-sm border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent">
+                    <svg class="absolute left-2 top-2.5 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </div>
+                <button class="inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-accent">
+                    Filter
+                </button>
+            </form>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="border-b bg-muted/30">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Employee</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Company</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Department</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Designation</th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">Status</th>
+                        <th class="px-6 py-3 text-center text-sm font-semibold text-foreground">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                    {% for e in employees %}
+                    <tr class="hover:bg-muted/50 transition-colors group">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">
+                                    {{ e.name|slice:":1"|upper }}
+                                </div>
+                                <div>
+                                    <div class="font-medium text-foreground">{{ e.name }}</div>
+                                    <div class="text-xs text-muted-foreground font-mono">ID: {{ e.employee_id }}{% if e.zkteco_id and e.zkteco_id != e.employee_id %} • ZK: {{ e.zkteco_id }}{% endif %}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-sm">{{ e.company.name }}</td>
+                        <td class="px-6 py-4 text-sm">{{ e.department.name|default:'-' }}</td>
+                        <td class="px-6 py-4 text-sm">{{ e.designation.name|default:'-' }}</td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-full border {{ e.is_active|yesno:'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300,border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300' }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ e.is_active|yesno:'bg-green-500,bg-red-500' }}"></span>
+                                {{ e.is_active|yesno:'Active,Inactive' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center justify-center gap-2">
+                                <a href="{% url 'zkteco:employee_detail' e.pk %}" class="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent" title="View">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                </a>
+                                <a href="{% url 'zkteco:employee_update' e.pk %}" class="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent" title="Edit">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                </a>
+                                <a href="{% url 'zkteco:employee_delete' e.pk %}" class="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-destructive hover:text-destructive-foreground" title="Delete">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center">
+                            <div class="text-sm text-muted-foreground">No employees found</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if is_paginated %}
+        <div class="border-t px-6 py-4 bg-muted/30">
+            <div class="flex items-center justify-between">
+                <div class="text-sm text-muted-foreground">
+                    Showing <span class="font-medium text-foreground">{{ page_obj.start_index }}-{{ page_obj.end_index }}</span> of <span class="font-medium text-foreground">{{ page_obj.paginator.count }}</span> results
+                </div>
+                <div class="flex items-center gap-1">
+                    {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium text-foreground shadow-sm hover:bg-accent">Previous</a>
+                    {% endif %}
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium text-foreground shadow-sm hover:bg-accent">Next</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+

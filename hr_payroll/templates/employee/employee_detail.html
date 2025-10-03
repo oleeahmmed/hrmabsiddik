@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Employee Detail - {{ block.super }}{% endblock %}
+{% block page_title %}Employee Detail{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header Section -->
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                {{ employee.name|slice:":1"|upper }}
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-foreground">{{ employee.name }}</h1>
+                <p class="text-sm text-muted-foreground font-mono">
+                    ID: {{ employee.employee_id }}
+                    {% if employee.zkteco_id and employee.zkteco_id != employee.employee_id %} 
+                        • ZK ID: {{ employee.zkteco_id }}
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'zkteco:employee_update' employee.pk %}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                Edit
+            </a>
+            <a href="{% url 'zkteco:employee_delete' employee.pk %}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 px-4 py-2">
+                Delete
+            </a>
+        </div>
+    </div>
+
+    <!-- Details Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Basic Info Card -->
+        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold mb-4 text-foreground">Basic Info</h3>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between"><span class="text-muted-foreground">First Name</span><span class="font-medium text-right">{{ employee.first_name|default:'-' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Last Name</span><span class="font-medium text-right">{{ employee.last_name|default:'-' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Company</span><span class="font-medium text-right">{{ employee.company.name|default:'-' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Department</span><span class="font-medium text-right">{{ employee.department.name|default:'-' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Designation</span><span class="font-medium text-right">{{ employee.designation.name|default:'-' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Default Shift</span><span class="font-medium text-right">{{ employee.default_shift.name|default:'-' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">User Account</span><span class="font-medium text-right">{{ employee.user.username|default:'-' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Status</span>
+                        <span class="font-medium px-2 py-0.5 rounded-full text-xs {% if employee.is_active %} bg-green-100 text-green-800 {% else %} bg-red-100 text-red-800 {% endif %}">
+                            {{ employee.is_active|yesno:'Active,Inactive' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Personal Info Card -->
+        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold mb-4 text-foreground">Personal Information</h3>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between"><span class="text-muted-foreground">Contact Number</span><span class="font-medium text-right">{{ employee.contact_number|default:'-' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Date of Birth</span><span class="font-medium text-right">{{ employee.date_of_birth|date:"d M, Y"|default:'-' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Joining Date</span><span class="font-medium text-right">{{ employee.joining_date|date:"d M, Y"|default:'-' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">National ID</span><span class="font-medium text-right">{{ employee.nid|default:'-' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Marital Status</span><span class="font-medium text-right">{{ employee.marital_status|default:'-' }}</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payroll Card -->
+        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold mb-4 text-foreground">Payroll</h3>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between"><span class="text-muted-foreground">Basic Salary</span><span class="font-medium text-right">{{ employee.basic_salary|default:'0.00' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Overtime Rate (per hour)</span><span class="font-medium text-right">{{ employee.overtime_rate|default:'0.00' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Per Hour Rate</span><span class="font-medium text-right">{{ employee.per_hour_rate|default:'0.00' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Expected Hours</span><span class="font-medium text-right">{{ employee.expected_working_hours|default:'0.0' }} hrs</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">OT Grace Minutes</span><span class="font-medium text-right">{{ employee.overtime_grace_minutes|default:'0' }} min</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Allowances Card -->
+        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold mb-4 text-foreground">Allowances</h3>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between"><span class="text-muted-foreground">House Rent</span><span class="font-medium text-right">{{ employee.house_rent_allowance|default:'0.00' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Medical</span><span class="font-medium text-right">{{ employee.medical_allowance|default:'0.00' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Conveyance</span><span class="font-medium text-right">{{ employee.conveyance_allowance|default:'0.00' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Food</span><span class="font-medium text-right">{{ employee.food_allowance|default:'0.00' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Attendance Bonus</span><span class="font-medium text-right">{{ employee.attendance_bonus|default:'0.00' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Festival Bonus</span><span class="font-medium text-right">{{ employee.festival_bonus|default:'0.00' }}</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deductions Card -->
+        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold mb-4 text-foreground">Deductions</h3>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between"><span class="text-muted-foreground">Provident Fund</span><span class="font-medium text-right">{{ employee.provident_fund|default:'0.00' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Tax</span><span class="font-medium text-right">{{ employee.tax_deduction|default:'0.00' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Loan</span><span class="font-medium text-right">{{ employee.loan_deduction|default:'0.00' }}</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Info Card -->
+        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold mb-4 text-foreground">Payment Information</h3>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between"><span class="text-muted-foreground">Payment Method</span><span class="font-medium text-right">{{ employee.payment_method|default:'-' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Bank Account No.</span><span class="font-medium text-right">{{ employee.bank_account_no|default:'-' }}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Action -->
+    <div class="pt-6">
+        <a href="{% url 'zkteco:employee_list' %}" class="inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-accent">
+            ← Back to Employee List
+        </a>
+    </div>
+</div>
+{% endblock %}
