@@ -1,8 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-
-    #Core Apps
 class Company(models.Model):
     """Represents a company in the multi-company system."""
     company_code = models.CharField(_("Company Code"), max_length=20, unique=True)
@@ -18,6 +16,7 @@ class Company(models.Model):
     website = models.URLField(max_length=255, blank=True, null=True)
     tax_id = models.CharField(max_length=50, blank=True, null=True, help_text="e.g., VAT, EIN, GST")
     currency = models.CharField(max_length=10, default='USD', help_text="e.g., USD, EUR, GBP")
+    logo = models.ImageField(upload_to='company_logos/', blank=True, null=True)  # Add this line
     is_active = models.BooleanField(_("Is Active"), default=True)
     created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
@@ -28,4 +27,4 @@ class Company(models.Model):
         ordering = ['name']
 
     def __str__(self):
-        return self.name    
+        return self.name
