@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-foreground">{{ title }}</h1>
+            <p class="text-muted-foreground mt-1">Fill in the attendance information below</p>
+        </div>
+        <a href="{% url 'zkteco:attendance_list' %}" class="inline-flex items-center px-4 py-2 border border-input text-sm font-medium rounded-lg shadow-sm text-foreground bg-background hover:bg-accent transition-all">
+            <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Back to List
+        </a>
+    </div>
+
+     
+    <div class="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
+        <div class="px-6 py-4 border-b border-border bg-muted/30">
+            <h2 class="text-lg font-semibold text-foreground">Attendance Information</h2>
+        </div>
+        <div class="p-6">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                 
+                {% if form.errors %}
+                <div class="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <div class="flex">
+                        <svg class="h-5 w-5 text-red-600 dark:text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800 dark:text-red-200">Please correct the following errors:</h3>
+                            <ul class="mt-2 text-sm text-red-700 dark:text-red-300 list-disc list-inside">
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <li>{{ field }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                 
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     
+                    <div>
+                        <label for="{{ form.employee.id_for_label }}" class="block text-sm font-medium text-foreground mb-2">
+                            Employee <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.employee }}
+                        {% if form.employee.help_text %}
+                        <p class="mt-1 text-sm text-muted-foreground">{{ form.employee.help_text }}</p>
+                        {% endif %}
+                    </div>
+
+                     
+                    <div>
+                        <label for="{{ form.date.id_for_label }}" class="block text-sm font-medium text-foreground mb-2">
+                            Date <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.date }}
+                        {% if form.date.help_text %}
+                        <p class="mt-1 text-sm text-muted-foreground">{{ form.date.help_text }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                 
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     
+                    <div>
+                        <label for="{{ form.shift.id_for_label }}" class="block text-sm font-medium text-foreground mb-2">
+                            Shift
+                        </label>
+                        {{ form.shift }}
+                        {% if form.shift.help_text %}
+                        <p class="mt-1 text-sm text-muted-foreground">{{ form.shift.help_text }}</p>
+                        {% endif %}
+                    </div>
+
+            
+                    <div>
+                        <label for="{{ form.status.id_for_label }}" class="block text-sm font-medium text-foreground mb-2">
+                            Status <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.status }}
+                        {% if form.status.help_text %}
+                        <p class="mt-1 text-sm text-muted-foreground">{{ form.status.help_text }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                 
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <div>
+                        <label for="{{ form.check_in_time.id_for_label }}" class="block text-sm font-medium text-foreground mb-2">
+                            Check In Time
+                        </label>
+                        {{ form.check_in_time }}
+                        {% if form.check_in_time.help_text %}
+                        <p class="mt-1 text-sm text-muted-foreground">{{ form.check_in_time.help_text }}</p>
+                        {% endif %}
+                    </div>
+
+                     
+                    <div>
+                        <label for="{{ form.check_out_time.id_for_label }}" class="block text-sm font-medium text-foreground mb-2">
+                            Check Out Time
+                        </label>
+                        {{ form.check_out_time }}
+                        {% if form.check_out_time.help_text %}
+                        <p class="mt-1 text-sm text-muted-foreground">{{ form.check_out_time.help_text }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <div>
+                        <label for="{{ form.work_hours.id_for_label }}" class="block text-sm font-medium text-foreground mb-2">
+                            Work Hours
+                        </label>
+                        {{ form.work_hours }}
+                        {% if form.work_hours.help_text %}
+                        <p class="mt-1 text-sm text-muted-foreground">{{ form.work_hours.help_text }}</p>
+                        {% endif %}
+                    </div>
+
+                     
+                    <div>
+                        <label for="{{ form.overtime_hours.id_for_label }}" class="block text-sm font-medium text-foreground mb-2">
+                            Overtime Hours
+                        </label>
+                        {{ form.overtime_hours }}
+                        {% if form.overtime_hours.help_text %}
+                        <p class="mt-1 text-sm text-muted-foreground">{{ form.overtime_hours.help_text }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                
+                    <div>
+                        <label for="{{ form.is_late.id_for_label }}" class="block text-sm font-medium text-foreground mb-2">
+                            Late Arrival
+                        </label>
+                        <div class="flex items-center h-10">
+                            {{ form.is_late }}
+                            <label for="{{ form.is_late.id_for_label }}" class="ml-2 text-sm text-muted-foreground">Mark as late</label>
+                        </div>
+                    </div>
+
+                     
+                    <div>
+                        <label for="{{ form.late_minutes.id_for_label }}" class="block text-sm font-medium text-foreground mb-2">
+                            Late Minutes
+                        </label>
+                        {{ form.late_minutes }}
+                    </div>
+
+                     
+                    <div>
+                        <label for="{{ form.is_early_departure.id_for_label }}" class="block text-sm font-medium text-foreground mb-2">
+                            Early Departure
+                        </label>
+                        <div class="flex items-center h-10">
+                            {{ form.is_early_departure }}
+                            <label for="{{ form.is_early_departure.id_for_label }}" class="ml-2 text-sm text-muted-foreground">Mark as early</label>
+                        </div>
+                    </div>
+
+                     
+                    <div>
+                        <label for="{{ form.early_departure_minutes.id_for_label }}" class="block text-sm font-medium text-foreground mb-2">
+                            Early Minutes
+                        </label>
+                        {{ form.early_departure_minutes }}
+                    </div>
+                </div>
+
+            
+                <div>
+                    <label for="{{ form.remarks.id_for_label }}" class="block text-sm font-medium text-foreground mb-2">
+                        Remarks
+                    </label>
+                    {{ form.remarks }}
+                    {% if form.remarks.help_text %}
+                    <p class="mt-1 text-sm text-muted-foreground">{{ form.remarks.help_text }}</p>
+                    {% endif %}
+                </div>
+
+        
+                <div class="flex items-center justify-end space-x-3 pt-6 border-t border-border">
+                    <a href="{% url 'zkteco:attendance_list' %}" class="inline-flex items-center px-4 py-2 border border-input text-sm font-medium rounded-lg shadow-sm text-foreground bg-background hover:bg-accent transition-all">
+                        Cancel
+                    </a>
+                    <button type="submit" class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-primary-foreground bg-primary hover:opacity-90 transition-all">
+                        <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        {{ button_text }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Form field styling */
+    form select,
+    form input[type="text"],
+    form input[type="date"],
+    form input[type="datetime-local"],
+    form input[type="number"],
+    form textarea {
+        width: 100%;
+        border: 1px solid hsl(var(--input));
+        background-color: hsl(var(--background));
+        color: hsl(var(--foreground));
+        border-radius: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+
+    form select:focus,
+    form input:focus,
+    form textarea:focus {
+        outline: none;
+        ring: 2px;
+        ring-color: hsl(var(--ring));
+        border-color: transparent;
+    }
+
+    form textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    form input[type="checkbox"] {
+        width: 1.25rem;
+        height: 1.25rem;
+        border: 1px solid hsl(var(--input));
+        border-radius: 0.25rem;
+        cursor: pointer;
+    }
+
+    form input[type="checkbox"]:checked {
+        background-color: hsl(var(--primary));
+        border-color: hsl(var(--primary));
+    }
+</style>
+{% endblock %}

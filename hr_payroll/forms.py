@@ -157,36 +157,73 @@ class LoginForm(forms.Form):
         })
     )
 
-
 class EmployeeForm(forms.ModelForm):
     class Meta:
         model = Employee
         fields = [
-            'company', 'department', 'designation', 'default_shift',
-            'employee_id', 'zkteco_id', 'name', 'first_name', 'last_name', 'user',
-            'basic_salary', 'overtime_rate', 'per_hour_rate', 'expected_working_hours',
-            'overtime_grace_minutes', 'is_active'
+            # Basic Information
+            'employee_id', 'zkteco_id', 'name', 'first_name', 'last_name', 'is_active',
+            # Employment Details
+            'company', 'department', 'designation', 'default_shift', 'user', 'joining_date',
+            # Contact & Personal Information
+            'contact_number', 'date_of_birth', 'nid', 'marital_status',
+            # Salary & Compensation
+            'basic_salary', 'overtime_rate', 'per_hour_rate', 'expected_working_hours', 'overtime_grace_minutes',
+            # Allowances
+            'house_rent_allowance', 'medical_allowance', 'conveyance_allowance', 'food_allowance',
+            'attendance_bonus', 'festival_bonus',
+            # Deductions
+            'provident_fund', 'tax_deduction', 'loan_deduction',
+            # Payroll Information
+            'bank_account_no',
         ]
         widgets = {
+            # Select fields
             'company': forms.Select(attrs={'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
             'department': forms.Select(attrs={'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
             'designation': forms.Select(attrs={'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
             'default_shift': forms.Select(attrs={'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            'user': forms.Select(attrs={'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            'marital_status': forms.Select(attrs={'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            # 'payment_method': forms.Select(attrs={'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            
+            # Text input fields
             'employee_id': forms.TextInput(attrs={'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
             'zkteco_id': forms.TextInput(attrs={'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
             'name': forms.TextInput(attrs={'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
             'first_name': forms.TextInput(attrs={'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
             'last_name': forms.TextInput(attrs={'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
-            'user': forms.Select(attrs={'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
-            'basic_salary': forms.NumberInput(attrs={'step': '0.01','class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
-            'overtime_rate': forms.NumberInput(attrs={'step': '0.01','class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
-            'per_hour_rate': forms.NumberInput(attrs={'step': '0.01','class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
-            'expected_working_hours': forms.NumberInput(attrs={'step': '0.1','class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
-            'overtime_grace_minutes': forms.NumberInput(attrs={'step': '1','class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            'contact_number': forms.TextInput(attrs={'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            'nid': forms.TextInput(attrs={'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            'bank_account_no': forms.TextInput(attrs={'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            
+            # Date fields
+            'date_of_birth': forms.DateInput(attrs={'type': 'date', 'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            'joining_date': forms.DateInput(attrs={'type': 'date', 'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            
+            # Number fields - Salary & Compensation
+            'basic_salary': forms.NumberInput(attrs={'step': '0.01', 'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            'overtime_rate': forms.NumberInput(attrs={'step': '0.01', 'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            'per_hour_rate': forms.NumberInput(attrs={'step': '0.01', 'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            'expected_working_hours': forms.NumberInput(attrs={'step': '0.1', 'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            'overtime_grace_minutes': forms.NumberInput(attrs={'step': '1', 'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            
+            # Number fields - Allowances
+            'house_rent_allowance': forms.NumberInput(attrs={'step': '0.01', 'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            'medical_allowance': forms.NumberInput(attrs={'step': '0.01', 'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            'conveyance_allowance': forms.NumberInput(attrs={'step': '0.01', 'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            'food_allowance': forms.NumberInput(attrs={'step': '0.01', 'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            'attendance_bonus': forms.NumberInput(attrs={'step': '0.01', 'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            'festival_bonus': forms.NumberInput(attrs={'step': '0.01', 'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            
+            # Number fields - Deductions
+            'provident_fund': forms.NumberInput(attrs={'step': '0.01', 'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            'tax_deduction': forms.NumberInput(attrs={'step': '0.01', 'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            'loan_deduction': forms.NumberInput(attrs={'step': '0.01', 'class': 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary'}),
+            
+            # Checkbox
             'is_active': forms.CheckboxInput(attrs={'class': 'rounded border-gray-300 text-primary focus:ring-primary focus:ring-offset-0'}),
         }
-
-
 class LeaveApplicationForm(forms.ModelForm):
     class Meta:
         model = LeaveApplication

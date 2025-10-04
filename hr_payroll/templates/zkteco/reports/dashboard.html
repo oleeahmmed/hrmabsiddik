@@ -84,6 +84,19 @@
             <p class="text-sm text-muted-foreground mt-2">প্রতিদিনের অ্যাটেনডেন্স, চেক-ইন/আউট, স্ট্যাটাস, ওভারটাইম এবং ওয়ার্ক আওয়ারস সামারি</p>
         </a>
 
+        <a href="{% url 'zkteco:employee_monthly_attendance' %}" class="group rounded-lg border bg-card p-6 shadow-sm hover:shadow-md transition-all hover:border-primary">
+            <div class="flex items-start justify-between">
+                <div class="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                    <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">Daily</span>
+            </div>
+            <h3 class="text-lg font-semibold text-foreground mt-4 group-hover:text-primary transition-colors">  দৈনিক উপস্থিতি প্রতিবেদন
+</h3>
+            <p class="text-sm text-muted-foreground mt-2">অ্যাটেনডেন্স, চেক-ইন/আউট, স্ট্যাটাস, ওভারটাইম এবং ওয়ার্ক আওয়ারস সামারি</p>
+        </a>
         <a href="{% url 'zkteco:monthly_attendance_report' %}" class="group rounded-lg border bg-card p-6 shadow-sm hover:shadow-md transition-all hover:border-primary">
             <div class="flex items-start justify-between">
                 <div class="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center group-hover:bg-green-500/20 transition-colors">

@@ -482,7 +482,7 @@
     </style>
 </head>
 <body class="bg-background text-foreground font-sans antialiased">
-     Sidebar 
+     
     <aside id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-card border-r border-border transition-transform duration-300 ease-in-out z-40 lg:translate-x-0 -translate-x-full overflow-hidden">
         <div class="flex flex-col h-full">
              
@@ -508,6 +508,7 @@
             </div>
             
              
+<!-- Navigation Menu -->
             <div class="flex-1 overflow-y-auto p-3">
                 <div class="mb-4">
                     <button id="playground-toggle" data-submenu-toggle data-submenu-target="#playground-submenu" data-chevron="#playground-chevron" class="submenu-toggle flex items-center justify-between w-full px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-accent rounded-lg transition-colors">
@@ -522,10 +523,11 @@
                         </svg>
                     </button>
                     
-                      
+                    <!-- Submenu Items -->
                     <div id="playground-submenu" class="mt-2 ml-2 space-y-1 hidden" data-submenu>
+                        <!-- 1. Devices Section -->
                         <div class="mb-3">
-                            <p class="submenu-header">Devices</p>
+                            <!-- <p class="submenu-header">Devices</p> -->
                             <a href="{% url 'zkteco:device_list' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:device_list' %}">
                                 <div class="flex items-center space-x-2.5">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -536,46 +538,9 @@
                             </a>
                         </div>
 
+                        <!-- 2. Employee Management Section -->
                         <div class="mb-3">
-                            <p class="submenu-header">Attendance</p>
-                            <a href="{% url 'zkteco:attendance_logs' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:attendance_logs' %}">
-                                <div class="flex items-center space-x-2.5">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                    </svg>
-                                    <span>Attendance Logs</span>
-                                </div>
-                            </a>
-                            <a href="{% url 'zkteco:mobile_attendance' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:mobile_attendance' %}">
-                                <div class="flex items-center space-x-2.5">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a1 1 0 001-1V4a1 1 0 00-1-1H8a1 1 0 00-1 1v16a1 1 0 001 1z"/>
-                                    </svg>
-                                    <span>Mobile Attendance</span>
-                                </div>
-                            </a>
-                            <a href="{% url 'zkteco:leave_list' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:leave_list' %}">
-                                <div class="flex items-center space-x-2.5">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    </svg>
-                                    <span>Leaves</span>
-                                </div>
-                            </a>
-                            <a href="{% url 'zkteco:config_list' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:config_list' %}">
-                                <div class="flex items-center space-x-2.5">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    </svg>
-                                    <span>Configurations</span>
-                                </div>
-                            </a>
-                        </div>
-
-                          
-                        <div class="mb-3">
-                            <p class="submenu-header">Employees</p>
+                            <!-- <p class="submenu-header">Employees</p> -->
                             <a href="{% url 'zkteco:employee_list' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:employee_list' %}">
                                 <div class="flex items-center space-x-2.5">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -586,9 +551,62 @@
                             </a>
                         </div>
 
-                          
+                        <!-- 3. Attendance Configuration Section -->
                         <div class="mb-3">
-                            <p class="submenu-header">Locations</p>
+                            <!-- <p class="submenu-header">Configuration</p> -->
+                            <a href="{% url 'zkteco:config_list' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:config_list' %}">
+                                <div class="flex items-center space-x-2.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                    <span>Attendance Config</span>
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- 4. Attendance Logs Section -->
+                        <div class="mb-3">
+                            <!-- <p class="submenu-header">Attendance Logs</p> -->
+                            <a href="{% url 'zkteco:attendance_logs' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:attendance_logs' %}">
+                                <div class="flex items-center space-x-2.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                    <span>Attendance Logs</span>
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- 5. Generate Attendance Section -->
+                        <div class="mb-3">
+                            <!-- <p class="submenu-header">Generate</p> -->
+                            <a href="{% url 'zkteco:simple_attendance_generation' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:simple_attendance_generation' %}">
+                                <div class="flex items-center space-x-2.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                    <span>Generate Attendance</span>
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- 6. Attendance Management Section -->
+                        <div class="mb-3">
+                            <!-- <p class="submenu-header">Attendance</p> -->
+                            <a href="{% url 'zkteco:attendance_list' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:attendance_list' %}">
+                                <div class="flex items-center space-x-2.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span>Attendance Records</span>
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- 7. Location Management Section -->
+                        <div class="mb-3">
+                            <!-- <p class="submenu-header">Locations</p> -->
                             <a href="{% url 'zkteco:location_list' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:location_list' %}">
                                 <div class="flex items-center space-x-2.5">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -598,6 +616,11 @@
                                     <span>Locations</span>
                                 </div>
                             </a>
+                        </div>
+
+                        <!-- 8. User Locations Section -->
+                        <div class="mb-3">
+                            <!-- <p class="submenu-header">User Locations</p> -->
                             <a href="{% url 'zkteco:user_location_list' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:user_location_list' %}">
                                 <div class="flex items-center space-x-2.5">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -608,9 +631,35 @@
                             </a>
                         </div>
 
-                         
+                        <!-- 9. Mobile Attendance Section -->
                         <div class="mb-3">
-                            <p class="submenu-header">Reports</p>
+                            <!-- <p class="submenu-header">Mobile</p> -->
+                            <a href="{% url 'zkteco:mobile_attendance' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:mobile_attendance' %}">
+                                <div class="flex items-center space-x-2.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a1 1 0 001-1V4a1 1 0 00-1-1H8a1 1 0 00-1 1v16a1 1 0 001 1z"/>
+                                    </svg>
+                                    <span>Mobile Attendance</span>
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- 10. Leave Management Section -->
+                        <div class="mb-3">
+                            <!-- <p class="submenu-header">Leave</p> -->
+                            <a href="{% url 'zkteco:leave_list' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:leave_list' %}">
+                                <div class="flex items-center space-x-2.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    <span>Leave Management</span>
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- 11. Reports Section -->
+                        <div class="mb-3">
+                            <!-- <p class="submenu-header">Reports</p> -->
                             <a href="{% url 'zkteco:attendance_reports_main' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:attendance_reports_main' %}">
                                 <div class="flex items-center space-x-2.5">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -627,11 +676,26 @@
                                     <span>Hourly Report</span>
                                 </div>
                             </a>
+                            <a href="{% url 'zkteco:daily_attendance_report' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:daily_attendance_report' %}">
+                                <div class="flex items-center space-x-2.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    <span>Daily Report</span>
+                                </div>
+                            </a>
+                            <a href="{% url 'zkteco:monthly_attendance_report' %}" class="nav-link block px-3 py-2 text-sm rounded-lg" data-url="{% url 'zkteco:monthly_attendance_report' %}">
+                                <div class="flex items-center space-x-2.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    <span>Monthly Report</span>
+                                </div>
+                            </a>
                         </div>
                     </div>
                 </div>
-            </div>
-            
+            </div>            
              
             <div class="p-3 border-t border-border bg-gradient-to-r from-primary/5 to-transparent">
                 <div class="relative">

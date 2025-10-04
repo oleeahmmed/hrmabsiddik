@@ -1,0 +1,496 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance Report - Print{% endblock %}
+{% block page_title %}Attendance Report{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/print-js/1.6.0/print.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+     Page Header (Hidden on Print) 
+    <div class="flex items-center justify-between print:hidden">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-foreground">Attendance Report</h1>
+            <p class="text-muted-foreground mt-1">Comprehensive attendance records with detailed information</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="printReport()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-primary-foreground bg-primary hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all">
+                <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                </svg>
+                Print Report
+            </button>
+            <a href="{% url 'zkteco:attendance_list' %}" class="inline-flex items-center px-4 py-2 border border-input text-sm font-medium rounded-lg shadow-sm text-foreground bg-background hover:bg-accent transition-all">
+                <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back to List
+            </a>
+        </div>
+    </div>
+
+     Report Card 
+    <div class="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
+        {% if attendances %}
+             Printable Content 
+            <div id="printable-area">
+                 Print Header (Hidden on Screen) 
+                <div id="print-header" class="hidden print:block">
+                    <div class="print-header-content">
+                        <div class="print-header-left">
+                            <h1 class="print-company-name">{{ company.name|default:"Company Name" }}</h1>
+                            <p class="print-company-address">{{ company.address|default:"Company Address" }}</p>
+                        </div>
+                        <div class="print-header-center">
+                            <h2 class="print-report-title">Attendance Report</h2>
+                            <p class="print-report-period">
+                                {% if start_date and end_date %}
+                                    {{ start_date|date:"F d, Y" }} to {{ end_date|date:"F d, Y" }}
+                                {% else %}
+                                    All Records
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="print-header-right">
+                            <p class="print-generation-date">Generated: {% now "F d, Y H:i" %}</p>
+                        </div>
+                    </div>
+                    <div class="print-header-border"></div>
+                </div>
+
+                 Summary Statistics (Print Only) 
+                <div id="print-summary" class="hidden print:block">
+                    <div class="print-summary-grid">
+                        <div class="print-summary-item">
+                            <span class="print-summary-label">Total Records:</span>
+                            <span class="print-summary-value">{{ total_records }}</span>
+                        </div>
+                        <div class="print-summary-item">
+                            <span class="print-summary-label">Present:</span>
+                            <span class="print-summary-value text-green-600">{{ stats.total_present }}</span>
+                        </div>
+                        <div class="print-summary-item">
+                            <span class="print-summary-label">Absent:</span>
+                            <span class="print-summary-value text-red-600">{{ stats.total_absent }}</span>
+                        </div>
+                        <div class="print-summary-item">
+                            <span class="print-summary-label">Total Overtime:</span>
+                            <span class="print-summary-value text-orange-600">{{ stats.total_overtime_hours|floatformat:1 }}h</span>
+                        </div>
+                    </div>
+                    <div class="print-summary-border"></div>
+                </div>
+
+                 Data Table 
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted/50">
+                            <tr>
+                                <th class="px-2 py-2 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">Employee</th>
+                                <th class="px-2 py-2 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">Date</th>
+                                <th class="px-2 py-2 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">Shift</th>
+                                <th class="px-2 py-2 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">Check In</th>
+                                <th class="px-2 py-2 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">Check Out</th>
+                                <th class="px-2 py-2 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">Status</th>
+                                <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">Work Hours</th>
+                                <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">Overtime</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-border">
+                            {% for attendance in attendances %}
+                            <tr class="hover:bg-accent/50 transition-colors">
+                                <td class="px-2 py-2 whitespace-nowrap text-xs border border-gray-300">
+                                    <div class="font-medium text-foreground">{{ attendance.employee.employee_id }}</div>
+                                    <div class="text-muted-foreground">{{ attendance.employee.name }}</div>
+                                    {% if attendance.employee.department %}
+                                    <div class="text-muted-foreground">{{ attendance.employee.department.name }}</div>
+                                    {% endif %}
+                                </td>
+                                
+                                <td class="px-2 py-2 whitespace-nowrap text-xs border border-gray-300">
+                                    <div class="font-medium text-foreground">{{ attendance.date|date:"M d, Y" }}</div>
+                                    <div class="text-muted-foreground">{{ attendance.date|date:"l" }}</div>
+                                </td>
+                                
+                                <td class="px-2 py-2 whitespace-nowrap text-xs text-foreground border border-gray-300">
+                                    {{ attendance.shift.name|default:"—" }}
+                                </td>
+                                
+                                <td class="px-2 py-2 whitespace-nowrap text-center text-xs border border-gray-300">
+                                    {% if attendance.check_in_time %}
+                                    <div class="font-medium text-foreground">{{ attendance.check_in_time|time:"H:i" }}</div>
+                                    {% else %}
+                                    <span class="text-muted-foreground">—</span>
+                                    {% endif %}
+                                </td>
+                                
+                                <td class="px-2 py-2 whitespace-nowrap text-center text-xs border border-gray-300">
+                                    {% if attendance.check_out_time %}
+                                    <div class="font-medium text-foreground">{{ attendance.check_out_time|time:"H:i" }}</div>
+                                    {% else %}
+                                    <span class="text-muted-foreground">—</span>
+                                    {% endif %}
+                                </td>
+                                
+                                <td class="px-2 py-2 whitespace-nowrap text-center text-xs border border-gray-300">
+                                    {% if attendance.status == 'P' %}
+                                    <span class="text-green-600 dark:text-green-400 font-medium">Present</span>
+                                    {% elif attendance.status == 'A' %}
+                                    <span class="text-red-600 dark:text-red-400 font-medium">Absent</span>
+                                    {% elif attendance.status == 'L' %}
+                                    <span class="text-blue-600 dark:text-blue-400 font-medium">Leave</span>
+                                    {% elif attendance.status == 'H' %}
+                                    <span class="text-purple-600 dark:text-purple-400 font-medium">Holiday</span>
+                                    {% else %}
+                                    <span class="text-gray-600 dark:text-gray-400 font-medium">{{ attendance.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                
+                                <td class="px-2 py-2 whitespace-nowrap text-right text-xs font-medium text-foreground border border-gray-300">
+                                    {{ attendance.work_hours|floatformat:2 }}h
+                                </td>
+                                
+                                <td class="px-2 py-2 whitespace-nowrap text-right text-xs font-medium text-orange-600 dark:text-orange-400 border border-gray-300">
+                                    {{ attendance.overtime_hours|floatformat:2 }}h
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="bg-muted/50 font-bold">
+                            <tr>
+                                <td colspan="6" class="px-2 py-2 text-xs text-right text-foreground border border-gray-300">Total:</td>
+                                <td class="px-2 py-2 text-xs text-right text-foreground border border-gray-300">{{ stats.total_work_hours|floatformat:1|default:"0.0" }}h</td>
+                                <td class="px-2 py-2 text-xs text-right text-orange-600 dark:text-orange-400 border border-gray-300">{{ stats.total_overtime_hours|floatformat:1|default:"0.0" }}h</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                 Print Footer (Hidden on Screen) 
+                <div id="print-footer" class="hidden print:block">
+                    <div class="print-footer-border"></div>
+                    <div class="print-footer-content">
+                        <div class="print-signature-section">
+                            <div class="print-signature-box">
+                                <div class="print-signature-line"></div>
+                                <p>Prepared By</p>
+                            </div>
+                            <div class="print-signature-box">
+                                <div class="print-signature-line"></div>
+                                <p>Verified By</p>
+                            </div>
+                            <div class="print-signature-box">
+                                <div class="print-signature-line"></div>
+                                <p>Approved By</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="p-8 text-center">
+                <svg class="mx-auto h-12 w-12 text-muted-foreground mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <p class="text-muted-foreground text-sm">No attendance records found for the selected criteria.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/print-js/1.6.0/print.min.js"></script>
+
+<script>
+function printReport() {
+    printJS({
+        printable: 'printable-area',
+        type: 'html',
+        targetStyles: ['*'],
+        style: `
+            @page {
+                size: A4 landscape;
+                margin: 8mm 6mm;
+            }
+            
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            body {
+                font-family: 'Inter', Arial, sans-serif;
+                font-size: 8px;
+                line-height: 1.15;
+                color: #000;
+            }
+            
+            .print\\:hidden {
+                display: none !important;
+            }
+            
+            .print\\:block {
+                display: block !important;
+            }
+            
+            /* Print Header */
+            #print-header {
+                display: block !important;
+                margin-bottom: 10px;
+                page-break-inside: avoid;
+            }
+            
+            .print-header-content {
+                display: grid;
+                grid-template-columns: 1fr 2fr 1fr;
+                gap: 10px;
+                padding-bottom: 8px;
+                align-items: start;
+            }
+            
+            .print-header-left {
+                text-align: left;
+            }
+            
+            .print-header-center {
+                text-align: center;
+            }
+            
+            .print-header-right {
+                text-align: right;
+            }
+            
+            .print-company-name {
+                font-size: 14px;
+                font-weight: bold;
+                color: #000;
+                margin: 0 0 3px 0;
+            }
+            
+            .print-company-address {
+                font-size: 9px;
+                color: #333;
+                margin: 0;
+            }
+            
+            .print-report-title {
+                font-size: 15px;
+                font-weight: bold;
+                color: #000;
+                margin: 0 0 3px 0;
+                text-decoration: underline;
+            }
+            
+            .print-report-period {
+                font-size: 10px;
+                color: #333;
+                margin: 0;
+            }
+            
+            .print-generation-date {
+                font-size: 8px;
+                color: #666;
+                margin: 0;
+            }
+            
+            .print-header-border {
+                border-bottom: 2px solid #000;
+                margin-top: 2px;
+            }
+            
+            /* Print Summary */
+            #print-summary {
+                display: block !important;
+                margin-bottom: 10px;
+                page-break-inside: avoid;
+            }
+            
+            .print-summary-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+                padding: 8px 0;
+            }
+            
+            .print-summary-item {
+                text-align: center;
+            }
+            
+            .print-summary-label {
+                font-size: 8px;
+                color: #666;
+                display: block;
+                margin-bottom: 2px;
+            }
+            
+            .print-summary-value {
+                font-size: 11px;
+                font-weight: bold;
+                color: #000;
+                display: block;
+            }
+            
+            .print-summary-border {
+                border-bottom: 1px solid #333;
+                margin-top: 2px;
+            }
+            
+            /* Table Styles */
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 7.5px;
+                margin: 0;
+            }
+            
+            th, td {
+                border: 1px solid #666 !important;
+                padding: 3px 4px !important;
+                vertical-align: middle;
+            }
+            
+            thead {
+                display: table-header-group;
+            }
+            
+            thead tr {
+                background-color: #e8e8e8 !important;
+            }
+            
+            thead th {
+                background-color: #e8e8e8 !important;
+                font-weight: bold;
+                color: #000 !important;
+                font-size: 7px;
+                text-transform: uppercase;
+                padding: 3px 2px !important;
+            }
+            
+            tbody tr {
+                page-break-inside: avoid;
+            }
+            
+            tbody tr:nth-child(even) {
+                background-color: #f5f5f5 !important;
+            }
+            
+            tbody tr:nth-child(odd) {
+                background-color: #ffffff !important;
+            }
+            
+            tbody td:first-child {
+                text-align: left;
+                font-size: 7.5px;
+            }
+            
+            tbody td:first-child > div:first-child {
+                font-weight: bold;
+                color: #000;
+            }
+            
+            tbody td:first-child > div:not(:first-child) {
+                font-size: 7px;
+                color: #666;
+                margin-top: 1px;
+            }
+            
+            .text-right {
+                text-align: right;
+            }
+            
+            .text-center {
+                text-align: center;
+            }
+            
+            .text-green-600 {
+                color: #16a34a !important;
+            }
+            
+            .text-red-600 {
+                color: #dc2626 !important;
+            }
+            
+            .text-blue-600 {
+                color: #2563eb !important;
+            }
+            
+            .text-purple-600 {
+                color: #7c3aed !important;
+            }
+            
+            .text-orange-600 {
+                color: #d97706 !important;
+            }
+            
+            tfoot {
+                display: table-footer-group;
+            }
+            
+            tfoot tr {
+                background-color: #d4d4d4 !important;
+                font-weight: bold;
+            }
+            
+            tfoot td {
+                font-weight: bold;
+                font-size: 8px;
+                border-top: 2px solid #333 !important;
+                padding: 4px !important;
+            }
+            
+            /* Print Footer */
+            #print-footer {
+                display: block !important;
+                margin-top: 20px;
+                page-break-inside: avoid;
+            }
+            
+            .print-footer-border {
+                border-top: 1px solid #333;
+                margin-bottom: 8px;
+            }
+            
+            .print-footer-content {
+                padding: 0 10px;
+            }
+            
+            .print-signature-section {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 15px;
+                padding-top: 30px;
+                text-align: center;
+            }
+            
+            .print-signature-box {
+                text-align: center;
+            }
+            
+            .print-signature-line {
+                border-top: 1px solid #000;
+                width: 140px;
+                margin: 0 auto 6px;
+            }
+            
+            .print-signature-box p {
+                font-size: 9px;
+                color: #333;
+                margin: 0;
+            }
+            
+            tr {
+                page-break-inside: avoid;
+            }
+            
+            * {
+                border-radius: 0 !important;
+                box-shadow: none !important;
+            }
+        `,
+        scanStyles: false,
+        documentTitle: 'Attendance Report - ' + '{% if start_date %}{{ start_date|date:"d-m-Y" }}{% endif %}' + '{% if end_date %} to {{ end_date|date:"d-m-Y" }}{% endif %}'
+    });
+}
+</script>
+{% endblock %}

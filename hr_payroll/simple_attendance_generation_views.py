@@ -167,6 +167,17 @@ def simple_attendance_preview(request):
             date__range=[start_date, end_date]
         ).values_list('date', flat=True))
         
+        # Get all attendance records for the period for checking adjacent days
+        all_attendance_records = {}
+        for employee in employees:
+            employee_attendance = Attendance.objects.filter(
+                employee=employee,
+                date__range=[start_date - timedelta(days=1), end_date + timedelta(days=1)]
+            ).values('date', 'status')
+            all_attendance_records[employee.id] = {
+                record['date']: record['status'] for record in employee_attendance
+            }
+        
         current_date = start_date
         present_count = 0
         absent_count = 0
@@ -188,14 +199,29 @@ def simple_attendance_preview(request):
                     continue
                 
                 # Determine status
-                if is_weekend:
-                    status = 'W'
-                    check_in = check_out = None
-                    working_hours = overtime_hours = 0
-                elif is_holiday:
-                    status = 'H'
-                    check_in = check_out = None
-                    working_hours = overtime_hours = 0
+                if is_weekend or is_holiday:
+                    # Check adjacent days for holiday/weekend eligibility
+                    prev_day = current_date - timedelta(days=1)
+                    next_day = current_date + timedelta(days=1)
+                    
+                    # Get status of previous and next day
+                    prev_day_status = all_attendance_records.get(employee.id, {}).get(prev_day, None)
+                    next_day_status = all_attendance_records.get(employee.id, {}).get(next_day, None)
+                    
+                    # If both adjacent days are absent, mark as absent
+                    if prev_day_status == 'A' and next_day_status == 'A':
+                        status = 'A'
+                        check_in = check_out = None
+                        working_hours = overtime_hours = 0
+                        absent_count += 1
+                    else:
+                        # Otherwise, mark as weekend or holiday
+                        if is_weekend:
+                            status = 'W'
+                        else:
+                            status = 'H'
+                        check_in = check_out = None
+                        working_hours = overtime_hours = 0
                 else:
                     # Check for leave
                     has_leave = LeaveApplication.objects.filter(
@@ -206,9 +232,24 @@ def simple_attendance_preview(request):
                     ).exists()
                     
                     if has_leave:
-                        status = 'L'
-                        check_in = check_out = None
-                        working_hours = overtime_hours = 0
+                        # Check adjacent days for leave eligibility
+                        prev_day = current_date - timedelta(days=1)
+                        next_day = current_date + timedelta(days=1)
+                        
+                        # Get status of previous and next day
+                        prev_day_status = all_attendance_records.get(employee.id, {}).get(prev_day, None)
+                        next_day_status = all_attendance_records.get(employee.id, {}).get(next_day, None)
+                        
+                        # If both adjacent days are absent, mark as absent instead of leave
+                        if prev_day_status == 'A' and next_day_status == 'A':
+                            status = 'A'
+                            check_in = check_out = None
+                            working_hours = overtime_hours = 0
+                            absent_count += 1
+                        else:
+                            status = 'L'
+                            check_in = check_out = None
+                            working_hours = overtime_hours = 0
                     else:
                         # Get from attendance logs
                         from .models import AttendanceLog

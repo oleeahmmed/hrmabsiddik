@@ -7,6 +7,7 @@ from datetime import datetime, date, timedelta
 from decimal import Decimal
 import json
 import logging
+import calendar
 
 from ..models import (
     Attendance, Employee, Department, LeaveApplication, 
@@ -1347,3 +1348,191 @@ def reports_dashboard(request):
     }
     
     return render(request, 'zkteco/reports/dashboard.html', context)
+
+
+@login_required
+def employee_monthly_attendance(request):
+    """
+    একজন শ্রমিকের মাসিক অ্যাটেনডেন্স রিপোর্ট
+    Employee, Month এবং Year সিলেক্ট করে দেখা যাবে
+    """
+    # Get company
+    company = Company.objects.first()
+    
+    # Get all employees for dropdown
+    employees = Employee.objects.filter(is_active=True).select_related('department', 'designation').order_by('employee_id')
+    
+    # Get parameters from request
+    employee_id = request.GET.get('employee', '')
+    month = request.GET.get('month', '')
+    year = request.GET.get('year', '')
+    
+    # Default to current month/year if not provided
+    today = datetime.now().date()
+    if not month:
+        month = str(today.month)
+    if not year:
+        year = str(today.year)
+    
+    # Initialize context
+    context = {
+        'company': company,
+        'employees': employees,
+        'selected_employee': employee_id,
+        'selected_month': month,
+        'selected_year': year,
+        'months': [
+            {'value': '1', 'name': 'জানুয়ারি'},
+            {'value': '2', 'name': 'ফেব্রুয়ারি'},
+            {'value': '3', 'name': 'মার্চ'},
+            {'value': '4', 'name': 'এপ্রিল'},
+            {'value': '5', 'name': 'মে'},
+            {'value': '6', 'name': 'জুন'},
+            {'value': '7', 'name': 'জুলাই'},
+            {'value': '8', 'name': 'আগস্ট'},
+            {'value': '9', 'name': 'সেপ্টেম্বর'},
+            {'value': '10', 'name': 'অক্টোবর'},
+            {'value': '11', 'name': 'নভেম্বর'},
+            {'value': '12', 'name': 'ডিসেম্বর'},
+        ],
+        'years': list(range(2020, 2030)),
+        'report_data': None,
+        'summary': None,
+    }
+    
+    # If employee is selected, generate report
+    if employee_id:
+        try:
+            employee = Employee.objects.select_related('department', 'designation', 'default_shift').get(id=employee_id)
+            
+            # Calculate date range for the month
+            month_int = int(month)
+            year_int = int(year)
+            
+            # Get first and last day of month
+            first_day = datetime(year_int, month_int, 1).date()
+            last_day_num = calendar.monthrange(year_int, month_int)[1]
+            last_day = datetime(year_int, month_int, last_day_num).date()
+            
+            # Get attendance records for the month
+            attendance_records = Attendance.objects.filter(
+                employee=employee,
+                date__range=[first_day, last_day]
+            ).select_related('shift').order_by('date')
+            
+            # Create attendance lookup dictionary
+            attendance_dict = {record.date: record for record in attendance_records}
+            
+            # Generate daily report data
+            report_data = []
+            total_present = 0
+            total_absent = 0
+            total_leave = 0
+            total_holiday = 0
+            total_weekly_off = 0
+            total_work_hours = Decimal('0.00')
+            total_overtime_hours = Decimal('0.00')
+            
+            current_date = first_day
+            while current_date <= last_day:
+                attendance = attendance_dict.get(current_date)
+                
+                if attendance:
+                    status = attendance.get_status_display()
+                    status_code = attendance.status
+                    check_in = attendance.check_in_time.strftime('%I:%M %p') if attendance.check_in_time else '-'
+                    check_out = attendance.check_out_time.strftime('%I:%M %p') if attendance.check_out_time else '-'
+                    work_hours = Decimal(str(attendance.work_hours))
+                    overtime_hours = attendance.overtime_hours or Decimal('0.00')
+                    shift_name = attendance.shift.name if attendance.shift else (employee.default_shift.name if employee.default_shift else '-')
+                    
+                    # Count statuses
+                    if status_code == 'P':
+                        total_present += 1
+                        total_work_hours += work_hours
+                        total_overtime_hours += overtime_hours
+                    elif status_code == 'A':
+                        total_absent += 1
+                    elif status_code == 'L':
+                        total_leave += 1
+                    elif status_code == 'H':
+                        total_holiday += 1
+                    elif status_code == 'W':
+                        total_weekly_off += 1
+                else:
+                    # No record - mark as absent
+                    status = 'Absent'
+                    status_code = 'A'
+                    check_in = '-'
+                    check_out = '-'
+                    work_hours = Decimal('0.00')
+                    overtime_hours = Decimal('0.00')
+                    shift_name = employee.default_shift.name if employee.default_shift else '-'
+                    total_absent += 1
+                
+                # Day name in Bangla
+                day_names = ['সোমবার', 'মঙ্গলবার', 'বুধবার', 'বৃহস্পতিবার', 'শুক্রবার', 'শনিবার', 'রবিবার']
+                day_name = day_names[current_date.weekday()]
+                
+                report_data.append({
+                    'date': current_date,
+                    'day_name': day_name,
+                    'shift': shift_name,
+                    'check_in': check_in,
+                    'check_out': check_out,
+                    'status': status,
+                    'status_code': status_code,
+                    'work_hours': work_hours,
+                    'overtime_hours': overtime_hours,
+                })
+                
+                current_date += timedelta(days=1)
+            
+            # Calculate summary
+            total_days = len(report_data)
+            working_days = total_days - total_holiday - total_weekly_off
+            attendance_percentage = (total_present / working_days * 100) if working_days > 0 else 0
+            
+            # Calculate per hour rate
+            per_hour_rate = employee.per_hour_rate or Decimal('0.00')
+            if not per_hour_rate and employee.expected_working_hours and employee.basic_salary:
+                per_hour_rate = employee.basic_salary / (Decimal('22') * Decimal(str(employee.expected_working_hours)))
+            
+            # Calculate hourly pay
+            hourly_pay = total_work_hours * per_hour_rate
+            
+            # Calculate overtime rate
+            overtime_rate = employee.overtime_rate or Decimal('0.00')
+            if not overtime_rate and per_hour_rate:
+                overtime_rate = per_hour_rate * Decimal('1.5')
+            
+            # Calculate overtime pay
+            overtime_pay = total_overtime_hours * overtime_rate
+            
+            summary = {
+                'total_days': total_days,
+                'working_days': working_days,
+                'present_days': total_present,
+                'absent_days': total_absent,
+                'leave_days': total_leave,
+                'holiday_days': total_holiday,
+                'weekly_off_days': total_weekly_off,
+                'attendance_percentage': round(attendance_percentage, 1),
+                'total_work_hours': total_work_hours,
+                'total_overtime_hours': total_overtime_hours,
+                'per_hour_rate': per_hour_rate,
+                'hourly_pay': hourly_pay,
+                'overtime_rate': overtime_rate,
+                'overtime_pay': overtime_pay,
+                'total_earnings': hourly_pay + overtime_pay,
+            }
+            
+            context['employee_info'] = employee
+            context['report_data'] = report_data
+            context['summary'] = summary
+            context['month_name'] = context['months'][month_int - 1]['name']
+            
+        except Employee.DoesNotExist:
+            context['error_message'] = 'নির্বাচিত শ্রমিক পাওয়া যায়নি'
+    
+    return render(request, 'zkteco/reports/employee_monthly_attendance.html', context)

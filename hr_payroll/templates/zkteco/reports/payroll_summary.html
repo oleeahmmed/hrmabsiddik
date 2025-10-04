@@ -3,6 +3,11 @@
 {% block title %}পে-রোল সামারি রিপোর্ট{% endblock %}
 {% block page_title %}পে-রোল সামারি রিপোর্ট{% endblock %}
 
+{% block extra_css %}
+<!-- Print.js CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/print-js/1.6.0/print.min.css">
+{% endblock %}
+
 {% block content %}
 <div class="space-y-6">
     <!-- Page Header -->
@@ -58,230 +63,174 @@
         </form>
     </div>
 
-    <!-- Summary Cards -->
-    {% if summary %}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 print:hidden">
-        <div class="bg-card rounded-lg shadow-sm border border-border p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-muted-foreground">মোট কর্মচারী</p>
-                    <p class="text-2xl font-bold text-foreground mt-1">{{ summary.total_employees }}</p>
-                </div>
-                <div class="p-3 bg-primary/10 rounded-lg">
-                    <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-card rounded-lg shadow-sm border border-border p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-muted-foreground">মোট বেসিক স্যালারি</p>
-                    <p class="text-2xl font-bold text-foreground mt-1">৳{{ summary.total_basic_salary|floatformat:2 }}</p>
-                </div>
-                <div class="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-card rounded-lg shadow-sm border border-border p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-muted-foreground">মোট ভাতা</p>
-                    <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">
-                        ৳{{ summary.total_house_rent|add:summary.total_medical|add:summary.total_conveyance|add:summary.total_food|add:summary.total_attendance_bonus|add:summary.total_festival_bonus|floatformat:2 }}
-                    </p>
-                </div>
-                <div class="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-                    <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-card rounded-lg shadow-sm border border-border p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-muted-foreground">মোট ওভারটাইম পে</p>
-                    <p class="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">৳{{ summary.total_overtime_pay|floatformat:2 }}</p>
-                </div>
-                <div class="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                    <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-card rounded-lg shadow-sm border border-border p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-muted-foreground">মোট ডিডাকশন</p>
-                    <p class="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">৳{{ summary.total_deductions|floatformat:2 }}</p>
-                </div>
-                <div class="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                    <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-card rounded-lg shadow-sm border border-border p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-muted-foreground">মোট নেট পে</p>
-                    <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">৳{{ summary.total_net_pay|floatformat:2 }}</p>
-                </div>
-                <div class="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                    <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 
     <!-- Report Table Card -->
-    <div id="printable-area" class="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
-        <!-- Print Header -->
-        <div id="print-header" class="hidden print:block p-6 text-center border-b border-border">
-            <h1 class="text-2xl font-bold text-foreground mb-2">{{ company.name }}</h1>
-            <h2 class="text-xl font-semibold text-muted-foreground mb-1">পে-রোল সামারি প্রতিবেদন</h2>
-            <p class="text-sm text-muted-foreground">{{ start_date|date:"d F, Y" }} থেকে {{ end_date|date:"d F, Y" }}</p>
-            <p class="text-xs text-muted-foreground mt-2">জেনারেটেড: {% now "d F, Y H:i" %}</p>
-        </div>
-
+    <div class="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
         {% if report_data %}
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-border">
-                    <thead class="bg-muted/50">
-                        <tr>
-                            <th rowspan="2" class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">কর্মচারী</th>
-                            <th colspan="6" class="px-3 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border">স্যালারি ও ভাতা</th>
-                            <th colspan="4" class="px-3 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border">কাজের সময় ও আয়</th>
-                            <th colspan="4" class="px-3 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border">ডিডাকশন</th>
-                            <th rowspan="2" class="px-3 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">নেট পে</th>
-                        </tr>
-                        <tr>
-                            <!-- Salary & Allowances -->
-                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">বেসিক</th>
-                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">বাড়ি ভাড়া</th>
-                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">মেডিকেল</th>
-                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">যাতায়াত</th>
-                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">খাদ্য</th>
-                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">বোনাস</th>
-                            
-                            <!-- Work & Earnings -->
-                            <th class="px-2 py-2 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">কাজের ঘণ্টা</th>
-                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">ঘণ্টাভিত্তিক</th>
-                            <th class="px-2 py-2 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">ওভারটাইম</th>
-                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">ওভারটাইম পে</th>
-                            
-                            <!-- Deductions -->
-                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">পিএফ</th>
-                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">ট্যাক্স</th>
-                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">লোন</th>
-                            <th class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">অনুপস্থিতি</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-border">
-                        {% for data in report_data %}
-                            <tr class="hover:bg-accent/50 transition-colors">
-                                <!-- Employee Info -->
-                                <td class="px-3 py-3 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-foreground">{{ data.employee_id }}</div>
-                                    <div class="text-xs text-muted-foreground">{{ data.employee_name }}</div>
-                                    <div class="text-xs text-muted-foreground">{{ data.department }}</div>
-                                </td>
+            <!-- Printable Content -->
+            <div id="printable-area">
+                <!-- Print Header (Hidden on Screen) -->
+                <div id="print-header" class="hidden print:block">
+                    <div class="print-header-content">
+                        <div class="print-header-left">
+                            <h1 class="print-company-name">{{ company.name }}</h1>
+                            <p class="print-company-address">{{ company.address|default:"ঠিকানা উল্লেখ করুন" }}</p>
+                        </div>
+                        <div class="print-header-center">
+                            <h2 class="print-report-title">পে-রোল সামারি প্রতিবেদন</h2>
+                            <p class="print-report-period">{{ start_date|date:"d F, Y" }} থেকে {{ end_date|date:"d F, Y" }}</p>
+                        </div>
+                        <div class="print-header-right">
+                            <p class="print-generation-date">জেনারেটেড: {% now "d F, Y H:i" %}</p>
+                        </div>
+                    </div>
+                    <div class="print-header-border"></div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted/50">
+                            <tr>
+                                <th rowspan="2" class="px-2 py-2 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider align-middle border border-gray-300">কর্মচারী</th>
+                                <th colspan="6" class="px-1 py-2 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border border border-gray-300">স্যালারি ও ভাতা</th>
+                                <th colspan="4" class="px-1 py-2 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border border border-gray-300">কাজের সময় ও আয়</th>
+                                <th colspan="4" class="px-1 py-2 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border border border-gray-300">ডিডাকশন</th>
+                                <th rowspan="2" class="px-2 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider align-middle border border-gray-300">নেট পে</th>
+                            </tr>
+                            <tr>
+                                <!-- Salary & Allowances -->
+                                <th class="px-1 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">বেসিক</th>
+                                <th class="px-1 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">বাড়ি ভাড়া</th>
+                                <th class="px-1 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">মেডিকেল</th>
+                                <th class="px-1 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">যাতায়াত</th>
+                                <th class="px-1 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">খাদ্য</th>
+                                <th class="px-1 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">বোনাস</th>
+                                
+                                <!-- Work & Earnings -->
+                                <th class="px-1 py-2 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">কাজের ঘণ্টা</th>
+                                <th class="px-1 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">ঘণ্টাভিত্তিক</th>
+                                <th class="px-1 py-2 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">ওভারটাইম</th>
+                                <th class="px-1 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">ওভারটাইম পে</th>
+                                
+                                <!-- Deductions -->
+                                <th class="px-1 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">পিএফ</th>
+                                <th class="px-1 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">ট্যাক্স</th>
+                                <th class="px-1 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">লোন</th>
+                                <th class="px-1 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">অনুপস্থিতি</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-border">
+                            {% for data in report_data %}
+                                <tr class="hover:bg-accent/50 transition-colors">
+                                    <!-- Employee Info -->
+                                    <td class="px-2 py-2 whitespace-nowrap text-xs border border-gray-300">
+                                        <div class="font-medium text-foreground">{{ data.employee_id }}</div>
+                                        <div class="text-muted-foreground">{{ data.employee_name }}</div>
+                                        <div class="text-muted-foreground">{{ data.department }}</div>
+                                    </td>
+                                    
+                                    <!-- Salary & Allowances -->
+                                    <td class="px-1 py-2 whitespace-nowrap text-xs text-right text-foreground border border-gray-300">৳{{ data.basic_salary|floatformat:0 }}</td>
+                                    <td class="px-1 py-2 whitespace-nowrap text-xs text-right text-foreground border border-gray-300">৳{{ data.house_rent|floatformat:0 }}</td>
+                                    <td class="px-1 py-2 whitespace-nowrap text-xs text-right text-foreground border border-gray-300">৳{{ data.medical|floatformat:0 }}</td>
+                                    <td class="px-1 py-2 whitespace-nowrap text-xs text-right text-foreground border border-gray-300">৳{{ data.conveyance|floatformat:0 }}</td>
+                                    <td class="px-1 py-2 whitespace-nowrap text-xs text-right text-foreground border border-gray-300">৳{{ data.food|floatformat:0 }}</td>
+                                    <td class="px-1 py-2 whitespace-nowrap text-xs text-right text-foreground border border-gray-300">
+                                        ৳{{ data.attendance_bonus|add:data.festival_bonus|floatformat:0 }}
+                                    </td>
+                                    
+                                    <!-- Work & Earnings -->
+                                    <td class="px-1 py-2 whitespace-nowrap text-xs text-center text-foreground border border-gray-300">
+                                        {{ data.work_hours|floatformat:1 }}
+                                        <div class="text-muted-foreground">
+                                            ({{ data.present_days }}/{{ data.working_days_in_period }} দিন)
+                                        </div>
+                                    </td>
+                                    <td class="px-1 py-2 whitespace-nowrap text-xs text-right text-orange-600 dark:text-orange-400 border border-gray-300">
+                                        ৳{{ data.hourly_pay|floatformat:0 }}
+                                    </td>
+                                    <td class="px-1 py-2 whitespace-nowrap text-xs text-center text-foreground border border-gray-300">
+                                        {{ data.overtime_hours|floatformat:1 }}
+                                    </td>
+                                    <td class="px-1 py-2 whitespace-nowrap text-xs text-right text-purple-600 dark:text-purple-400 border border-gray-300">
+                                        ৳{{ data.overtime_pay|floatformat:0 }}
+                                    </td>
+                                    
+                                    <!-- Deductions -->
+                                    <td class="px-1 py-2 whitespace-nowrap text-xs text-right text-red-600 dark:text-red-400 border border-gray-300">
+                                        ৳{{ data.provident_fund|floatformat:0 }}
+                                    </td>
+                                    <td class="px-1 py-2 whitespace-nowrap text-xs text-right text-red-600 dark:text-red-400 border border-gray-300">
+                                        ৳{{ data.tax_deduction|floatformat:0 }}
+                                    </td>
+                                    <td class="px-1 py-2 whitespace-nowrap text-xs text-right text-red-600 dark:text-red-400 border border-gray-300">
+                                        ৳{{ data.loan_deduction|floatformat:0 }}
+                                    </td>
+                                    <td class="px-1 py-2 whitespace-nowrap text-xs text-right text-red-600 dark:text-red-400 border border-gray-300">
+                                        <div>৳{{ data.absence_deduction|floatformat:0 }}</div>
+                                        <div class="text-muted-foreground">({{ data.absent_days }} দিন)</div>
+                                    </td>
+                                    
+                                    <!-- Net Pay -->
+                                    <td class="px-2 py-2 whitespace-nowrap text-xs text-right font-bold text-green-600 dark:text-green-400 border border-gray-300">
+                                        ৳{{ data.net_pay|floatformat:0 }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="bg-muted/50 font-bold">
+                            <tr>
+                                <td class="px-2 py-2 text-xs text-foreground border border-gray-300">মোট</td>
                                 
                                 <!-- Salary & Allowances -->
-                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-foreground">৳{{ data.basic_salary|floatformat:0 }}</td>
-                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-foreground">৳{{ data.house_rent|floatformat:0 }}</td>
-                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-foreground">৳{{ data.medical|floatformat:0 }}</td>
-                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-foreground">৳{{ data.conveyance|floatformat:0 }}</td>
-                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-foreground">৳{{ data.food|floatformat:0 }}</td>
-                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-foreground">
-                                    ৳{{ data.attendance_bonus|add:data.festival_bonus|floatformat:0 }}
+                                <td class="px-1 py-2 text-xs text-right text-foreground border border-gray-300">৳{{ summary.total_basic_salary|floatformat:0 }}</td>
+                                <td class="px-1 py-2 text-xs text-right text-foreground border border-gray-300">৳{{ summary.total_house_rent|floatformat:0 }}</td>
+                                <td class="px-1 py-2 text-xs text-right text-foreground border border-gray-300">৳{{ summary.total_medical|floatformat:0 }}</td>
+                                <td class="px-1 py-2 text-xs text-right text-foreground border border-gray-300">৳{{ summary.total_conveyance|floatformat:0 }}</td>
+                                <td class="px-1 py-2 text-xs text-right text-foreground border border-gray-300">৳{{ summary.total_food|floatformat:0 }}</td>
+                                <td class="px-1 py-2 text-xs text-right text-foreground border border-gray-300">
+                                    ৳{{ summary.total_attendance_bonus|add:summary.total_festival_bonus|floatformat:0 }}
                                 </td>
                                 
                                 <!-- Work & Earnings -->
-                                <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-foreground">
-                                    {{ data.work_hours|floatformat:1 }}
-                                    <div class="text-xs text-muted-foreground">
-                                        ({{ data.present_days }}/{{ data.working_days_in_period }} দিন)
-                                    </div>
-                                </td>
-                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-orange-600 dark:text-orange-400">
-                                    ৳{{ data.hourly_pay|floatformat:0 }}
-                                </td>
-                                <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-foreground">
-                                    {{ data.overtime_hours|floatformat:1 }}
-                                </td>
-                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-purple-600 dark:text-purple-400">
-                                    ৳{{ data.overtime_pay|floatformat:0 }}
-                                </td>
+                                <td class="px-1 py-2 text-xs text-center text-foreground border border-gray-300">{{ summary.total_work_hours|floatformat:1 }}</td>
+                                <td class="px-1 py-2 text-xs text-right text-orange-600 dark:text-orange-400 border border-gray-300">৳{{ summary.total_hourly_pay|floatformat:0 }}</td>
+                                <td class="px-1 py-2 text-xs text-center text-foreground border border-gray-300">{{ summary.total_overtime_hours|floatformat:1 }}</td>
+                                <td class="px-1 py-2 text-xs text-right text-purple-600 dark:text-purple-400 border border-gray-300">৳{{ summary.total_overtime_pay|floatformat:0 }}</td>
                                 
                                 <!-- Deductions -->
-                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-red-600 dark:text-red-400">
-                                    ৳{{ data.provident_fund|floatformat:0 }}
-                                </td>
-                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-red-600 dark:text-red-400">
-                                    ৳{{ data.tax_deduction|floatformat:0 }}
-                                </td>
-                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-red-600 dark:text-red-400">
-                                    ৳{{ data.loan_deduction|floatformat:0 }}
-                                </td>
-                                <td class="px-2 py-3 whitespace-nowrap text-sm text-right text-red-600 dark:text-red-400">
-                                    <div>৳{{ data.absence_deduction|floatformat:0 }}</div>
-                                    <div class="text-xs text-muted-foreground">({{ data.absent_days }} দিন)</div>
-                                </td>
+                                <td class="px-1 py-2 text-xs text-right text-red-600 dark:text-red-400 border border-gray-300">৳{{ summary.total_provident_fund|floatformat:0 }}</td>
+                                <td class="px-1 py-2 text-xs text-right text-red-600 dark:text-red-400 border border-gray-300">৳{{ summary.total_tax_deduction|floatformat:0 }}</td>
+                                <td class="px-1 py-2 text-xs text-right text-red-600 dark:text-red-400 border border-gray-300">৳{{ summary.total_loan_deduction|floatformat:0 }}</td>
+                                <td class="px-1 py-2 text-xs text-right text-red-600 dark:text-red-400 border border-gray-300">৳{{ summary.total_absence_deduction|floatformat:0 }}</td>
                                 
                                 <!-- Net Pay -->
-                                <td class="px-3 py-3 whitespace-nowrap text-sm text-right font-bold text-green-600 dark:text-green-400">
-                                    ৳{{ data.net_pay|floatformat:0 }}
-                                </td>
+                                <td class="px-2 py-2 text-xs text-right text-green-600 dark:text-green-400 border border-gray-300">৳{{ summary.total_net_pay|floatformat:0 }}</td>
                             </tr>
-                        {% endfor %}
-                    </tbody>
-                    <tfoot class="bg-muted/50 font-bold">
-                        <tr>
-                            <td class="px-3 py-3 text-sm text-foreground">মোট</td>
-                            
-                            <!-- Salary & Allowances -->
-                            <td class="px-2 py-3 text-sm text-right text-foreground">৳{{ summary.total_basic_salary|floatformat:0 }}</td>
-                            <td class="px-2 py-3 text-sm text-right text-foreground">৳{{ summary.total_house_rent|floatformat:0 }}</td>
-                            <td class="px-2 py-3 text-sm text-right text-foreground">৳{{ summary.total_medical|floatformat:0 }}</td>
-                            <td class="px-2 py-3 text-sm text-right text-foreground">৳{{ summary.total_conveyance|floatformat:0 }}</td>
-                            <td class="px-2 py-3 text-sm text-right text-foreground">৳{{ summary.total_food|floatformat:0 }}</td>
-                            <td class="px-2 py-3 text-sm text-right text-foreground">
-                                ৳{{ summary.total_attendance_bonus|add:summary.total_festival_bonus|floatformat:0 }}
-                            </td>
-                            
-                            <!-- Work & Earnings -->
-                            <td class="px-2 py-3 text-sm text-center text-foreground">{{ summary.total_work_hours|floatformat:1 }}</td>
-                            <td class="px-2 py-3 text-sm text-right text-orange-600 dark:text-orange-400">৳{{ summary.total_hourly_pay|floatformat:0 }}</td>
-                            <td class="px-2 py-3 text-sm text-center text-foreground">{{ summary.total_overtime_hours|floatformat:1 }}</td>
-                            <td class="px-2 py-3 text-sm text-right text-purple-600 dark:text-purple-400">৳{{ summary.total_overtime_pay|floatformat:0 }}</td>
-                            
-                            <!-- Deductions -->
-                            <td class="px-2 py-3 text-sm text-right text-red-600 dark:text-red-400">৳{{ summary.total_provident_fund|floatformat:0 }}</td>
-                            <td class="px-2 py-3 text-sm text-right text-red-600 dark:text-red-400">৳{{ summary.total_tax_deduction|floatformat:0 }}</td>
-                            <td class="px-2 py-3 text-sm text-right text-red-600 dark:text-red-400">৳{{ summary.total_loan_deduction|floatformat:0 }}</td>
-                            <td class="px-2 py-3 text-sm text-right text-red-600 dark:text-red-400">৳{{ summary.total_absence_deduction|floatformat:0 }}</td>
-                            
-                            <!-- Net Pay -->
-                            <td class="px-3 py-3 text-sm text-right text-green-600 dark:text-green-400">৳{{ summary.total_net_pay|floatformat:0 }}</td>
-                        </tr>
-                    </tfoot>
-                </table>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Print Footer (Hidden on Screen) -->
+                <div id="print-footer" class="hidden print:block">
+                    <div class="print-footer-border"></div>
+                    <div class="print-footer-content">
+                        <div class="print-signature-section">
+                            <div class="print-signature-box">
+                                <div class="print-signature-line"></div>
+                                <p>প্রস্তুতকারী</p>
+                            </div>
+                            <div class="print-signature-box">
+                                <div class="print-signature-line"></div>
+                                <p>যাচাইকারী</p>
+                            </div>
+                            <div class="print-signature-box">
+                                <div class="print-signature-line"></div>
+                                <p>অনুমোদনকারী</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         {% else %}
             <div class="p-8 text-center">
@@ -294,94 +243,267 @@
     </div>
 </div>
 
-<style>
-    @media print {
-        @page {
-            size: A4 landscape;
-            margin: 0.5cm;
-        }
-        
-        body {
-            print-color-adjust: exact;
-            -webkit-print-color-adjust: exact;
-            font-size: 10px;
-        }
-        
-        .print\:hidden {
-            display: none !important;
-        }
-        
-        .print\:block {
-            display: block !important;
-        }
-        
-        #printable-area {
-            box-shadow: none !important;
-            border: none !important;
-        }
-        
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            font-size: 8px;
-        }
-        
-        th, td {
-            border: 1px solid #ddd;
-            padding: 4px 6px;
-        }
-        
-        th {
-            background-color: #f3f4f6 !important;
-            font-weight: bold;
-        }
-        
-        tr:nth-child(even) {
-            background-color: #f9fafb;
-        }
-        
-        tfoot tr {
-            background-color: #f3f4f6 !important;
-            font-weight: bold;
-        }
-        
-        #print-header {
-            display: block !important;
-            text-align: center;
-            margin-bottom: 10px;
-            padding-bottom: 5px;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        
-        #print-header h1 {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
-        
-        #print-header h2 {
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 2px;
-            color: #6b7280;
-        }
-        
-        #print-header p {
-            font-size: 9px;
-            color: #9ca3af;
-        }
-    }
-</style>
+<!-- Print.js Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/print-js/1.6.0/print.min.js"></script>
 
 <script>
 function printReport() {
-    const printContent = document.getElementById('printable-area').innerHTML;
-    const originalContent = document.body.innerHTML;
-    
-    document.body.innerHTML = printContent;
-    window.print();
-    document.body.innerHTML = originalContent;
-    window.location.reload();
+    printJS({
+        printable: 'printable-area',
+        type: 'html',
+        targetStyles: ['*'],
+        style: `
+            @page {
+                size: A4 landscape;
+                margin: 8mm 6mm;
+            }
+            
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            body {
+                font-family: 'Noto Sans Bengali', 'SolaimanLipi', Arial, sans-serif;
+                font-size: 8px;
+                line-height: 1.15;
+                color: #000;
+            }
+            
+            /* Hide non-printable elements */
+            .print\\:hidden {
+                display: none !important;
+            }
+            
+            .print\\:block {
+                display: block !important;
+            }
+            
+            /* Print Header */
+            #print-header {
+                display: block !important;
+                margin-bottom: 10px;
+                page-break-inside: avoid;
+            }
+            
+            .print-header-content {
+                display: grid;
+                grid-template-columns: 1fr 2fr 1fr;
+                gap: 10px;
+                padding-bottom: 8px;
+                align-items: start;
+            }
+            
+            .print-header-left {
+                text-align: left;
+            }
+            
+            .print-header-center {
+                text-align: center;
+            }
+            
+            .print-header-right {
+                text-align: right;
+            }
+            
+            .print-company-name {
+                font-size: 14px;
+                font-weight: bold;
+                color: #000;
+                margin: 0 0 3px 0;
+            }
+            
+            .print-company-address {
+                font-size: 9px;
+                color: #333;
+                margin: 0;
+            }
+            
+            .print-report-title {
+                font-size: 15px;
+                font-weight: bold;
+                color: #000;
+                margin: 0 0 3px 0;
+                text-decoration: underline;
+            }
+            
+            .print-report-period {
+                font-size: 10px;
+                color: #333;
+                margin: 0;
+            }
+            
+            .print-generation-date {
+                font-size: 8px;
+                color: #666;
+                margin: 0;
+            }
+            
+            .print-header-border {
+                border-bottom: 2px solid #000;
+                margin-top: 2px;
+            }
+            
+            /* Table Styles */
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 7.5px;
+                margin: 0;
+            }
+            
+            th, td {
+                border: 1px solid #666 !important;
+                padding: 3px 4px !important;
+                vertical-align: middle;
+            }
+            
+            /* Header Styles */
+            thead {
+                display: table-header-group;
+            }
+            
+            thead tr {
+                background-color: #e8e8e8 !important;
+            }
+            
+            thead th {
+                background-color: #e8e8e8 !important;
+                font-weight: bold;
+                color: #000 !important;
+                font-size: 7px;
+                text-transform: uppercase;
+                padding: 3px 2px !important;
+            }
+            
+            /* Body Styles */
+            tbody tr {
+                page-break-inside: avoid;
+            }
+            
+            tbody tr:nth-child(even) {
+                background-color: #f5f5f5 !important;
+            }
+            
+            tbody tr:nth-child(odd) {
+                background-color: #ffffff !important;
+            }
+            
+            /* Employee Column */
+            tbody td:first-child {
+                text-align: left;
+                font-size: 7.5px;
+            }
+            
+            tbody td:first-child > div:first-child {
+                font-weight: bold;
+                color: #000;
+            }
+            
+            tbody td:first-child > div:not(:first-child) {
+                font-size: 7px;
+                color: #666;
+                margin-top: 1px;
+            }
+            
+            /* Amount Columns */
+            .text-right {
+                text-align: right;
+            }
+            
+            .text-center {
+                text-align: center;
+            }
+            
+            /* Color Coding */
+            .text-orange-600 {
+                color: #d97706 !important;
+            }
+            
+            .text-purple-600 {
+                color: #7c3aed !important;
+            }
+            
+            .text-red-600 {
+                color: #dc2626 !important;
+            }
+            
+            .text-green-600 {
+                color: #16a34a !important;
+                font-weight: bold;
+            }
+            
+            /* Footer/Total Row */
+            tfoot {
+                display: table-footer-group;
+            }
+            
+            tfoot tr {
+                background-color: #d4d4d4 !important;
+                font-weight: bold;
+            }
+            
+            tfoot td {
+                font-weight: bold;
+                font-size: 8px;
+                border-top: 2px solid #333 !important;
+                padding: 4px !important;
+            }
+            
+            /* Print Footer */
+            #print-footer {
+                display: block !important;
+                margin-top: 20px;
+                page-break-inside: avoid;
+            }
+            
+            .print-footer-border {
+                border-top: 1px solid #333;
+                margin-bottom: 8px;
+            }
+            
+            .print-footer-content {
+                padding: 0 10px;
+            }
+            
+            .print-signature-section {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 15px;
+                padding-top: 30px;
+                text-align: center;
+            }
+            
+            .print-signature-box {
+                text-align: center;
+            }
+            
+            .print-signature-line {
+                border-top: 1px solid #000;
+                width: 140px;
+                margin: 0 auto 6px;
+            }
+            
+            .print-signature-box p {
+                font-size: 9px;
+                color: #333;
+                margin: 0;
+            }
+            
+            /* Page Break Control */
+            tr {
+                page-break-inside: avoid;
+            }
+            
+            /* Remove rounded corners and shadows for print */
+            * {
+                border-radius: 0 !important;
+                box-shadow: none !important;
+            }
+        `,
+        scanStyles: false,
+        documentTitle: 'পে-রোল সামারি রিপোর্ট - ' + '{{ start_date|date:"d-m-Y" }}' + ' থেকে ' + '{{ end_date|date:"d-m-Y" }}'
+    });
 }
 </script>
 {% endblock %}

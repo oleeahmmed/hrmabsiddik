@@ -5,36 +5,438 @@
 
 {% block content %}
 <div class="space-y-6">
-    <div class="rounded-lg border bg-card shadow-sm">
-        <div class="border-b bg-muted/50 px-6 py-4">
-            <h2 class="text-lg font-semibold text-foreground">Employee Information</h2>
-        </div>
-        <form method="post" class="p-6 space-y-6">
-            {% csrf_token %}
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        
+         Basic Information 
+        <div class="rounded-lg border bg-card shadow-sm">
+            <div class="border-b bg-muted/50 px-6 py-4">
+                <h2 class="text-lg font-semibold text-foreground">Basic Information</h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {{ form.non_field_errors }}
+                    
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.employee_id.id_for_label }}">{{ form.employee_id.label }}</label>
+                        {{ form.employee_id }}
+                        {% if form.employee_id.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.employee_id.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.employee_id.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {{ form.non_field_errors }}
-                {% for field in form %}
-                <div>
-                    <label class="mb-2 block text-sm font-medium text-foreground" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.help_text %}
-                    <p class="mt-1 text-xs text-muted-foreground">{{ field.help_text }}</p>
-                    {% endif %}
-                    {% for error in field.errors %}
-                    <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                    {% endfor %}
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.zkteco_id.id_for_label }}">{{ form.zkteco_id.label }}</label>
+                        {{ form.zkteco_id }}
+                        {% if form.zkteco_id.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.zkteco_id.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.zkteco_id.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+                        {{ form.name }}
+                        {% if form.name.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.name.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.name.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.first_name.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.first_name.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
+                        {{ form.last_name }}
+                        {% if form.last_name.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.last_name.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.last_name.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
+                        {{ form.is_active }}
+                        {% if form.is_active.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.is_active.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.is_active.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
                 </div>
-                {% endfor %}
             </div>
+        </div>
 
-            <div class="flex items-center justify-end gap-2 border-t border-border pt-4">
-                <a href="{% url 'zkteco:employee_list' %}" class="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</a>
-                <button type="submit" class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">Save</button>
+         Employment Details 
+        <div class="rounded-lg border bg-card shadow-sm">
+            <div class="border-b bg-muted/50 px-6 py-4">
+                <h2 class="text-lg font-semibold text-foreground">Employment Details</h2>
             </div>
-        </form>
-    </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.company.id_for_label }}">{{ form.company.label }}</label>
+                        {{ form.company }}
+                        {% if form.company.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.company.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.company.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.department.id_for_label }}">{{ form.department.label }}</label>
+                        {{ form.department }}
+                        {% if form.department.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.department.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.department.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.designation.id_for_label }}">{{ form.designation.label }}</label>
+                        {{ form.designation }}
+                        {% if form.designation.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.designation.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.designation.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.default_shift.id_for_label }}">{{ form.default_shift.label }}</label>
+                        {{ form.default_shift }}
+                        {% if form.default_shift.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.default_shift.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.default_shift.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.user.id_for_label }}">{{ form.user.label }}</label>
+                        {{ form.user }}
+                        {% if form.user.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.user.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.user.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.joining_date.id_for_label }}">{{ form.joining_date.label }}</label>
+                        {{ form.joining_date }}
+                        {% if form.joining_date.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.joining_date.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.joining_date.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+         Contact & Personal Information 
+        <div class="rounded-lg border bg-card shadow-sm">
+            <div class="border-b bg-muted/50 px-6 py-4">
+                <h2 class="text-lg font-semibold text-foreground">Contact & Personal Information</h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.contact_number.id_for_label }}">{{ form.contact_number.label }}</label>
+                        {{ form.contact_number }}
+                        {% if form.contact_number.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.contact_number.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.contact_number.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.date_of_birth.id_for_label }}">{{ form.date_of_birth.label }}</label>
+                        {{ form.date_of_birth }}
+                        {% if form.date_of_birth.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.date_of_birth.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.date_of_birth.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.nid.id_for_label }}">{{ form.nid.label }}</label>
+                        {{ form.nid }}
+                        {% if form.nid.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.nid.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.nid.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.marital_status.id_for_label }}">{{ form.marital_status.label }}</label>
+                        {{ form.marital_status }}
+                        {% if form.marital_status.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.marital_status.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.marital_status.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+         Salary & Compensation 
+        <div class="rounded-lg border bg-card shadow-sm">
+            <div class="border-b bg-muted/50 px-6 py-4">
+                <h2 class="text-lg font-semibold text-foreground">Salary & Compensation</h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.basic_salary.id_for_label }}">{{ form.basic_salary.label }}</label>
+                        {{ form.basic_salary }}
+                        {% if form.basic_salary.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.basic_salary.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.basic_salary.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.overtime_rate.id_for_label }}">{{ form.overtime_rate.label }}</label>
+                        {{ form.overtime_rate }}
+                        {% if form.overtime_rate.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.overtime_rate.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.overtime_rate.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.per_hour_rate.id_for_label }}">{{ form.per_hour_rate.label }}</label>
+                        {{ form.per_hour_rate }}
+                        {% if form.per_hour_rate.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.per_hour_rate.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.per_hour_rate.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.expected_working_hours.id_for_label }}">{{ form.expected_working_hours.label }}</label>
+                        {{ form.expected_working_hours }}
+                        {% if form.expected_working_hours.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.expected_working_hours.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.expected_working_hours.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.overtime_grace_minutes.id_for_label }}">{{ form.overtime_grace_minutes.label }}</label>
+                        {{ form.overtime_grace_minutes }}
+                        {% if form.overtime_grace_minutes.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.overtime_grace_minutes.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.overtime_grace_minutes.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+         Allowances 
+        <div class="rounded-lg border bg-card shadow-sm">
+            <div class="border-b bg-muted/50 px-6 py-4">
+                <h2 class="text-lg font-semibold text-foreground">Allowances</h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.house_rent_allowance.id_for_label }}">{{ form.house_rent_allowance.label }}</label>
+                        {{ form.house_rent_allowance }}
+                        {% if form.house_rent_allowance.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.house_rent_allowance.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.house_rent_allowance.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.medical_allowance.id_for_label }}">{{ form.medical_allowance.label }}</label>
+                        {{ form.medical_allowance }}
+                        {% if form.medical_allowance.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.medical_allowance.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.medical_allowance.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.conveyance_allowance.id_for_label }}">{{ form.conveyance_allowance.label }}</label>
+                        {{ form.conveyance_allowance }}
+                        {% if form.conveyance_allowance.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.conveyance_allowance.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.conveyance_allowance.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.food_allowance.id_for_label }}">{{ form.food_allowance.label }}</label>
+                        {{ form.food_allowance }}
+                        {% if form.food_allowance.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.food_allowance.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.food_allowance.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.attendance_bonus.id_for_label }}">{{ form.attendance_bonus.label }}</label>
+                        {{ form.attendance_bonus }}
+                        {% if form.attendance_bonus.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.attendance_bonus.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.attendance_bonus.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.festival_bonus.id_for_label }}">{{ form.festival_bonus.label }}</label>
+                        {{ form.festival_bonus }}
+                        {% if form.festival_bonus.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.festival_bonus.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.festival_bonus.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+         Deductions 
+        <div class="rounded-lg border bg-card shadow-sm">
+            <div class="border-b bg-muted/50 px-6 py-4">
+                <h2 class="text-lg font-semibold text-foreground">Deductions</h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.provident_fund.id_for_label }}">{{ form.provident_fund.label }}</label>
+                        {{ form.provident_fund }}
+                        {% if form.provident_fund.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.provident_fund.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.provident_fund.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.tax_deduction.id_for_label }}">{{ form.tax_deduction.label }}</label>
+                        {{ form.tax_deduction }}
+                        {% if form.tax_deduction.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.tax_deduction.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.tax_deduction.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.loan_deduction.id_for_label }}">{{ form.loan_deduction.label }}</label>
+                        {{ form.loan_deduction }}
+                        {% if form.loan_deduction.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.loan_deduction.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.loan_deduction.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+         Payroll Information 
+        <div class="rounded-lg border bg-card shadow-sm">
+            <div class="border-b bg-muted/50 px-6 py-4">
+                <h2 class="text-lg font-semibold text-foreground">Payroll Information</h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.bank_account_no.id_for_label }}">{{ form.bank_account_no.label }}</label>
+                        {{ form.bank_account_no }}
+                        {% if form.bank_account_no.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.bank_account_no.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.bank_account_no.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-foreground" for="{{ form.payment_method.id_for_label }}">{{ form.payment_method.label }}</label>
+                        {{ form.payment_method }}
+                        {% if form.payment_method.help_text %}
+                        <p class="mt-1 text-xs text-muted-foreground">{{ form.payment_method.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.payment_method.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+         Form Actions 
+        <div class="flex items-center justify-end gap-2 border-t border-border pt-4">
+            <a href="{% url 'zkteco:employee_list' %}" class="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</a>
+            <button type="submit" class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">Save Employee</button>
+        </div>
+    </form>
 </div>
 {% endblock %}
-
-

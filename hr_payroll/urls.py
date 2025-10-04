@@ -1,13 +1,15 @@
 # zkteco/urls.py
 from django.urls import path
-from . import  attendance_log_views, attendance_generation_views_enhanced
+from . import attendance_log_views
 from . import simple_attendance_generation_views
 from .views import location_views
 from .views import employee_views
 from .views import leave_views
 from .views import attendance_config_views
 from .views import attendance_reports
-from .views import hourly_attendance,device_views
+from .views import hourly_attendance, device_views
+from .views import attendance_views
+
 app_name = 'zkteco'
 
 urlpatterns = [
@@ -62,6 +64,7 @@ urlpatterns = [
     path('reports/department-analytics/', attendance_reports.department_analytics_report, name='department_analytics_report'),
     path('reports/shift-compliance/', attendance_reports.shift_roster_compliance_report, name='shift_compliance_report'),
     path('reports/employee-performance/', attendance_reports.employee_performance_report, name='employee_performance_report'),
+    path('reports/employee-monthly/', attendance_reports.employee_monthly_attendance, name='employee_monthly_attendance'),
 
     # ==================== LOCATION URLS ====================
     path('locations/', location_views.LocationListView.as_view(), name='location_list'),
@@ -112,4 +115,12 @@ urlpatterns = [
     # Attendance Config API Endpoints
     path('api/attendance-configs/<int:pk>/toggle-status/', attendance_config_views.AttendanceConfigToggleStatusView.as_view(), name='config_toggle_status'),
     path('api/attendance-configs/<int:pk>/duplicate/', attendance_config_views.AttendanceConfigDuplicateView.as_view(), name='config_duplicate'),
+    
+# ==================== ATTENDANCE MANAGEMENT ====================
+    path('attendance/', attendance_views.AttendanceListView.as_view(), name='attendance_list'),
+    path('attendance/create/', attendance_views.AttendanceCreateView.as_view(), name='attendance_create'),
+    path('attendance/<int:pk>/', attendance_views.AttendanceDetailView.as_view(), name='attendance_detail'),
+    path('attendance/<int:pk>/update/', attendance_views.AttendanceUpdateView.as_view(), name='attendance_update'),
+    path('attendance/<int:pk>/delete/', attendance_views.AttendanceDeleteView.as_view(), name='attendance_delete'),
+    path('attendance/export/', attendance_views.AttendanceExportCSVView.as_view(), name='attendance_export'),
 ]

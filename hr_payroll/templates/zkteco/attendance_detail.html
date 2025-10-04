@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance Details{% endblock %}
+{% block page_title %}Attendance Details{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+     Page Header 
+    <div class="flex items-center justify-between print:hidden">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-foreground">Attendance Record Details</h1>
+            <p class="text-muted-foreground mt-1">Detailed view of attendance record for {{ attendance.employee.name }}</p>
+        </div>
+        <div class="flex items-center space-x-2">
+            <a href="{% url 'zkteco:attendance_list' %}" class="inline-flex items-center px-4 py-2 border border-input text-sm font-medium rounded-lg shadow-sm text-foreground bg-background hover:bg-accent transition-all">
+                <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Back to List
+            </a>
+            <a href="{% url 'zkteco:attendance_update' attendance.pk %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-primary-foreground bg-primary hover:opacity-90 transition-all">
+                <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                Edit Record
+            </a>
+            <a href="{% url 'zkteco:attendance_delete' attendance.pk %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-destructive-foreground bg-destructive hover:opacity-90 transition-all">
+                <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                Delete
+            </a>
+        </div>
+    </div>
+
+     Main Details Card 
+    <div class="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
+        <div class="px-6 py-4 border-b border-border bg-muted/30">
+            <h2 class="text-lg font-semibold text-foreground">Attendance Information</h2>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                 Employee Info 
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-muted-foreground">Employee</label>
+                    <p class="text-base font-semibold text-foreground">{{ attendance.employee.name }}</p>
+                    <p class="text-sm text-muted-foreground">ID: {{ attendance.employee.employee_id }}</p>
+                </div>
+
+                 Department 
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-muted-foreground">Department</label>
+                    <p class="text-base text-foreground">{{ attendance.employee.department.name|default:"N/A" }}</p>
+                </div>
+
+                 Designation 
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-muted-foreground">Designation</label>
+                    <p class="text-base text-foreground">{{ attendance.employee.designation.name|default:"N/A" }}</p>
+                </div>
+
+                 Date 
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-muted-foreground">Date</label>
+                    <p class="text-base font-semibold text-foreground">{{ attendance.date|date:"F d, Y" }}</p>
+                    <p class="text-sm text-muted-foreground">{{ attendance.date|date:"l" }}</p>
+                </div>
+
+                 Shift 
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-muted-foreground">Shift</label>
+                    <p class="text-base text-foreground">{{ attendance.shift.name|default:"N/A" }}</p>
+                    {% if attendance.shift %}
+                    <p class="text-sm text-muted-foreground">{{ attendance.shift.start_time|time:"H:i" }} - {{ attendance.shift.end_time|time:"H:i" }}</p>
+                    {% endif %}
+                </div>
+
+                 Status 
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-muted-foreground">Status</label>
+                    <div>
+                        {% if attendance.status == 'P' %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Present
+                        </span>
+                        {% elif attendance.status == 'A' %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            Absent
+                        </span>
+                        {% elif attendance.status == 'L' %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                            </svg>
+                            Leave
+                        </span>
+                        {% elif attendance.status == 'H' %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clip-rule="evenodd"/>
+                            </svg>
+                            Holiday
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">
+                            {{ attendance.get_status_display }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 pt-6 border-t border-border">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                     Check In 
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-muted-foreground">Check In Time</label>
+                        <p class="text-lg font-semibold text-foreground">
+                            {% if attendance.check_in_time %}
+                                {{ attendance.check_in_time|time:"H:i:s" }}
+                            {% else %}
+                                <span class="text-muted-foreground">N/A</span>
+                            {% endif %}
+                        </p>
+                    </div>
+
+                     Check Out 
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-muted-foreground">Check Out Time</label>
+                        <p class="text-lg font-semibold text-foreground">
+                            {% if attendance.check_out_time %}
+                                {{ attendance.check_out_time|time:"H:i:s" }}
+                            {% else %}
+                                <span class="text-muted-foreground">N/A</span>
+                            {% endif %}
+                        </p>
+                    </div>
+
+                     Work Hours 
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-muted-foreground">Work Hours</label>
+                        <p class="text-lg font-semibold text-green-600 dark:text-green-400">
+                            {{ attendance.work_hours|floatformat:2 }} hrs
+                        </p>
+                    </div>
+
+                     Overtime 
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-muted-foreground">Overtime Hours</label>
+                        <p class="text-lg font-semibold text-purple-600 dark:text-purple-400">
+                            {{ attendance.overtime_hours|floatformat:2 }} hrs
+                        </p>
+                    </div>
+
+                     Late Status 
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-muted-foreground">Late Arrival</label>
+                        <p class="text-base text-foreground">
+                            {% if attendance.is_late %}
+                                <span class="text-red-600 dark:text-red-400 font-medium">Yes ({{ attendance.late_minutes }} min)</span>
+                            {% else %}
+                                <span class="text-green-600 dark:text-green-400">No</span>
+                            {% endif %}
+                        </p>
+                    </div>
+
+                     Early Departure 
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-muted-foreground">Early Departure</label>
+                        <p class="text-base text-foreground">
+                            {% if attendance.is_early_departure %}
+                                <span class="text-red-600 dark:text-red-400 font-medium">Yes ({{ attendance.early_departure_minutes }} min)</span>
+                            {% else %}
+                                <span class="text-green-600 dark:text-green-400">No</span>
+                            {% endif %}
+                        </p>
+                    </div>
+
+                     Remarks 
+                    <div class="space-y-1 md:col-span-2">
+                        <label class="text-sm font-medium text-muted-foreground">Remarks</label>
+                        <p class="text-base text-foreground">{{ attendance.remarks|default:"No remarks" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+     Monthly Statistics Card 
+    <div class="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
+        <div class="px-6 py-4 border-b border-border bg-muted/30">
+            <h2 class="text-lg font-semibold text-foreground">Monthly Statistics</h2>
+            <p class="text-sm text-muted-foreground">Performance summary for {{ attendance.date|date:"F Y" }}</p>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div class="bg-muted/30 rounded-lg p-4 text-center">
+                    <p class="text-2xl font-bold text-foreground">{{ monthly_stats.total_days }}</p>
+                    <p class="text-sm text-muted-foreground mt-1">Total Days</p>
+                </div>
+                <div class="bg-green-50 dark:bg-green-950/30 rounded-lg p-4 text-center">
+                    <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ monthly_stats.present_days }}</p>
+                    <p class="text-sm text-muted-foreground mt-1">Present</p>
+                </div>
+                <div class="bg-red-50 dark:bg-red-950/30 rounded-lg p-4 text-center">
+                    <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ monthly_stats.absent_days }}</p>
+                    <p class="text-sm text-muted-foreground mt-1">Absent</p>
+                </div>
+                <div class="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4 text-center">
+                    <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ monthly_stats.leave_days }}</p>
+                    <p class="text-sm text-muted-foreground mt-1">Leave</p>
+                </div>
+                <div class="bg-purple-50 dark:bg-purple-950/30 rounded-lg p-4 text-center">
+                    <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ monthly_stats.total_work_hours|floatformat:1 }}</p>
+                    <p class="text-sm text-muted-foreground mt-1">Work Hours</p>
+                </div>
+                <div class="bg-orange-50 dark:bg-orange-950/30 rounded-lg p-4 text-center">
+                    <p class="text-2xl font-bold text-orange-600 dark:text-orange-400">{{ monthly_stats.total_overtime|floatformat:1 }}</p>
+                    <p class="text-sm text-muted-foreground mt-1">Overtime</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+     Nearby Records Card 
+    {% if nearby_records %}
+    <div class="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
+        <div class="px-6 py-4 border-b border-border bg-muted/30">
+            <h2 class="text-lg font-semibold text-foreground">Recent Attendance Records</h2>
+            <p class="text-sm text-muted-foreground">Last 10 records within 7 days</p>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-border">
+                <thead class="bg-muted/50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Date</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Check In</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Check Out</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Work Hours</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Overtime</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                    {% for record in nearby_records %}
+                    <tr class="hover:bg-accent/50 transition-colors">
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-foreground">
+                            {{ record.date|date:"M d, Y" }}
+                            <div class="text-xs text-muted-foreground">{{ record.date|date:"l" }}</div>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm">
+                            {% if record.status == 'P' %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Present</span>
+                            {% elif record.status == 'A' %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">Absent</span>
+                            {% elif record.status == 'L' %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">Leave</span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">{{ record.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-foreground">
+                            {{ record.check_in_time|time:"H:i"|default:"--:--" }}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-foreground">
+                            {{ record.check_out_time|time:"H:i"|default:"--:--" }}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-right text-foreground">
+                            {{ record.work_hours|floatformat:2 }}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-right text-purple-600 dark:text-purple-400">
+                            {{ record.overtime_hours|floatformat:2 }}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-center">
+                            <a href="{% url 'zkteco:attendance_detail' record.pk %}" class="text-primary hover:text-primary/80 transition-colors">
+                                <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

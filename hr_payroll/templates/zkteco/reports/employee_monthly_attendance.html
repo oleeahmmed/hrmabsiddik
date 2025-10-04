@@ -1,0 +1,566 @@
+{% extends 'base.html' %}
+
+{% block title %}শ্রমিক মাসিক অ্যাটেনডেন্স রিপোর্ট{% endblock %}
+{% block page_title %}শ্রমিক মাসিক অ্যাটেনডেন্স রিপোর্ট{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/print-js/1.6.0/print.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between print:hidden">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-foreground">শ্রমিক মাসিক অ্যাটেনডেন্স রিপোর্ট</h1>
+            <p class="text-muted-foreground mt-1">একজন শ্রমিকের পুরো মাসের বিস্তারিত উপস্থিতি রেকর্ড</p>
+        </div>
+        {% if report_data %}
+        <button onclick="printReport()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-primary-foreground bg-primary hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all">
+            <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+            </svg>
+            প্রিন্ট করুন
+        </button>
+        {% endif %}
+    </div>
+
+    <!-- Filter Form Card -->
+    <div class="bg-card rounded-lg shadow-sm border border-border p-4 print:hidden">
+        <form method="GET" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                    <label for="employee" class="block text-sm font-medium text-foreground mb-1">শ্রমিক নির্বাচন করুন</label>
+                    <select name="employee" id="employee" required
+                            class="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all">
+                        <option value="">-- শ্রমিক সিলেক্ট করুন --</option>
+                        {% for emp in employees %}
+                            <option value="{{ emp.id }}" {% if emp.id|stringformat:"s" == selected_employee %}selected{% endif %}>
+                                {{ emp.employee_id }} - {{ emp.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="month" class="block text-sm font-medium text-foreground mb-1">মাস নির্বাচন করুন</label>
+                    <select name="month" id="month" required
+                            class="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all">
+                        {% for m in months %}
+                            <option value="{{ m.value }}" {% if m.value == selected_month %}selected{% endif %}>{{ m.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="year" class="block text-sm font-medium text-foreground mb-1">বছর নির্বাচন করুন</label>
+                    <select name="year" id="year" required
+                            class="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all">
+                        {% for y in years %}
+                            <option value="{{ y }}" {% if y|stringformat:"s" == selected_year %}selected{% endif %}>{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="flex items-end">
+                    <button type="submit" class="w-full inline-flex justify-center items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        রিপোর্ট দেখুন
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Report Content -->
+    {% if report_data %}
+    <div class="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
+        <div id="printable-area">
+            <!-- Print Header -->
+            <div id="print-header" class="hidden print:block">
+                <div class="print-header-content">
+                    <div class="print-header-left">
+                        <h1 class="print-company-name">{{ company.name }}</h1>
+                        <p class="print-company-address">{{ company.address|default:"ঠিকানা উল্লেখ করুন" }}</p>
+                    </div>
+                    <div class="print-header-center">
+                        <h2 class="print-report-title">শ্রমিক মাসিক অ্যাটেনডেন্স রিপোর্ট</h2>
+                        <p class="print-report-period">{{ month_name }} {{ selected_year }}</p>
+                    </div>
+                    <div class="print-header-right">
+                        <p class="print-generation-date">জেনারেটেড: {% now "d F, Y H:i" %}</p>
+                    </div>
+                </div>
+                <div class="print-header-border"></div>
+            </div>
+
+            <!-- Employee Info Card -->
+            <div class="p-4 bg-muted/30 border-b border-border print:p-2">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 print:grid-cols-4 print:gap-2">
+                    <div>
+                        <p class="text-xs text-muted-foreground">শ্রমিক আইডি</p>
+                        <p class="text-sm font-semibold text-foreground">{{ employee_info.employee_id }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-muted-foreground">নাম</p>
+                        <p class="text-sm font-semibold text-foreground">{{ employee_info.name }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-muted-foreground">বিভাগ</p>
+                        <p class="text-sm font-semibold text-foreground">{{ employee_info.department.name|default:"-" }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-muted-foreground">পদবী</p>
+                        <p class="text-sm font-semibold text-foreground">{{ employee_info.designation.name|default:"-" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendance Table -->
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-border">
+                    <thead class="bg-muted/50">
+                        <tr>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">তারিখ</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">দিন</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">শিফট</th>
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">চেক-ইন</th>
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">চেক-আউট</th>
+                            <th class="px-3 py-2 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">অবস্থা</th>
+                            <th class="px-3 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">কাজের ঘণ্টা</th>
+                            <th class="px-3 py-2 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider border border-gray-300">ওভারটাইম</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-border">
+                        {% for data in report_data %}
+                        <tr class="hover:bg-accent/50 transition-colors {% if data.status_code == 'H' or data.status_code == 'W' %}bg-blue-50 dark:bg-blue-900/20{% endif %}">
+                            <td class="px-3 py-2 whitespace-nowrap text-xs text-foreground border border-gray-300">
+                                {{ data.date|date:"d-m-Y" }}
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap text-xs text-foreground border border-gray-300">
+                                {{ data.day_name }}
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap text-xs text-foreground border border-gray-300">
+                                {{ data.shift }}
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap text-xs text-center text-foreground border border-gray-300">
+                                {{ data.check_in }}
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap text-xs text-center text-foreground border border-gray-300">
+                                {{ data.check_out }}
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap text-xs text-center border border-gray-300">
+                                {% if data.status_code == 'P' %}
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">{{ data.status }}</span>
+                                {% elif data.status_code == 'A' %}
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">{{ data.status }}</span>
+                                {% elif data.status_code == 'L' %}
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">{{ data.status }}</span>
+                                {% elif data.status_code == 'H' %}
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">{{ data.status }}</span>
+                                {% elif data.status_code == 'W' %}
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">{{ data.status }}</span>
+                                {% else %}
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">{{ data.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap text-xs text-right text-foreground border border-gray-300">
+                                {{ data.work_hours|floatformat:2 }}
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap text-xs text-right text-purple-600 dark:text-purple-400 border border-gray-300">
+                                {{ data.overtime_hours|floatformat:2 }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Summary Section -->
+            <div class="p-4 bg-muted/30 border-t border-border print:p-2">
+                <h3 class="text-lg font-semibold text-foreground mb-3 print:text-sm">সারাংশ</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 print:grid-cols-6 print:gap-2">
+                    <div class="bg-card p-3 rounded-lg border border-border print:p-1">
+                        <p class="text-xs text-muted-foreground">মোট দিন</p>
+                        <p class="text-xl font-bold text-foreground print:text-sm">{{ summary.total_days }}</p>
+                    </div>
+                    <div class="bg-card p-3 rounded-lg border border-border print:p-1">
+                        <p class="text-xs text-muted-foreground">কর্মদিবস</p>
+                        <p class="text-xl font-bold text-foreground print:text-sm">{{ summary.working_days }}</p>
+                    </div>
+                    <div class="bg-card p-3 rounded-lg border border-border print:p-1">
+                        <p class="text-xs text-muted-foreground">উপস্থিত</p>
+                        <p class="text-xl font-bold text-green-600 dark:text-green-400 print:text-sm">{{ summary.present_days }}</p>
+                    </div>
+                    <div class="bg-card p-3 rounded-lg border border-border print:p-1">
+                        <p class="text-xs text-muted-foreground">অনুপস্থিত</p>
+                        <p class="text-xl font-bold text-red-600 dark:text-red-400 print:text-sm">{{ summary.absent_days }}</p>
+                    </div>
+                    <div class="bg-card p-3 rounded-lg border border-border print:p-1">
+                        <p class="text-xs text-muted-foreground">ছুটি</p>
+                        <p class="text-xl font-bold text-yellow-600 dark:text-yellow-400 print:text-sm">{{ summary.leave_days }}</p>
+                    </div>
+                    <div class="bg-card p-3 rounded-lg border border-border print:p-1">
+                        <p class="text-xs text-muted-foreground">উপস্থিতি %</p>
+                        <p class="text-xl font-bold text-blue-600 dark:text-blue-400 print:text-sm">{{ summary.attendance_percentage }}%</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 print:grid-cols-4 print:gap-2 print:mt-2">
+                    <div class="bg-card p-3 rounded-lg border border-border print:p-1">
+                        <p class="text-xs text-muted-foreground">মোট কাজের ঘণ্টা</p>
+                        <p class="text-xl font-bold text-foreground print:text-sm">{{ summary.total_work_hours|floatformat:2 }}</p>
+                    </div>
+                    <div class="bg-card p-3 rounded-lg border border-border print:p-1">
+                        <p class="text-xs text-muted-foreground">মোট ওভারটাইম</p>
+                        <p class="text-xl font-bold text-purple-600 dark:text-purple-400 print:text-sm">{{ summary.total_overtime_hours|floatformat:2 }}</p>
+                    </div>
+                    <div class="bg-card p-3 rounded-lg border border-border print:p-1">
+                        <p class="text-xs text-muted-foreground">ঘণ্টাভিত্তিক পেমেন্ট</p>
+                        <p class="text-xl font-bold text-orange-600 dark:text-orange-400 print:text-sm">৳{{ summary.hourly_pay|floatformat:0 }}</p>
+                    </div>
+                    <div class="bg-card p-3 rounded-lg border border-border print:p-1">
+                        <p class="text-xs text-muted-foreground">ওভারটাইম পেমেন্ট</p>
+                        <p class="text-xl font-bold text-purple-600 dark:text-purple-400 print:text-sm">৳{{ summary.overtime_pay|floatformat:0 }}</p>
+                    </div>
+                </div>
+
+                <div class="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 print:mt-2 print:p-2">
+                    <p class="text-xs text-muted-foreground mb-1">মোট আয় (ঘণ্টাভিত্তিক + ওভারটাইম)</p>
+                    <p class="text-2xl font-bold text-green-600 dark:text-green-400 print:text-lg">৳{{ summary.total_earnings|floatformat:0 }}</p>
+                </div>
+            </div>
+
+            <!-- Print Footer -->
+            <div id="print-footer" class="hidden print:block">
+                <div class="print-footer-border"></div>
+                <div class="print-footer-content">
+                    <div class="print-signature-section">
+                        <div class="print-signature-box">
+                            <div class="print-signature-line"></div>
+                            <p>প্রস্তুতকারী</p>
+                        </div>
+                        <div class="print-signature-box">
+                            <div class="print-signature-line"></div>
+                            <p>যাচাইকারী</p>
+                        </div>
+                        <div class="print-signature-box">
+                            <div class="print-signature-line"></div>
+                            <p>অনুমোদনকারী</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif error_message %}
+    <div class="p-8 text-center bg-card rounded-lg shadow-sm border border-border">
+        <svg class="mx-auto h-12 w-12 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <p class="text-red-600 dark:text-red-400 text-sm font-medium">{{ error_message }}</p>
+    </div>
+    {% else %}
+    <div class="p-8 text-center bg-card rounded-lg shadow-sm border border-border">
+        <svg class="mx-auto h-12 w-12 text-muted-foreground mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <p class="text-muted-foreground text-sm">শ্রমিক, মাস এবং বছর নির্বাচন করে রিপোর্ট দেখুন</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Print.js Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/print-js/1.6.0/print.min.js"></script>
+
+<script>
+function printReport() {
+    printJS({
+        printable: 'printable-area',
+        type: 'html',
+        targetStyles: ['*'],
+        style: `
+            @page {
+                size: A4 portrait;
+                margin: 10mm;
+            }
+            
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            body {
+                font-family: 'Noto Sans Bengali', 'SolaimanLipi', Arial, sans-serif;
+                font-size: 10px;
+                line-height: 1.3;
+                color: #000;
+            }
+            
+            .print\\:hidden {
+                display: none !important;
+            }
+            
+            .print\\:block {
+                display: block !important;
+            }
+            
+            /* Print Header */
+            #print-header {
+                display: block !important;
+                margin-bottom: 12px;
+                page-break-inside: avoid;
+            }
+            
+            .print-header-content {
+                display: grid;
+                grid-template-columns: 1fr 2fr 1fr;
+                gap: 10px;
+                padding-bottom: 8px;
+                align-items: start;
+            }
+            
+            .print-header-left {
+                text-align: left;
+            }
+            
+            .print-header-center {
+                text-align: center;
+            }
+            
+            .print-header-right {
+                text-align: right;
+            }
+            
+            .print-company-name {
+                font-size: 16px;
+                font-weight: bold;
+                color: #000;
+                margin: 0 0 3px 0;
+            }
+            
+            .print-company-address {
+                font-size: 10px;
+                color: #333;
+                margin: 0;
+            }
+            
+            .print-report-title {
+                font-size: 16px;
+                font-weight: bold;
+                color: #000;
+                margin: 0 0 3px 0;
+                text-decoration: underline;
+            }
+            
+            .print-report-period {
+                font-size: 11px;
+                color: #333;
+                margin: 0;
+            }
+            
+            .print-generation-date {
+                font-size: 9px;
+                color: #666;
+                margin: 0;
+            }
+            
+            .print-header-border {
+                border-bottom: 2px solid #000;
+                margin-top: 2px;
+            }
+            
+            /* Employee Info */
+            .bg-muted\\/30 {
+                background-color: #f5f5f5 !important;
+                padding: 8px;
+                margin-bottom: 8px;
+            }
+            
+            .grid {
+                display: grid;
+            }
+            
+            .print\\:grid-cols-4 {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .print\\:grid-cols-6 {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            
+            .print\\:gap-2 {
+                gap: 8px;
+            }
+            
+            .print\\:p-1 {
+                padding: 4px;
+            }
+            
+            .print\\:p-2 {
+                padding: 6px;
+            }
+            
+            /* Table Styles */
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 9px;
+                margin: 8px 0;
+            }
+            
+            th, td {
+                border: 1px solid #666 !important;
+                padding: 4px 6px !important;
+                vertical-align: middle;
+            }
+            
+            thead {
+                display: table-header-group;
+            }
+            
+            thead tr {
+                background-color: #e8e8e8 !important;
+            }
+            
+            thead th {
+                background-color: #e8e8e8 !important;
+                font-weight: bold;
+                color: #000 !important;
+                font-size: 8px;
+                text-transform: uppercase;
+            }
+            
+            tbody tr {
+                page-break-inside: avoid;
+            }
+            
+            tbody tr:nth-child(even) {
+                background-color: #f9f9f9 !important;
+            }
+            
+            tbody tr:nth-child(odd) {
+                background-color: #ffffff !important;
+            }
+            
+            /* Status Badges */
+            .bg-green-100 {
+                background-color: #d1fae5 !important;
+                color: #065f46 !important;
+            }
+            
+            .bg-red-100 {
+                background-color: #fee2e2 !important;
+                color: #991b1b !important;
+            }
+            
+            .bg-yellow-100 {
+                background-color: #fef3c7 !important;
+                color: #92400e !important;
+            }
+            
+            .bg-blue-100 {
+                background-color: #dbeafe !important;
+                color: #1e40af !important;
+            }
+            
+            .bg-purple-100 {
+                background-color: #e9d5ff !important;
+                color: #6b21a8 !important;
+            }
+            
+            .rounded-full {
+                border-radius: 9999px;
+                padding: 2px 6px;
+                font-size: 8px;
+                font-weight: 600;
+            }
+            
+            /* Summary Section */
+            .bg-card {
+                background-color: #fff !important;
+                border: 1px solid #ddd !important;
+                padding: 6px;
+                margin: 4px 0;
+            }
+            
+            .bg-green-50 {
+                background-color: #f0fdf4 !important;
+                border: 1px solid #86efac !important;
+                padding: 8px;
+            }
+            
+            .text-xl {
+                font-size: 14px;
+            }
+            
+            .text-2xl {
+                font-size: 16px;
+            }
+            
+            .print\\:text-sm {
+                font-size: 10px !important;
+            }
+            
+            .print\\:text-lg {
+                font-size: 12px !important;
+            }
+            
+            /* Print Footer */
+            #print-footer {
+                display: block !important;
+                margin-top: 25px;
+                page-break-inside: avoid;
+            }
+            
+            .print-footer-border {
+                border-top: 1px solid #333;
+                margin-bottom: 10px;
+            }
+            
+            .print-footer-content {
+                padding: 0 10px;
+            }
+            
+            .print-signature-section {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
+                padding-top: 35px;
+                text-align: center;
+            }
+            
+            .print-signature-box {
+                text-align: center;
+            }
+            
+            .print-signature-line {
+                border-top: 1px solid #000;
+                width: 150px;
+                margin: 0 auto 8px;
+            }
+            
+            .print-signature-box p {
+                font-size: 10px;
+                color: #333;
+                margin: 0;
+            }
+            
+            /* Page Break Control */
+            tr {
+                page-break-inside: avoid;
+            }
+            
+            * {
+                border-radius: 0 !important;
+                box-shadow: none !important;
+            }
+        `,
+        scanStyles: false,
+        documentTitle: 'শ্রমিক মাসিক অ্যাটেনডেন্স - {{ employee_info.employee_id }} - {{ month_name }} {{ selected_year }}'
+    });
+}
+</script>
+{% endblock %}
