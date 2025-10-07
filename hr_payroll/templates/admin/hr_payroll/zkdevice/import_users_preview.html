@@ -1,0 +1,624 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .import-container {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+    
+    .device-list {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    
+    .device-item {
+        display: inline-block;
+        background: #fff;
+        padding: 8px 15px;
+        margin: 5px;
+        border-radius: 3px;
+        border: 1px solid #ddd;
+    }
+    
+    .import-button {
+        background: #417690;
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    
+    .import-button:hover {
+        background: #2e5a6f;
+    }
+    
+    .import-button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+    
+    /* Loading Spinner */
+    .spinner-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .spinner-overlay.active {
+        display: flex;
+    }
+    
+    .spinner-content {
+        background: white;
+        padding: 40px;
+        border-radius: 10px;
+        text-align: center;
+        min-width: 400px;
+    }
+    
+    .spinner {
+        border: 8px solid #f3f3f3;
+        border-top: 8px solid #417690;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .spinner-text {
+        font-size: 18px;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .spinner-subtext {
+        font-size: 14px;
+        color: #666;
+    }
+    
+    /* Results Section */
+    .results-section {
+        display: none;
+        margin-top: 30px;
+    }
+    
+    .results-section.active {
+        display: block;
+    }
+    
+    .result-card {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .result-header {
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 15px;
+        color: #333;
+    }
+    
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-box {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        text-align: center;
+    }
+    
+    .stat-value {
+        font-size: 32px;
+        font-weight: bold;
+        color: #417690;
+    }
+    
+    .stat-label {
+        font-size: 14px;
+        color: #666;
+        margin-top: 5px;
+    }
+    
+    .success-stat { color: #28a745; }
+    .warning-stat { color: #ffc107; }
+    .error-stat { color: #dc3545; }
+    .info-stat { color: #17a2b8; }
+    
+    .user-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+    
+    .user-table th,
+    .user-table td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    
+    .user-table th {
+        background: #f8f9fa;
+        font-weight: bold;
+    }
+    
+    .user-table tr:hover {
+        background: #f8f9fa;
+    }
+    
+    .badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 3px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .badge-success { background: #d4edda; color: #155724; }
+    .badge-warning { background: #fff3cd; color: #856404; }
+    .badge-danger { background: #f8d7da; color: #721c24; }
+    .badge-info { background: #d1ecf1; color: #0c5460; }
+    
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+    }
+    
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .alert-warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+    
+    .alert-danger {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    .collapsible {
+        cursor: pointer;
+        padding: 10px;
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        margin-top: 10px;
+    }
+    
+    .collapsible:hover {
+        background: #e9ecef;
+    }
+    
+    .collapsible-content {
+        display: none;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-top: none;
+    }
+    
+    .collapsible-content.active {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="import-container">
+    <h1>{% trans "Import Users from ZKTeco Devices" %}</h1>
+    
+    <div class="device-list">
+        <h3>{% trans "Selected Devices:" %}</h3>
+        {% for device in devices %}
+        <div class="device-item">
+            <strong>{{ device.name }}</strong> ({{ device.ip_address }}:{{ device.port }})
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div style="text-align: center; margin: 30px 0;">
+        <button id="startImport" class="import-button">
+            {% trans "Start Import Process" %}
+        </button>
+    </div>
+    
+    <div class="alert alert-warning">
+        <strong>{% trans "Note:" %}</strong> 
+        {% trans "This process will:" %}
+        <ul>
+            <li>{% trans "Fetch all users from selected devices" %}</li>
+            <li>{% trans "Analyze and categorize users (new vs existing)" %}</li>
+            <li>{% trans "Import new users as employees automatically" %}</li>
+            <li>{% trans "Update names for existing employees if changed" %}</li>
+            <li>{% trans "Generate detailed import report" %}</li>
+        </ul>
+    </div>
+    
+    <!-- Results Section -->
+    <div id="resultsSection" class="results-section">
+        <!-- Fetch Results -->
+        <div class="result-card">
+            <div class="result-header">📡 Device Fetch Results</div>
+            <div id="fetchResults"></div>
+        </div>
+        
+        <!-- Analysis Results -->
+        <div class="result-card">
+            <div class="result-header">🔍 User Analysis</div>
+            <div class="stat-grid">
+                <div class="stat-box">
+                    <div class="stat-value info-stat" id="totalFetched">0</div>
+                    <div class="stat-label">Total Users Fetched</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value success-stat" id="newUsers">0</div>
+                    <div class="stat-label">New Users</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value warning-stat" id="existingUsers">0</div>
+                    <div class="stat-label">Existing Users</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value error-stat" id="duplicateUsers">0</div>
+                    <div class="stat-label">Duplicate Users</div>
+                </div>
+            </div>
+            
+            <div id="userDetails"></div>
+        </div>
+        
+        <!-- Import Results -->
+        <div class="result-card">
+            <div class="result-header">💾 Database Import Results</div>
+            <div class="stat-grid">
+                <div class="stat-box">
+                    <div class="stat-value success-stat" id="importedCount">0</div>
+                    <div class="stat-label">Imported</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value info-stat" id="updatedCount">0</div>
+                    <div class="stat-label">Updated</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value error-stat" id="errorCount">0</div>
+                    <div class="stat-label">Errors</div>
+                </div>
+            </div>
+            
+            <div id="importDetails"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Spinner Overlay -->
+<div id="spinnerOverlay" class="spinner-overlay">
+    <div class="spinner-content">
+        <div class="spinner"></div>
+        <div class="spinner-text" id="spinnerText">{% trans "Connecting to devices..." %}</div>
+        <div class="spinner-subtext" id="spinnerSubtext">{% trans "Please wait, this may take a few moments" %}</div>
+    </div>
+</div>
+
+<script>
+document.getElementById('startImport').addEventListener('click', function() {
+    const button = this;
+    button.disabled = true;
+    
+    const overlay = document.getElementById('spinnerOverlay');
+    const spinnerText = document.getElementById('spinnerText');
+    const spinnerSubtext = document.getElementById('spinnerSubtext');
+    const resultsSection = document.getElementById('resultsSection');
+    
+    // Show loading spinner
+    overlay.classList.add('active');
+    resultsSection.classList.remove('active');
+    
+    // Update spinner text stages
+    setTimeout(() => {
+        spinnerText.textContent = '{% trans "Fetching users from devices..." %}';
+        spinnerSubtext.textContent = '{% trans "Reading user data from ZKTeco devices" %}';
+    }, 1000);
+    
+    setTimeout(() => {
+        spinnerText.textContent = '{% trans "Analyzing user data..." %}';
+        spinnerSubtext.textContent = '{% trans "Categorizing new and existing users" %}';
+    }, 3000);
+    
+    setTimeout(() => {
+        spinnerText.textContent = '{% trans "Importing to database..." %}';
+        spinnerSubtext.textContent = '{% trans "Creating employee records" %}';
+    }, 5000);
+    
+    // Execute import via AJAX
+    fetch('{% url "admin:attendance_zkdevice_import_users_execute" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Hide spinner
+        overlay.classList.remove('active');
+        
+        if (data.success) {
+            // Show results section
+            resultsSection.classList.add('active');
+            
+            // Display fetch results
+            displayFetchResults(data.fetch_results);
+            
+            // Display analysis results
+            displayAnalysis(data.analysis);
+            
+            // Display import results
+            displayImportResults(data.import_results);
+            
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            alert('{% trans "Error during import:" %} ' + data.error);
+            button.disabled = false;
+        }
+    })
+    .catch(error => {
+        overlay.classList.remove('active');
+        alert('{% trans "Import failed:" %} ' + error);
+        button.disabled = false;
+    });
+});
+
+function displayFetchResults(fetchResults) {
+    const container = document.getElementById('fetchResults');
+    let html = '<div class="stat-grid">';
+    
+    fetchResults.forEach(result => {
+        const statusClass = result.success ? 'badge-success' : 'badge-danger';
+        const statusText = result.success ? '✓ Success' : '✗ Failed';
+        
+        html += `
+            <div class="stat-box">
+                <span class="badge ${statusClass}">${statusText}</span>
+                <div style="margin-top: 10px; font-weight: bold;">${result.device.name}</div>
+                <div style="font-size: 12px; color: #666;">${result.device.ip || ''}</div>
+                ${result.success ? 
+                    `<div style="margin-top: 5px; color: #28a745;">${result.users_found} users found</div>` :
+                    `<div style="margin-top: 5px; color: #dc3545;">${result.error}</div>`
+                }
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function displayAnalysis(analysis) {
+    // Update stat boxes
+    document.getElementById('totalFetched').textContent = analysis.total_fetched;
+    document.getElementById('newUsers').textContent = analysis.new_count;
+    document.getElementById('existingUsers').textContent = analysis.existing_count;
+    document.getElementById('duplicateUsers').textContent = analysis.duplicate_count;
+    
+    const container = document.getElementById('userDetails');
+    let html = '';
+    
+    // New Users Table
+    if (analysis.new_users.length > 0) {
+        html += `
+            <div class="collapsible" onclick="toggleCollapsible(this)">
+                <strong>🆕 New Users (${analysis.new_users.length})</strong> - Click to expand
+            </div>
+            <div class="collapsible-content">
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>ZKTeco ID</th>
+                            <th>Name</th>
+                            <th>Device</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        analysis.new_users.slice(0, 50).forEach(user => {
+            html += `
+                <tr>
+                    <td>${user.user_id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.device_name || user.device_ip}</td>
+                    <td><span class="badge badge-success">Will be imported</span></td>
+                </tr>
+            `;
+        });
+        
+        if (analysis.new_users.length > 50) {
+            html += `
+                <tr>
+                    <td colspan="4" style="text-align: center; color: #666;">
+                        ... and ${analysis.new_users.length - 50} more users
+                    </td>
+                </tr>
+            `;
+        }
+        
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+    
+    // Existing Users Table
+    if (analysis.existing_users.length > 0) {
+        html += `
+            <div class="collapsible" onclick="toggleCollapsible(this)">
+                <strong>🔄 Existing Users (${analysis.existing_users.length})</strong> - Click to expand
+            </div>
+            <div class="collapsible-content">
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>ZKTeco ID</th>
+                            <th>Device Name</th>
+                            <th>Existing Employee ID</th>
+                            <th>Existing Name</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        analysis.existing_users.slice(0, 50).forEach(user => {
+            html += `
+                <tr>
+                    <td>${user.user_id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.existing_employee_id}</td>
+                    <td>${user.existing_name}</td>
+                    <td><span class="badge badge-warning">Already exists</span></td>
+                </tr>
+            `;
+        });
+        
+        if (analysis.existing_users.length > 50) {
+            html += `
+                <tr>
+                    <td colspan="5" style="text-align: center; color: #666;">
+                        ... and ${analysis.existing_users.length - 50} more users
+                    </td>
+                </tr>
+            `;
+        }
+        
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+    
+    // Duplicate Users
+    if (analysis.duplicate_users.length > 0) {
+        html += `
+            <div class="alert alert-warning" style="margin-top: 15px;">
+                <strong>⚠️ Warning:</strong> Found ${analysis.duplicate_users.length} duplicate users across devices. Only the first occurrence will be considered.
+            </div>
+        `;
+    }
+    
+    container.innerHTML = html;
+}
+
+function displayImportResults(importResults) {
+    // Update stat boxes
+    document.getElementById('importedCount').textContent = importResults.imported_count;
+    document.getElementById('updatedCount').textContent = importResults.updated_count;
+    document.getElementById('errorCount').textContent = importResults.error_count;
+    
+    const container = document.getElementById('importDetails');
+    let html = '';
+    
+    // Success message
+    if (importResults.imported_count > 0) {
+        html += `
+            <div class="alert alert-success">
+                <strong>✓ Success!</strong> Successfully imported ${importResults.imported_count} new employee(s) into the database.
+            </div>
+        `;
+    }
+    
+    // Update message
+    if (importResults.updated_count > 0) {
+        html += `
+            <div class="alert alert-success">
+                <strong>🔄 Updated!</strong> Updated ${importResults.updated_count} existing employee(s) with new information.
+            </div>
+        `;
+    }
+    
+    // Error messages
+    if (importResults.error_count > 0) {
+        html += `
+            <div class="alert alert-danger">
+                <strong>✗ Errors:</strong> Encountered ${importResults.error_count} error(s) during import.
+            </div>
+        `;
+        
+        if (importResults.errors && importResults.errors.length > 0) {
+            html += `
+                <div class="collapsible" onclick="toggleCollapsible(this)">
+                    <strong>View Error Details</strong>
+                </div>
+                <div class="collapsible-content">
+                    <ul>
+            `;
+            
+            importResults.errors.forEach(error => {
+                html += `<li>${error}</li>`;
+            });
+            
+            html += `
+                    </ul>
+                </div>
+            `;
+        }
+    }
+    
+    // No action needed
+    if (importResults.imported_count === 0 && importResults.updated_count === 0 && importResults.error_count === 0) {
+        html += `
+            <div class="alert alert-warning">
+                <strong>ℹ️ Info:</strong> No new users to import. All users already exist in the database.
+            </div>
+        `;
+    }
+    
+    container.innerHTML = html;
+}
+
+function toggleCollapsible(element) {
+    const content = element.nextElementSibling;
+    content.classList.toggle('active');
+}
+</script>
+{% endblock %}

@@ -8,6 +8,7 @@ from decimal import Decimal
 import json
 import logging
 import calendar
+from django.urls import reverse
 
 from ..models import (
     Attendance, Employee, Department, LeaveApplication, 
@@ -1322,33 +1323,11 @@ def employee_performance_report(request):
     }
     
     return render(request, 'zkteco/reports/employee_performance.html', context)
-
 # ==================== Main Reports Dashboard ====================
 @login_required
 def reports_dashboard(request):
-    """Main reports dashboard with links to all reports"""
-    company = get_company_from_request(request)
-    if not company:
-        return render(request, 'zkteco/reports/dashboard.html', {
-            'error_message': 'No company access found'
-        })
-    
-    # Get date range for default values
-    today = timezone.now().date()
-    first_day_of_month = today.replace(day=1)
-    
-    # Get departments for filtering
-    departments = Department.objects.filter(company=company).order_by('name')
-    
-    context = {
-        'company': company,
-        'departments': departments,
-        'default_start_date': first_day_of_month.strftime('%Y-%m-%d'),
-        'default_end_date': today.strftime('%Y-%m-%d'),
-    }
-    
-    return render(request, 'zkteco/reports/dashboard.html', context)
-
+    """Main reports dashboard - only report grid"""
+    return render(request, 'zkteco/reports/dashboard.html')
 
 @login_required
 def employee_monthly_attendance(request):

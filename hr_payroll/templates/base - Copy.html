@@ -559,12 +559,30 @@
                         </svg>
                     </button>
                     <div id="quick-create-menu" class="mt-1 space-y-1 hidden">
-                   
+                        <a href="{% url 'zkteco:employee_create' %}" class="block px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent rounded-sm transition-colors ml-2">
+                            <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            New Employee
+                        </a>
+                        <a href="{% url 'zkteco:leave_create' %}" class="block px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent rounded-sm transition-colors ml-2">
+                            <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0V6a2 2 0 012-2h4a2 2 0 012 2v1m-6 0h6m-6 0l1 12a2 2 0 002 2h2a2 2 0 002-2l1-12"/>
+                            </svg>
+                            New Leave Request
+                        </a>
+                        <a href="{% url 'zkteco:location_create' %}" class="block px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent rounded-sm transition-colors ml-2">
+                            <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            </svg>
+                            New Location
+                        </a>
                     </div>
                 </div>
                 
                 <!-- HRM Modules Section -->
                 <div class="mb-3">
+                    <p class="text-xs font-medium text-muted-foreground mb-1 px-2">HRM Modules</p>
                     
                     <!-- Main Navigation -->
                     <div class="space-y-1 mb-3">
@@ -576,9 +594,121 @@
                             </svg>
                             <span class="nav-text">Dashboard</span>
                         </a>
-                      
+                        
+                        <!-- Employee Management with Submenu -->
+                        <div class="mb-1">
+                            <button id="employee-toggle" class="flex items-center justify-between w-full px-2 py-1 text-sm text-foreground hover:bg-accent rounded-sm transition-colors nav-icon">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                                    </svg>
+                                    <span class="nav-text">Employee Management</span>
+                                </div>
+                                <svg id="employee-chevron" class="w-3 h-3 transition-transform nav-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </button>
+                            <div id="employee-submenu" class="ml-5 space-y-1 hidden submenu">
+                                <a href="{% url 'zkteco:employee_list' %}" class="block px-2 py-1 text-xs {% if 'employee' in request.resolver_match.url_name %}text-primary font-medium{% else %}text-muted-foreground hover:text-foreground{% endif %} transition-colors">All Employees</a>
+                                <a href="{% url 'zkteco:employee_create' %}" class="block px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors">Add Employee</a>
+                            </div>
+                        </div>
+                        
+                        <!-- Leave Management with Submenu -->
+                        <div class="mb-1">
+                            <button id="leave-toggle" class="flex items-center justify-between w-full px-2 py-1 text-sm text-foreground hover:bg-accent rounded-sm transition-colors">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0V6a2 2 0 012-2h4a2 2 0 012 2v1m-6 0h6m-6 0l1 12a2 2 0 002 2h2a2 2 0 002-2l1-12"/>
+                                    </svg>
+                                    <span>Leave Management</span>
+                                </div>
+                                <svg id="leave-chevron" class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </button>
+                            <div id="leave-submenu" class="ml-5 space-y-1 hidden">
+                                <a href="{% url 'zkteco:leave_list' %}" class="block px-2 py-1 text-xs {% if 'leave' in request.resolver_match.url_name %}text-primary font-medium{% else %}text-muted-foreground hover:text-foreground{% endif %} transition-colors">All Leaves</a>
+                                <a href="{% url 'zkteco:leave_create' %}" class="block px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors">Request Leave</a>
+                            </div>
+                        </div>
+                        
+                        <!-- Attendance Management -->
+                        <div class="mb-1">
+                            <button id="attendance-toggle" class="flex items-center justify-between w-full px-2 py-1 text-sm text-foreground hover:bg-accent rounded-sm transition-colors">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span>Attendance</span>
+                                </div>
+                                <svg id="attendance-chevron" class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </button>
+                            <div id="attendance-submenu" class="ml-5 space-y-1 hidden">
+                                <a href="{% url 'zkteco:attendance_logs' %}" class="block px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors">Attendance Logs</a>
+                                <a href="{% url 'zkteco:attendance_list' %}" class="block px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors">Manage Attendance</a>
+                                <a href="{% url 'zkteco:mobile_attendance' %}" class="block px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors">Mobile Attendance</a>
+                                <a href="{% url 'zkteco:config_list' %}" class="block px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors">Configuration</a>
+                            </div>
+                        </div>
+                        
+                        <!-- Device Management -->
+                        <a href="{% url 'zkteco:device_list' %}" class="flex items-center space-x-2 px-2 py-1 text-sm {% if 'device' in request.resolver_match.url_name %}bg-accent text-accent-foreground{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %} rounded-sm transition-colors">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+                            </svg>
+                            <span>Device Management</span>
+                        </a>
+                        
+                        <!-- Location Management -->
+                        <a href="{% url 'zkteco:location_list' %}" class="flex items-center space-x-2 px-2 py-1 text-sm {% if 'location' in request.resolver_match.url_name %}bg-accent text-accent-foreground{% else %}text-muted-foreground hover:text-foreground hover:bg-accent{% endif %} rounded-sm transition-colors">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <span>Locations</span>
+                        </a>
+                    </div>
+                </div>
 
-                
+                <!-- Reports Section -->
+                <div class="mb-3">
+                    <p class="text-xs font-medium text-muted-foreground mb-1 px-2">Reports & Analytics</p>
+                    
+                    <div class="mb-1">
+                        <button id="reports-toggle" class="flex items-center justify-between w-full px-2 py-1 text-sm text-foreground hover:bg-accent rounded-sm transition-colors">
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                                <span>Reports</span>
+                            </div>
+                            <svg id="reports-chevron" class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                        <div id="reports-submenu" class="ml-5 space-y-1 hidden">
+                            <a href="{% url 'zkteco:attendance_reports_main' %}" class="block px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors">Reports Dashboard</a>
+                            <a href="{% url 'zkteco:daily_attendance_report' %}" class="block px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors">Daily Attendance</a>
+                            <a href="{% url 'zkteco:monthly_attendance_report' %}" class="block px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors">Monthly Summary</a>
+                            <a href="{% url 'zkteco:hourly_attendance_report' %}" class="block px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors">Hourly Report</a>
+                            <a href="{% url 'zkteco:overtime_payment_report' %}" class="block px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors">Overtime Report</a>
+                            <a href="{% url 'zkteco:payroll_summary_report' %}" class="block px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors">Payroll Summary</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Newsletter/Updates Subscription -->
+                <div class="bg-muted p-3 rounded-lg mb-3 newsletter-section">
+                    <h4 class="text-sm font-medium text-foreground mb-1">System Updates</h4>
+                    <p class="text-xs text-muted-foreground mb-2">Stay updated with system notifications.</p>
+                    <input type="email" placeholder="Email" class="w-full px-2 py-1.5 text-xs border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring focus:border-transparent mb-2">
+                    <button class="w-full bg-primary text-primary-foreground px-2 py-1.5 rounded-md text-xs font-medium hover:bg-primary/90 transition-colors">
+                        Subscribe
+                    </button>
+                </div>
                 {% endblock %}
             </div>
             

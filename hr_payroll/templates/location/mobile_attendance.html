@@ -1,29 +1,21 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Mobile Attendance - {{ block.super }}{% endblock %}
+{% block title %}Mobile Attendance{% endblock %}
 {% block page_title %}Mobile Attendance{% endblock %}
 
 {% block content %}
-<!-- Mobile-First Container -->
-<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-    <!-- Mobile Header -->
-    <div class="sticky top-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700">
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
+    <!-- Header -->
+    <div class="sticky top-0 z-50 bg-white dark:bg-gray-800 shadow-sm">
         <div class="px-4 py-3">
             <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a1 1 0 001-1V4a1 1 0 00-1-1H8a1 1 0 00-1 1v16a1 1 0 001 1z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h1 class="text-lg font-bold text-gray-900 dark:text-white">Mobile Attendance</h1>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Mark attendance from anywhere</p>
-                    </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900 dark:text-white">Attendance</h1>
+                    <p class="text-xs text-gray-500 dark:text-gray-400" id="current-time">--:--:--</p>
                 </div>
-                <button onclick="refreshLocations()" class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                    <svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button onclick="refreshData()" class="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                     </svg>
                 </button>
@@ -31,125 +23,88 @@
         </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="px-4 py-6 grid gap-6 md:grid-cols-2">
-
-        <!-- User Status Card -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden md:col-span-2">
-            <div class="p-4">
-                <div class="flex items-center gap-4">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-lg font-bold shadow-lg">
-                        {{ user.username|slice:":2"|upper }}
-                    </div>
-                    <div class="flex-1">
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ user.get_full_name|default:user.username }}</h2>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ user.email|default:"No email provided" }}</p>
-                        {% if employee %}
-                        <p class="text-xs text-blue-600 dark:text-blue-400 font-medium">ID: {{ employee.employee_id }}</p>
-                        {% else %}
-                        <p class="text-xs text-amber-600 dark:text-amber-400 font-medium">⚠️ No employee record</p>
-                        {% endif %}
-                    </div>
-                    <div class="text-right">
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Current Time</div>
-                        <div class="text-lg font-bold text-gray-900 dark:text-white" id="current-time">--:--:--</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400" id="current-date">-- -- ----</div>
-                    </div>
+    <!-- User Info Card -->
+    <div class="px-4 py-4">
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-lg">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-lg font-bold">
+                    {{ user.username|slice:":2"|upper }}
+                </div>
+                <div class="flex-1">
+                    <h2 class="font-semibold">{{ user.get_full_name|default:user.username }}</h2>
+                    {% if employee %}
+                    <p class="text-sm text-blue-100">ID: {{ employee.employee_id }}</p>
+                    {% else %}
+                    <p class="text-sm text-yellow-200">⚠️ No employee record</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Location Status -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div class="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    Location Status
-                </h2>
-            </div>
-            <div class="p-4 space-y-4">
-                <!-- Current Location Status -->
-                <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-                    <div id="location-status" class="flex items-center gap-3 mb-3">
-                        <span class="relative flex h-4 w-4">
-                            <span class="relative inline-flex h-4 w-4 rounded-full bg-gray-500"></span>
-                        </span>
-                        <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Detecting location...</span>
-                    </div>
-                    <div id="location-coordinates" class="text-xs text-gray-500 dark:text-gray-400 font-mono mb-1">
-                        Coordinates: Not available
-                    </div>
-                    <div id="location-accuracy" class="text-xs text-gray-500 dark:text-gray-400">
-                        Accuracy: Unknown
-                    </div>
-                </div>
-                
-                <!-- Location Button -->
-                <button onclick="getCurrentLocation()" class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 text-sm font-medium text-white shadow-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    Get Current Location
+    <!-- Current Location -->
+    <div class="px-4 pb-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-semibold text-gray-900 dark:text-white">Current Location</h3>
+                <button onclick="getCurrentLocation()" class="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                    Detect
                 </button>
             </div>
+            <div id="location-status" class="flex items-center gap-2 mb-2">
+                <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+                <span class="text-sm text-gray-600 dark:text-gray-400">Waiting for location...</span>
+            </div>
+            <div id="location-info" class="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                <div>Coordinates: <span id="coords">--</span></div>
+                <div>Accuracy: <span id="accuracy">--</span></div>
+            </div>
         </div>
+    </div>
 
-        <!-- Interactive Map -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden md:row-span-2">
-            <div class="px-4 py-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-gray-700 dark:to-gray-600">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                    </svg>
-                    Interactive Map
-                </h2>
+    <!-- Map -->
+    <div class="px-4 pb-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+            <div id="map" class="w-full h-64"></div>
+        </div>
+    </div>
+
+    <!-- Available Locations -->
+    <div class="px-4 pb-4">
+        <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Available Locations</h3>
+        <div id="locations-container" class="space-y-3">
+            <div class="text-center py-8">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Loading...</p>
             </div>
-            <div class="p-2">
-                <div id="map" class="w-full h-80 rounded-xl border border-gray-200 dark:border-gray-600 shadow-inner"></div>
-            </div>
+        </div>
+    </div>
+
+    <!-- Attendance History -->
+    <div class="px-4 pb-4">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="font-semibold text-gray-900 dark:text-white">My Attendance</h3>
+            <select id="days-filter" onchange="loadAttendanceHistory()" class="text-sm border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                <option value="7">Last 7 days</option>
+                <option value="30">Last 30 days</option>
+                <option value="all">All time</option>
+            </select>
         </div>
         
-        <!-- Available Locations -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div class="px-4 py-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-700 dark:to-gray-600">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                        <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                        </svg>
-                        Available Locations
-                    </h2>
-                    <span class="text-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 px-2 py-1 rounded-full" id="locations-count">Loading...</span>
-                </div>
-            </div>
-            <div class="p-4">
-                <div id="locations-container" class="space-y-3">
-                    <!-- Loading state -->
-                    <div class="flex items-center justify-center py-8">
-                        <div class="flex flex-col items-center gap-3">
-                            <svg class="h-8 w-8 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                            </svg>
-                            <span class="text-sm text-gray-500 dark:text-gray-400">Loading locations...</span>
-                        </div>
-                    </div>
-                </div>
+        <div id="attendance-history" class="space-y-2">
+            <div class="text-center py-8">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Loading history...</p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Include Leaflet CSS and JS for OpenStreetMap -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<!-- Leaflet CSS and JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-// Global variables
 let map = null;
 let userMarker = null;
 let locationMarkers = [];
@@ -173,58 +128,29 @@ function getCookie(name) {
 }
 const csrftoken = getCookie('csrftoken');
 
-// Initialize page
+// Initialize
 document.addEventListener('DOMContentLoaded', function() {
-    initializeMap();
-    updateCurrentTime();
-    setInterval(updateCurrentTime, 1000);
-    loadAvailableLocations();
+    initMap();
+    updateTime();
+    setInterval(updateTime, 1000);
     getCurrentLocation();
-    
-    // Add offline/online event listeners
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    // Check initial connection status
-    if (!navigator.onLine) {
-        handleOffline();
-    }
+    loadLocations();
+    loadAttendanceHistory();
 });
 
-// Handle online event
-function handleOnline() {
-    showToast('Connection restored! Refreshing locations...', 'success');
-    loadAvailableLocations();
-    getCurrentLocation();
+// Update time
+function updateTime() {
+    const now = new Date();
+    document.getElementById('current-time').textContent = now.toLocaleTimeString();
 }
 
-// Handle offline event
-function handleOffline() {
-    showToast('You are offline. Some features may not work properly.', 'warning', 6000);
-}
-
-// Initialize OpenStreetMap
-function initializeMap() {
-    // Default to a central location (you can change this)
-    map = L.map('map').setView([23.8103, 90.4125], 11); // Dhaka, Bangladesh - zoomed out 2 steps (was 13, now 11)
-
-    // Add OpenStreetMap tiles
+// Initialize map
+function initMap() {
+    map = L.map('map').setView([23.8103, 90.4125], 11);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
         maxZoom: 19
     }).addTo(map);
-}
-
-// Update current time
-function updateCurrentTime() {
-    const now = new Date();
-    document.getElementById('current-time').textContent = now.toLocaleTimeString();
-    document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
 }
 
 // Get current location
@@ -274,32 +200,27 @@ function getCurrentLocation() {
 
 // Update location status
 function updateLocationStatus(status, message) {
-    const statusElement = document.getElementById('location-status');
-    const statusColors = {
-        loading: 'text-blue-600',
-        success: 'text-green-600',
-        error: 'text-red-600'
+    const statusEl = document.getElementById('location-status');
+    const colors = {
+        loading: 'bg-blue-500',
+        success: 'bg-green-500',
+        error: 'bg-red-500'
     };
-
-    const statusIcons = {
-        loading: '<span class="relative flex h-3 w-3"><span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span><span class="relative inline-flex h-3 w-3 rounded-full bg-blue-500"></span></span>',
-        success: '<span class="relative flex h-3 w-3"><span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex h-3 w-3 rounded-full bg-green-500"></span></span>',
-        error: '<span class="relative inline-flex h-3 w-3 rounded-full bg-red-500"></span>'
-    };
-
-    statusElement.innerHTML = `
-        ${statusIcons[status]}
-        <span class="text-sm font-medium ${statusColors[status]}">${message}</span>
+    
+    const dotClass = colors[status] || 'bg-gray-400';
+    statusEl.innerHTML = `
+        <span class="w-2 h-2 rounded-full ${dotClass}"></span>
+        <span class="text-sm text-gray-600 dark:text-gray-400">${message}</span>
     `;
 }
 
 // Update location display
 function updateLocationDisplay() {
     if (currentPosition) {
-        document.getElementById('location-coordinates').textContent = 
-            `Coordinates: ${currentPosition.lat.toFixed(6)}, ${currentPosition.lng.toFixed(6)}`;
-        document.getElementById('location-accuracy').textContent = 
-            `Accuracy: ±${Math.round(currentPosition.accuracy)}m`;
+        document.getElementById('coords').textContent = 
+            `${currentPosition.lat.toFixed(6)}, ${currentPosition.lng.toFixed(6)}`;
+        document.getElementById('accuracy').textContent = 
+            `±${Math.round(currentPosition.accuracy)}m`;
     }
 }
 
@@ -307,22 +228,19 @@ function updateLocationDisplay() {
 function updateMapWithUserLocation() {
     if (!currentPosition || !map) return;
 
-    // Remove existing user marker
     if (userMarker) {
         map.removeLayer(userMarker);
     }
 
-    // Add user marker
     userMarker = L.marker([currentPosition.lat, currentPosition.lng], {
         icon: L.divIcon({
-            className: 'user-location-marker',
+            className: 'user-marker',
             html: '<div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-lg"></div>',
             iconSize: [16, 16],
             iconAnchor: [8, 8]
         })
     }).addTo(map);
 
-    // Add accuracy circle
     L.circle([currentPosition.lat, currentPosition.lng], {
         radius: currentPosition.accuracy,
         color: '#3b82f6',
@@ -331,81 +249,40 @@ function updateMapWithUserLocation() {
         weight: 1
     }).addTo(map);
 
-    // Center map on user location
-    map.setView([currentPosition.lat, currentPosition.lng], 14); // Zoomed out 2 steps (was 16, now 14)
+    map.setView([currentPosition.lat, currentPosition.lng], 14);
 }
 
-// Load available locations with better error handling
-async function loadAvailableLocations() {
-    // Check if offline
-    if (!navigator.onLine) {
-        showToast('Cannot load locations while offline', 'warning');
-        return;
-    }
-
+// Load locations
+async function loadLocations() {
     try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-        const response = await fetch('{% url "zkteco:get_locations" %}', {
-            signal: controller.signal,
-            headers: {
-                'Cache-Control': 'no-cache',
-                'Pragma': 'no-cache'
-            }
-        });
-        
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
+        const response = await fetch('{% url "zkteco:get_locations" %}');
         const data = await response.json();
 
         if (data.status === 'success') {
             availableLocations = data.data;
-            displayAvailableLocations();
-            addLocationMarkersToMap();
+            displayLocations();
+            addLocationMarkers();
             checkLocationProximity();
         } else {
-            throw new Error(data.message || 'Failed to load locations');
+            showToast(data.message || 'Failed to load locations', 'error');
         }
     } catch (error) {
         console.error('Error loading locations:', error);
-        
-        if (error.name === 'AbortError') {
-            showToast('Request timed out. Please check your connection.', 'error');
-        } else if (error.message.includes('Failed to fetch')) {
-            showToast('Network error. Please check your internet connection.', 'error');
-        } else {
-            showToast(`Error: ${error.message}`, 'error');
-        }
+        showToast('Network error', 'error');
     }
 }
 
-// Display available locations
-function displayAvailableLocations() {
+// Display locations
+function displayLocations() {
     const container = document.getElementById('locations-container');
-    const countElement = document.getElementById('locations-count');
     
-    countElement.textContent = `${availableLocations.length} location${availableLocations.length !== 1 ? 's' : ''}`;
-
     if (availableLocations.length === 0) {
         container.innerHTML = `
             <div class="text-center py-8">
-                <div class="flex flex-col items-center gap-4">
-                    <div class="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
-                        <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No Locations Available</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Contact your administrator to assign locations</p>
-                    </div>
-                </div>
+                <svg class="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                </svg>
+                <p class="text-sm text-gray-500 dark:text-gray-400">No locations available</p>
             </div>
         `;
         return;
@@ -418,65 +295,36 @@ function displayAvailableLocations() {
         ) : null;
 
         const isWithinRadius = distance !== null && distance <= (location.radius / 1000);
-        const statusColor = isWithinRadius ? 'green' : 'red';
-        const statusText = distance !== null ? 
-            (isWithinRadius ? 'Within range' : 'Outside range') : 'Location unknown';
+        const distanceText = distance !== null ? `${(distance * 1000).toFixed(0)}m away` : 'Location unknown';
 
         return `
-            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm hover:shadow-md transition-all duration-200 ${isWithinRadius ? 'ring-2 ring-green-200 dark:ring-green-800' : ''}">
-                <!-- Location Header -->
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            </svg>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="font-semibold text-gray-900 dark:text-white text-lg">${location.name}</h3>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">${location.address || 'No address provided'}</p>
-                        </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm ${isWithinRadius ? 'ring-2 ring-green-500' : ''}">
+                <div class="flex items-start justify-between mb-3">
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-gray-900 dark:text-white">${location.name}</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${location.address || 'No address'}</p>
                     </div>
-                    ${location.is_primary ? '<span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">Primary</span>' : ''}
+                    ${isWithinRadius ? '<span class="text-xs bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 px-2 py-1 rounded-full">In Range</span>' : ''}
                 </div>
                 
-                <!-- Location Stats -->
-                <div class="grid grid-cols-2 gap-3 mb-4">
-                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                        <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Distance</div>
-                        <div class="text-sm font-semibold text-gray-900 dark:text-white">${distance !== null ? `${(distance * 1000).toFixed(0)}m` : 'Unknown'}</div>
-                    </div>
-                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                        <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Radius</div>
-                        <div class="text-sm font-semibold text-gray-900 dark:text-white">${location.radius}m</div>
-                    </div>
-                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                        <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Status</div>
-                        <div class="text-sm font-semibold text-${statusColor}-600 dark:text-${statusColor}-400">${statusText}</div>
-                    </div>
-                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                        <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Type</div>
-                        <div class="text-sm font-semibold text-gray-900 dark:text-white">${location.is_assigned ? 'Assigned' : 'Available'}</div>
-                    </div>
+                <div class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 mb-3">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    </svg>
+                    <span>${distanceText}</span>
+                    <span class="mx-1">•</span>
+                    <span>Radius: ${location.radius}m</span>
                 </div>
-
-                <!-- Action Buttons -->
+                
                 <div class="flex gap-2">
                     <button onclick="markAttendance(${location.id}, 'IN')" 
-                            class="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-3 text-sm font-medium text-white shadow-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105 ${!isWithinRadius ? 'opacity-50 cursor-not-allowed' : ''}"
+                            class="flex-1 py-2 px-4 rounded-lg text-sm font-medium text-white bg-green-600 hover:bg-green-700 ${!isWithinRadius ? 'opacity-50 cursor-not-allowed' : ''}"
                             ${!isWithinRadius ? 'disabled' : ''}>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-                        </svg>
                         Check In
                     </button>
                     <button onclick="markAttendance(${location.id}, 'OUT')" 
-                            class="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-4 py-3 text-sm font-medium text-white shadow-lg hover:from-red-700 hover:to-rose-700 transition-all duration-200 transform hover:scale-105 ${!isWithinRadius ? 'opacity-50 cursor-not-allowed' : ''}"
+                            class="flex-1 py-2 px-4 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 ${!isWithinRadius ? 'opacity-50 cursor-not-allowed' : ''}"
                             ${!isWithinRadius ? 'disabled' : ''}>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-                        </svg>
                         Check Out
                     </button>
                 </div>
@@ -485,63 +333,48 @@ function displayAvailableLocations() {
     }).join('');
 }
 
-// Add location markers to map
-function addLocationMarkersToMap() {
+// Add location markers
+function addLocationMarkers() {
     if (!map) return;
 
-    // Clear existing markers
     locationMarkers.forEach(marker => map.removeLayer(marker));
     locationMarkers = [];
 
     availableLocations.forEach(location => {
-        // Add location marker
         const marker = L.marker([location.latitude, location.longitude], {
             icon: L.divIcon({
                 className: 'location-marker',
-                html: `<div class="w-6 h-6 bg-red-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center">
-                    <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-                    </svg>
-                </div>`,
+                html: '<div class="w-6 h-6 bg-red-500 rounded-full border-2 border-white shadow-lg"></div>',
                 iconSize: [24, 24],
                 iconAnchor: [12, 12]
             })
         }).addTo(map);
 
-        // Add radius circle
         L.circle([location.latitude, location.longitude], {
             radius: location.radius,
-            color: location.is_primary ? '#10b981' : '#6b7280',
-            fillColor: location.is_primary ? '#10b981' : '#6b7280',
+            color: '#ef4444',
+            fillColor: '#ef4444',
             fillOpacity: 0.1,
             weight: 2
         }).addTo(map);
 
-        // Add popup
-        marker.bindPopup(`
-            <div class="p-2">
-                <h3 class="font-semibold">${location.name}</h3>
-                <p class="text-sm text-gray-600">${location.address || 'No address'}</p>
-                <p class="text-xs text-gray-500">Radius: ${location.radius}m</p>
-            </div>
-        `);
-
+        marker.bindPopup(`<b>${location.name}</b><br>${location.address || 'No address'}<br>Radius: ${location.radius}m`);
         locationMarkers.push(marker);
     });
 }
 
-// Calculate distance between two points
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371; // Earth's radius in km
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
-    }
-    
+// Calculate distance
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
 // Check location proximity
 function checkLocationProximity() {
     if (!currentPosition || availableLocations.length === 0) return;
@@ -555,17 +388,11 @@ function checkLocationProximity() {
         location.isWithinRadius = distance <= (location.radius / 1000);
     });
 
-    displayAvailableLocations();
+    displayLocations();
 }
 
-// Mark attendance with enhanced error handling
+// Mark attendance
 async function markAttendance(locationId, type) {
-    // Check if offline
-    if (!navigator.onLine) {
-        showToast('Cannot mark attendance while offline', 'warning');
-        return;
-    }
-
     if (!currentPosition) {
         showToast('Please enable location access first', 'warning');
         getCurrentLocation();
@@ -584,26 +411,11 @@ async function markAttendance(locationId, type) {
     );
 
     if (distance > (location.radius / 1000)) {
-        showToast(`You are ${Math.round(distance * 1000)}m away. Please move closer to the location (within ${location.radius}m)`, 'warning');
+        showToast(`You are ${Math.round(distance * 1000)}m away. Please move closer (within ${location.radius}m)`, 'warning');
         return;
     }
 
-    // Show loading state
-    const button = event.target;
-    const originalText = button.innerHTML;
-    button.innerHTML = `
-        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-        </svg>
-        Processing...
-    `;
-    button.disabled = true;
-
     try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-
         const formData = new FormData();
         formData.append('location_id', locationId);
         formData.append('attendance_type', type);
@@ -616,228 +428,156 @@ async function markAttendance(locationId, type) {
             headers: {
                 'X-CSRFToken': csrftoken
             },
-            body: formData,
-            signal: controller.signal
+            body: formData
         });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
         
         const data = await response.json();
         
         if (data.status === 'success') {
-            showToast(`${type === 'IN' ? 'Check-in' : 'Check-out'} successful at ${location.name}!`, 'success');
-            // Refresh locations after successful attendance
-            setTimeout(() => loadAvailableLocations(), 1000);
+            showToast(`${type === 'IN' ? 'Check-in' : 'Check-out'} successful!`, 'success');
+            loadAttendanceHistory();
         } else {
-            throw new Error(data.message || 'Failed to mark attendance');
+            showToast(data.message || 'Failed to mark attendance', 'error');
         }
     } catch (error) {
         console.error('Error marking attendance:', error);
-        
-        if (error.name === 'AbortError') {
-            showToast('Request timed out. Please try again.', 'error');
-        } else if (error.message.includes('Failed to fetch')) {
-            showToast('Network error. Please check your connection.', 'error');
-        } else {
-            showToast(`Error: ${error.message}`, 'error');
-        }
-    } finally {
-        // Restore button state
-        button.innerHTML = originalText;
-        button.disabled = false;
+        showToast('Network error', 'error');
     }
 }
 
-// Refresh locations
-function refreshLocations() {
-    loadAvailableLocations();
-    getCurrentLocation();
-    showToast('Locations refreshed', 'success');
+// Load attendance history
+async function loadAttendanceHistory() {
+    const days = document.getElementById('days-filter').value;
+    const container = document.getElementById('attendance-history');
+    
+    try {
+        const response = await fetch(`{% url "zkteco:get_user_attendance" %}?days=${days}`);
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            displayAttendanceHistory(data.data);
+        } else {
+            container.innerHTML = `<p class="text-center text-sm text-red-600 py-4">${data.message}</p>`;
+        }
+    } catch (error) {
+        console.error('Error loading history:', error);
+        container.innerHTML = '<p class="text-center text-sm text-red-600 py-4">Failed to load history</p>';
+    }
 }
 
-// Enhanced Toast Notifications
-function showToast(message, type = 'success', duration = 4000) {
-    const toast = document.createElement('div');
-    const toastId = 'toast-' + Date.now();
-    toast.id = toastId;
+// Display attendance history
+function displayAttendanceHistory(logs) {
+    const container = document.getElementById('attendance-history');
     
-    const colors = {
-        success: 'border-green-200 bg-green-50 text-green-900 dark:border-green-800 dark:bg-green-950 dark:text-green-100',
-        error: 'border-red-200 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-100',
-        warning: 'border-yellow-200 bg-yellow-50 text-yellow-900 dark:border-yellow-800 dark:bg-yellow-950 dark:text-yellow-100',
-        info: 'border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-100'
-    };
-    
-    const icons = {
-        success: '<svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>',
-        error: '<svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>',
-        warning: '<svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z"/></svg>',
-        info: '<svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
-    };
-    
-    toast.className = `fixed top-4 right-4 z-50 min-w-80 max-w-sm rounded-xl border p-4 shadow-xl transform transition-all duration-300 ${colors[type]}`;
-    toast.innerHTML = `
-        <div class="flex items-start gap-3">
-            <div class="flex-shrink-0 mt-0.5">
-                ${icons[type]}
-            </div>
-            <div class="flex-1 text-sm font-medium">${message}</div>
-            <button onclick="document.getElementById('${toastId}').remove()" class="flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+    if (logs.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8">
+                <svg class="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                 </svg>
-            </button>
-        </div>
-    `;
+                <p class="text-sm text-gray-500 dark:text-gray-400">No attendance records</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Group by date
+    const grouped = {};
+    logs.forEach(log => {
+        if (!grouped[log.date]) {
+            grouped[log.date] = [];
+        }
+        grouped[log.date].push(log);
+    });
+
+    container.innerHTML = Object.keys(grouped).map(date => {
+        const dateLogs = grouped[date];
+        const dateObj = new Date(date);
+        const dateStr = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        
+        return `
+            <div class="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm">
+                <div class="px-4 py-2 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white">${dateStr}</h4>
+                </div>
+                <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                    ${dateLogs.map(log => `
+                        <div class="px-4 py-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium ${log.type === 'IN' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'}">
+                                        ${log.type_display}
+                                    </span>
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white">${log.time}</span>
+                                </div>
+                                ${log.is_within_radius ? '<svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' : '<svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'}
+                            </div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                                <div class="flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    </svg>
+                                    <span>${log.location}</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                                    </svg>
+                                    <span>${log.actual_location}</span>
+                                </div>
+                                ${log.distance ? `<div class="flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg><span>Distance: ${log.distance}m</span></div>` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Refresh data
+function refreshData() {
+    getCurrentLocation();
+    loadLocations();
+    loadAttendanceHistory();
+    showToast('Refreshed', 'success');
+}
+
+// Show toast
+function showToast(message, type = 'success') {
+    const colors = {
+        success: 'bg-green-600',
+        error: 'bg-red-600',
+        warning: 'bg-yellow-600',
+        info: 'bg-blue-600'
+    };
     
+    const toast = document.createElement('div');
+    toast.className = `fixed top-4 right-4 ${colors[type]} text-white px-4 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300`;
+    toast.textContent = message;
     document.body.appendChild(toast);
     
-    // Animate in
-    toast.style.transform = 'translateX(100%)';
-    toast.style.opacity = '0';
     setTimeout(() => {
-        toast.style.transform = 'translateX(0)';
-        toast.style.opacity = '1';
-    }, 10);
-    
-    setTimeout(() => {
-        toast.style.transform = 'translateX(100%)';
         toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
         setTimeout(() => toast.remove(), 300);
-    }, duration);
+    }, 3000);
 }
 </script>
 
 <style>
-/* Mobile-first responsive design */
-@media (max-width: 640px) {
-    .min-h-screen {
-        min-height: 100vh;
-        min-height: 100dvh; /* Dynamic viewport height for mobile */
-    }
-}
-
-/* Custom styles for map markers */
-.user-location-marker {
+.user-marker, .location-marker {
     background: none;
     border: none;
 }
 
-.location-marker {
-    background: none;
-    border: none;
-}
-
-/* Enhanced Leaflet popup customization */
 .leaflet-popup-content-wrapper {
-    border-radius: 12px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
 }
 
-.leaflet-popup-tip {
-    background: white;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-/* Mobile touch improvements */
-button:active {
-    transform: scale(0.98);
-}
-
-/* Smooth scrolling for mobile */
-html {
-    scroll-behavior: smooth;
-}
-
-/* Custom scrollbar for webkit browsers */
-::-webkit-scrollbar {
-    width: 6px;
-}
-
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-}
-
-/* Dark mode scrollbar */
-@media (prefers-color-scheme: dark) {
-    ::-webkit-scrollbar-track {
-        background: #374151;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-        background: #6b7280;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-        background: #9ca3af;
-    }
-}
-
-/* Loading animation improvements */
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.5;
-    }
-}
-
-.animate-pulse {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Enhanced button hover effects */
-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-button:active {
-    transform: translateY(0);
-}
-
-/* Mobile-specific improvements */
-@media (max-width: 768px) {
-    .leaflet-popup-content-wrapper {
-        max-width: 280px;
-    }
-    
-    .leaflet-popup-content {
-        margin: 8px 12px;
-        line-height: 1.4;
-    }
-}
-
-/* Accessibility improvements */
-@media (prefers-reduced-motion: reduce) {
-    * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-    }
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-    .bg-gradient-to-r {
-        background: #000 !important;
-        color: #fff !important;
+@media (max-width: 640px) {
+    #map {
+        height: 250px;
     }
 }
 </style>

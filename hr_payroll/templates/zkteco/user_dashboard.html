@@ -1,0 +1,730 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Dashboard - {{ block.super }}{% endblock %}
+{% block page_title %}My Dashboard{% endblock %}
+
+{% block content %}
+<style>
+    /* Premium Dashboard Styles */
+    :root {
+        --gradient-primary: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+        --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        --gradient-info: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    }
+    
+    .premium-card {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: calc(var(--radius));
+        backdrop-filter: blur(10px);
+    }
+    
+    .premium-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        border-color: hsl(var(--primary) / 0.5);
+    }
+    
+    .dark .premium-card:hover {
+        box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.4);
+    }
+    
+    .stat-card-premium {
+        position: relative;
+        overflow: hidden;
+        padding: 28px;
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: calc(var(--radius));
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .stat-card-premium::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--gradient-primary);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .stat-card-premium:hover::before {
+        opacity: 1;
+    }
+    
+    .stat-card-premium:hover {
+        transform: translateY(-6px) scale(1.02);
+        box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.15), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        border-color: hsl(var(--primary) / 0.5);
+    }
+    
+    .gradient-bg-primary {
+        background: var(--gradient-primary);
+    }
+    
+    .gradient-bg-success {
+        background: var(--gradient-success);
+    }
+    
+    .gradient-bg-warning {
+        background: var(--gradient-warning);
+    }
+    
+    .gradient-bg-danger {
+        background: var(--gradient-danger);
+    }
+    
+    .gradient-bg-info {
+        background: var(--gradient-info);
+    }
+    
+    .hero-section {
+        background: linear-gradient(135deg, hsl(var(--primary) / 0.08), hsl(var(--accent) / 0.08));
+        border: 1px solid hsl(var(--border));
+        border-radius: calc(var(--radius));
+        padding: 40px;
+        margin-bottom: 40px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, hsl(var(--primary) / 0.1) 0%, transparent 70%);
+        animation: rotate 20s linear infinite;
+    }
+    
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    .trend-indicator {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        gap: 4px;
+    }
+    
+    .trend-up {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+    
+    .trend-down {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    
+    .pulse-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #10b981;
+        animation: pulse-animation 2s infinite;
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    
+    @keyframes pulse-animation {
+        0% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        }
+    }
+    
+    .activity-item {
+        padding: 16px;
+        border-radius: calc(var(--radius) - 2px);
+        background: hsl(var(--muted) / 0.3);
+        border: 1px solid hsl(var(--border));
+        transition: all 0.2s ease;
+    }
+    
+    .activity-item:hover {
+        background: hsl(var(--muted) / 0.5);
+        transform: translateX(4px);
+        border-color: hsl(var(--primary) / 0.3);
+    }
+    
+    .quick-action-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        border-radius: calc(var(--radius));
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    
+    .quick-action-btn:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        border-color: hsl(var(--primary));
+        background: hsl(var(--primary) / 0.05);
+    }
+    
+    .metric-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 14px;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        gap: 6px;
+    }
+    
+    .fade-in-up {
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .stagger-1 { animation-delay: 0.1s; }
+    .stagger-2 { animation-delay: 0.2s; }
+    .stagger-3 { animation-delay: 0.3s; }
+    .stagger-4 { animation-delay: 0.4s; }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        gap: 6px;
+    }
+    
+    .status-present { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .status-absent { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    .status-leave { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    .status-holiday { background: rgba(168, 85, 247, 0.1); color: #a855f7; }
+    
+    .attendance-item {
+        padding: 12px;
+        border-radius: calc(var(--radius) - 2px);
+        background: hsl(var(--muted) / 0.3);
+        border: 1px solid hsl(var(--border));
+        transition: all 0.2s ease;
+    }
+    
+    .attendance-item:hover {
+        background: hsl(var(--muted) / 0.5);
+        border-color: hsl(var(--primary) / 0.3);
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid hsl(var(--border));
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .glass-effect {
+        background: hsl(var(--card) / 0.8);
+        backdrop-filter: blur(12px);
+        border: 1px solid hsl(var(--border) / 0.5);
+    }
+</style>
+
+<div class="space-y-10">
+    <!-- Hero Section -->
+    <div class="hero-section fade-in-up" style="position: relative; z-index: 1;">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center" style="position: relative; z-index: 2;">
+            <div>
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="pulse-dot"></div>
+                    <span class="text-sm font-medium text-muted-foreground">Personal Dashboard</span>
+                </div>
+                <h1 class="text-4xl font-bold text-foreground mb-3 text-balance">
+                    Welcome back, {{ employee.name|default:request.user.first_name }}! 👋
+                </h1>
+                <p class="text-lg text-muted-foreground text-pretty">
+                    Your personal attendance and leave management overview
+                </p>
+                <div class="flex items-center gap-4 mt-6">
+                    <div class="metric-badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Active Employee
+                    </div>
+                    <div class="metric-badge" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        {{ shift_info.name|default:"Shift" }}
+                    </div>
+                </div>
+            </div>
+            <div class="hidden lg:block">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="glass-effect rounded-xl p-6">
+                        <p class="text-sm text-muted-foreground mb-2">Today's Hours</p>
+                        <p class="text-3xl font-bold text-foreground">{{ today_work_hours|default:"0.0" }}h</p>
+                        <div class="trend-indicator trend-up mt-2">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                            </svg>
+                            Active
+                        </div>
+                    </div>
+                    <div class="glass-effect rounded-xl p-6">
+                        <p class="text-sm text-muted-foreground mb-2">Leave Balance</p>
+                        <p class="text-3xl font-bold text-foreground">
+                            {% if leave_balances %}
+                                {{ leave_balances.0.remaining_days }}
+                            {% else %}
+                                0
+                            {% endif %}
+                        </p>
+                        <div class="trend-indicator trend-up mt-2">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                            </svg>
+                            Days Available
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Status Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="stat-card-premium fade-in-up stagger-1">
+            <div class="flex items-start justify-between mb-4">
+                <div class="w-14 h-14 rounded-xl gradient-bg-primary flex items-center justify-center">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="trend-indicator trend-up">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                    On Time
+                </div>
+            </div>
+            <p class="text-sm font-medium text-muted-foreground mb-2">Check In</p>
+            <p class="text-4xl font-bold text-foreground mb-1">
+                {% if today_check_in %}
+                    {{ today_check_in.timestamp|date:"H:i" }}
+                {% else %}
+                    --
+                {% endif %}
+            </p>
+            <p class="text-xs text-muted-foreground">
+                {% if shift_info %}
+                    Shift: {{ shift_info.start_time|time:"H:i" }}
+                {% else %}
+                    No shift assigned
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="stat-card-premium fade-in-up stagger-2">
+            <div class="flex items-start justify-between mb-4">
+                <div class="w-14 h-14 rounded-xl gradient-bg-success flex items-center justify-center">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="trend-indicator trend-up">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                    Complete
+                </div>
+            </div>
+            <p class="text-sm font-medium text-muted-foreground mb-2">Check Out</p>
+            <p class="text-4xl font-bold text-foreground mb-1">
+                {% if today_check_out %}
+                    {{ today_check_out.timestamp|date:"H:i" }}
+                {% else %}
+                    --
+                {% endif %}
+            </p>
+            <p class="text-xs text-muted-foreground">
+                {% if shift_info %}
+                    Shift: {{ shift_info.end_time|time:"H:i" }}
+                {% else %}
+                    No shift assigned
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="stat-card-premium fade-in-up stagger-3">
+            <div class="flex items-start justify-between mb-4">
+                <div class="w-14 h-14 rounded-xl gradient-bg-info flex items-center justify-center">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="trend-indicator" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Today
+                </div>
+            </div>
+            <p class="text-sm font-medium text-muted-foreground mb-2">Work Hours</p>
+            <p class="text-4xl font-bold text-foreground mb-1">{{ today_work_hours|default:"0.0" }}h</p>
+            <p class="text-xs text-muted-foreground">
+                {% if shift_info %}
+                    Expected: {{ shift_info.duration_hours }}h
+                {% else %}
+                    No shift assigned
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="stat-card-premium fade-in-up stagger-4">
+            <div class="flex items-start justify-between mb-4">
+                <div class="w-14 h-14 rounded-xl gradient-bg-warning flex items-center justify-center">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0V6a2 2 0 012-2h4a2 2 0 012 2v1m-6 0h6m-6 0l1 12a2 2 0 002 2h2a2 2 0 002-2l1-12"/>
+                    </svg>
+                </div>
+                <div class="trend-indicator" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Available
+                </div>
+            </div>
+            <p class="text-sm font-medium text-muted-foreground mb-2">Leave Balance</p>
+            <p class="text-4xl font-bold text-foreground mb-1">
+                {% if leave_balances %}
+                    {{ leave_balances.0.remaining_days }}
+                {% else %}
+                    0
+                {% endif %}
+            </p>
+            <p class="text-xs text-muted-foreground">
+                {% if leave_balances %}
+                    {{ leave_balances.0.leave_type.name }}
+                {% else %}
+                    No leave balance
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="premium-card p-6 fade-in-up">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h3 class="text-xl font-semibold text-foreground">Quick Actions</h3>
+                <p class="text-sm text-muted-foreground">Frequently used operations</p>
+            </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <!-- Mark Attendance -->
+            <a href="{% url 'zkteco:mobile_attendance' %}" class="quick-action-btn">
+                <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+                    <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <span class="text-sm font-medium text-foreground">Mark Attendance</span>
+            </a>
+
+            <!-- Apply Leave -->
+            <a href="{% url 'zkteco:leave_create' %}" class="quick-action-btn">
+                <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center mb-3">
+                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0V6a2 2 0 012-2h4a2 2 0 012 2v1m-6 0h6m-6 0l1 12a2 2 0 002 2h2a2 2 0 002-2l1-12"/>
+                    </svg>
+                </div>
+                <span class="text-sm font-medium text-foreground">Apply Leave</span>
+            </a>
+
+            <!-- My Attendance -->
+            <a href="{% url 'zkteco:attendance_list' %}" class="quick-action-btn">
+                <div class="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center mb-3">
+                    <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+                <span class="text-sm font-medium text-foreground">My Attendance</span>
+            </a>
+
+            <!-- My Leave Applications -->
+            <a href="{% url 'zkteco:leave_list' %}" class="quick-action-btn">
+                <div class="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-3">
+                    <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <span class="text-sm font-medium text-foreground">My Leaves</span>
+            </a>
+
+            <!-- My Profile -->
+            <a href="#" class="quick-action-btn">
+                <div class="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center mb-3">
+                    <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                </div>
+                <span class="text-sm font-medium text-foreground">My Profile</span>
+            </a>
+
+            <!-- Attendance Logs -->
+            <a href="{% url 'zkteco:attendance_logs' %}" class="quick-action-btn">
+                <div class="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center mb-3">
+                    <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                </div>
+                <span class="text-sm font-medium text-foreground">Attendance Logs</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Recent Attendance -->
+        <div class="premium-card p-6 fade-in-up">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-semibold text-foreground">Recent Attendance</h3>
+                    <p class="text-sm text-muted-foreground">Last 7 days overview</p>
+                </div>
+                <a href="{% url 'zkteco:attendance_list' %}" class="text-primary text-sm font-medium hover:underline">View All</a>
+            </div>
+            <div class="space-y-3 max-h-80 overflow-y-auto">
+                {% for day in recent_attendance %}
+                <div class="activity-item">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-foreground">
+                                {{ day.date|date:"D, M j" }}
+                            </p>
+                            <div class="flex items-center gap-2 mt-1">
+                                {% if day.check_in %}
+                                    <span class="text-xs text-muted-foreground">In: {{ day.check_in|date:"H:i" }}</span>
+                                {% endif %}
+                                {% if day.check_out %}
+                                    <span class="text-xs text-muted-foreground">Out: {{ day.check_out|date:"H:i" }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            {% if day.status == 'Present' %}
+                                <div class="status-badge status-present">Present</div>
+                            {% elif day.status == 'Absent' %}
+                                <div class="status-badge status-absent">Absent</div>
+                            {% elif day.status == 'Holiday' %}
+                                <div class="status-badge status-holiday">Holiday</div>
+                            {% elif day.status == 'Weekend' %}
+                                <div class="status-badge" style="background: rgba(107, 114, 128, 0.1); color: #6b7280;">Weekend</div>
+                            {% endif %}
+                            {% if day.work_hours > 0 %}
+                                <p class="text-xs text-muted-foreground mt-1">{{ day.work_hours }}h</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-8 text-muted-foreground">
+                    <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-8 h-8 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <p>No attendance records found</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Leave Information -->
+        <div class="premium-card p-6 fade-in-up">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-semibold text-foreground">Leave Information</h3>
+                    <p class="text-sm text-muted-foreground">Balance & recent applications</p>
+                </div>
+                <a href="{% url 'zkteco:leave_list' %}" class="text-primary text-sm font-medium hover:underline">View All</a>
+            </div>
+            
+            <!-- Leave Balances -->
+            <div class="mb-6">
+                <h3 class="text-sm font-medium text-foreground mb-3">Leave Balance</h3>
+                <div class="space-y-2">
+                    {% for balance in leave_balances %}
+                    <div class="info-row">
+                        <span class="text-sm text-foreground">{{ balance.leave_type.name }}</span>
+                        <span class="text-sm font-medium text-foreground">{{ balance.remaining_days }} days</span>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted-foreground">
+                        <p class="text-sm">No leave balances found</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Recent Leave Applications -->
+            <div>
+                <h3 class="text-sm font-medium text-foreground mb-3">Recent Applications</h3>
+                <div class="space-y-3 max-h-40 overflow-y-auto">
+                    {% for leave in leave_applications %}
+                    <div class="attendance-item">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-foreground">{{ leave.leave_type.name }}</p>
+                                <p class="text-xs text-muted-foreground">
+                                    {{ leave.start_date|date:"M d" }} - {{ leave.end_date|date:"M d" }}
+                                </p>
+                            </div>
+                            <div>
+                                {% if leave.status == 'A' %}
+                                    <div class="status-badge status-present">Approved</div>
+                                {% elif leave.status == 'P' %}
+                                    <div class="status-badge" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">Pending</div>
+                                {% elif leave.status == 'R' %}
+                                    <div class="status-badge status-absent">Rejected</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted-foreground">
+                        <p class="text-sm">No leave applications</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Holidays -->
+    <div class="premium-card p-6 fade-in-up">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h3 class="text-xl font-semibold text-foreground">Upcoming Holidays</h3>
+                <p class="text-sm text-muted-foreground">Next scheduled holidays</p>
+            </div>
+            <button class="text-primary text-sm font-medium hover:underline">View Calendar</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for holiday in upcoming_holidays %}
+            <div class="attendance-item">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-foreground">{{ holiday.name }}</p>
+                        <p class="text-xs text-muted-foreground">{{ holiday.date|date:"F d, Y" }}</p>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center py-8 text-muted-foreground">
+                <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-8 h-8 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <p>No upcoming holidays</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="premium-card text-center p-6 fade-in-up">
+            <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <h3 class="font-semibold text-foreground mb-1">Monthly Hours</h3>
+            <p class="text-2xl font-bold text-foreground">--</p>
+            <p class="text-sm text-muted-foreground">This month</p>
+        </div>
+
+        <div class="premium-card text-center p-6 fade-in-up">
+            <div class="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center mx-auto mb-3">
+                <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <h3 class="font-semibold text-foreground mb-1">Present Days</h3>
+            <p class="text-2xl font-bold text-foreground">--</p>
+            <p class="text-sm text-muted-foreground">This month</p>
+        </div>
+
+        <div class="premium-card text-center p-6 fade-in-up">
+            <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center mx-auto mb-3">
+                <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0V6a2 2 0 012-2h4a2 2 0 012 2v1m-6 0h6m-6 0l1 12a2 2 0 002 2h2a2 2 0 002-2l1-12"/>
+                </svg>
+            </div>
+            <h3 class="font-semibold text-foreground mb-1">Leave Used</h3>
+            <p class="text-2xl font-bold text-foreground">--</p>
+            <p class="text-sm text-muted-foreground">This year</p>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add any custom JavaScript for the user dashboard here
+    // For example, animations or interactive elements
+    
+    // Example: Add click handlers for quick action buttons
+    const quickActionButtons = document.querySelectorAll('.quick-action-btn');
+    quickActionButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            // Add any custom behavior here
+            console.log('Quick action clicked:', this.querySelector('span').textContent);
+        });
+    });
+});
+</script>
+{% endblock %}

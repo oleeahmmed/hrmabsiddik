@@ -6,9 +6,11 @@ from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.views import View
+from django.db.models import Q
 from math import radians, cos, sin, asin, sqrt
 from decimal import Decimal
 import logging
+from datetime import timedelta
 
 from ..models import Location, UserLocation, AttendanceLog, Employee, ZkDevice
 from django.contrib.auth.models import User
@@ -27,6 +29,40 @@ def haversine(lat1, lon1, lat2, lon2):
     return c * 6371  # Earth radius in km
 
 
+def get_address_from_coords(latitude, longitude):
+    """
+    Get a formatted address string from coordinates
+    Uses a geocoding service if available, falls back to coordinates
+    """
+    try:
+        lat_float = float(latitude)
+        lon_float = float(longitude)
+        
+        # Try to get actual address from a geocoding service
+        address = reverse_geocode(lat_float, lon_float)  # You'd implement this
+        if address:
+            return address
+        
+        # Fallback to coordinates if geocoding fails
+        return f"Location: {lat_float:.6f}, {lon_float:.6f}"
+        
+    except (ValueError, TypeError) as e:
+        logger.warning(f"Geocoding error: {e}, lat={latitude}, lon={longitude}")
+        return f"Location: {latitude}, {longitude}"
+
+
+def reverse_geocode(lat, lon):
+    """
+    Reverse geocode coordinates to get address
+    This is a placeholder - implement with your preferred geocoding service
+    """
+    # Example using a geocoding service (you'd need to install and configure)
+    # from geopy.geocoders import Nominatim
+    # geolocator = Nominatim(user_agent="your_app")
+    # location = geolocator.reverse(f"{lat}, {lon}")
+    # return location.address if location else None
+    
+    return None  # Placeholder - implement as needed
 # ==================== LOCATION VIEWS ====================
 class LocationListView(LoginRequiredMixin, ListView):
     """List all locations"""
@@ -102,7 +138,7 @@ class LocationDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = _('Location Details')
-        context['subtitle'] = f'zkteco: {self.object.name}'
+        context['subtitle'] = f'Location: {self.object.name}'
         
         # Get assigned users
         context['assigned_users'] = UserLocation.objects.filter(
@@ -202,7 +238,7 @@ class UserLocationDeleteView(LoginRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-# ==================== MOBILE ATTENDANCE VIEWS ====================
+    # ==================== MOBILE ATTENDANCE API VIEWS ====================
 class MobileAttendanceView(LoginRequiredMixin, TemplateView):
     """Mobile attendance marking page"""
     template_name = 'location/mobile_attendance.html'
@@ -340,11 +376,10 @@ class MarkAttendanceView(LoginRequiredMixin, View):
                         'message': _('You are not assigned to this location')
                     }, status=403)
             
-            # Get employee record - Changed to use user field instead of employee_id
+            # Get employee record
             try:
                 employee = Employee.objects.get(user=request.user)
             except Employee.DoesNotExist:
-                # Try fallback with username matching employee_id
                 try:
                     employee = Employee.objects.get(employee_id=request.user.username)
                 except Employee.DoesNotExist:
@@ -374,7 +409,7 @@ class MarkAttendanceView(LoginRequiredMixin, View):
                     'status': 'error',
                     'message': _('You are outside the location radius'),
                     'data': {
-                        'distance': round(distance, 2),
+                        'distance': round(distance * 1000, 2),  # Convert to meters
                         'required_radius': float(location.radius)
                     }
                 }, status=400)
@@ -399,6 +434,9 @@ class MarkAttendanceView(LoginRequiredMixin, View):
                 punch_type = 'CHECK_OUT'
                 status_code = 1
             
+            # Generate actual location name from coordinates
+            actual_location_name = get_address_from_coords(latitude, longitude)
+            
             # Create attendance log entry
             attendance_log = AttendanceLog.objects.create(
                 device=device,
@@ -414,6 +452,7 @@ class MarkAttendanceView(LoginRequiredMixin, View):
                 longitude=longitude,
                 is_within_radius=is_within_radius,
                 distance=distance,
+                location_name=actual_location_name,  # Store actual GPS location
                 device_info=device_info,
                 ip_address=request.META.get('REMOTE_ADDR')
             )
@@ -422,7 +461,7 @@ class MarkAttendanceView(LoginRequiredMixin, View):
                 f"Mobile attendance marked successfully: "
                 f"user={request.user.username}, employee={employee.employee_id}, "
                 f"location={location.name}, type={attendance_type}, "
-                f"distance={distance:.2f}km, has_assignment={has_assignments}"
+                f"distance={distance:.2f}km, actual_location={actual_location_name}"
             )
             
             return JsonResponse({
@@ -432,8 +471,9 @@ class MarkAttendanceView(LoginRequiredMixin, View):
                     'id': attendance_log.id,
                     'timestamp': attendance_log.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
                     'is_within_radius': is_within_radius,
-                    'distance': round(distance, 2),
+                    'distance': round(distance * 1000, 2),  # Convert to meters
                     'location': location.name,
+                    'actual_location': actual_location_name,
                     'type': attendance_type,
                     'has_assignment': has_assignments
                 }
@@ -445,6 +485,84 @@ class MarkAttendanceView(LoginRequiredMixin, View):
                 'status': 'error',
                 'message': _('An error occurred while marking attendance')
             }, status=500)
+
+
+class GetUserAttendanceLogsView(LoginRequiredMixin, View):
+    """API to get current user's attendance logs with filtering"""
+    
+    def get(self, request):
+        try:
+            # Get employee record
+            try:
+                employee = Employee.objects.get(user=request.user)
+            except Employee.DoesNotExist:
+                try:
+                    employee = Employee.objects.get(employee_id=request.user.username)
+                except Employee.DoesNotExist:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': _('Employee record not found')
+                    }, status=404)
+            
+            # Get filter parameters
+            days = request.GET.get('days', '7')  # Default 7 days
+            
+            # Calculate date range
+            if days == 'all':
+                date_from = None
+            else:
+                try:
+                    days_int = int(days)
+                    date_from = timezone.now() - timedelta(days=days_int)
+                except ValueError:
+                    date_from = timezone.now() - timedelta(days=7)
+            
+            # Build queryset
+            queryset = AttendanceLog.objects.filter(
+                employee=employee,
+                source_type='MB'  # Only mobile attendance
+            ).select_related('location').order_by('-timestamp')
+            
+            if date_from:
+                queryset = queryset.filter(timestamp__gte=date_from)
+            
+            # Prepare data
+            logs = []
+            for log in queryset:
+                logs.append({
+                    'id': log.id,
+                    'timestamp': log.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                    'date': log.timestamp.strftime('%Y-%m-%d'),
+                    'time': log.timestamp.strftime('%H:%M:%S'),
+                    'type': log.attendance_type,
+                    'type_display': 'Check In' if log.attendance_type == 'IN' else 'Check Out',
+                    'location': log.location.name if log.location else 'Unknown',
+                    'actual_location': log.location_name or 'Not recorded',
+                    'latitude': float(log.latitude) if log.latitude else None,
+                    'longitude': float(log.longitude) if log.longitude else None,
+                    'distance': round(float(log.distance) * 1000, 2) if log.distance else None,  # Convert to meters
+                    'is_within_radius': log.is_within_radius,
+                })
+            
+            return JsonResponse({
+                'status': 'success',
+                'data': logs,
+                'count': len(logs),
+                'employee': {
+                    'id': employee.id,
+                    'employee_id': employee.employee_id,
+                    'name': employee.name
+                }
+            })
+            
+        except Exception as e:
+            logger.exception(f"Error getting attendance logs: {str(e)}")
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            }, status=500)
+
+
 # ==================== ATTENDANCE LOG VIEWS ====================
 class AttendanceLogListView(LoginRequiredMixin, ListView):
     """List all attendance logs"""

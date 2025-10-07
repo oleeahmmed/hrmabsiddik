@@ -1,13 +1,18 @@
-# admin.py
 from django.contrib import admin
 from unfold.admin import ModelAdmin
-from unfold.contrib.forms.widgets import WysiwygWidget
-from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib import messages
 from django.utils.html import format_html
-from django.urls import reverse
-from django.http import HttpResponseRedirect
+from django.urls import reverse, path
+from django.http import HttpResponseRedirect, JsonResponse
+from django.utils import timezone
+from django.shortcuts import render
+from django.template.response import TemplateResponse
+from datetime import datetime, timedelta
+from django.db import transaction
+import logging
+from django.contrib.admin.views.decorators import staff_member_required
+from .zkteco_device_manager import ZKTecoDeviceManager
 
 from .models import (
     Department, Designation, Shift, Employee,
@@ -329,14 +334,22 @@ class LeaveApplicationAdmin(CustomModelAdmin):
         return 0
     duration.short_description = _("Duration (Days)")
 
-
 @admin.register(ZkDevice)
-class ZkDeviceAdmin(CustomModelAdmin):
-    list_display = ('name', 'company', 'ip_address', 'port', 'is_active', 'last_synced', 'created_at')
+class ZkDeviceAdmin(ModelAdmin):
+    list_display = (
+        'name', 'company', 'ip_address', 'port', 'is_active', 
+        'last_synced', 'connection_status_display', 'created_at'
+    )
     list_filter = ('company', 'is_active', 'last_synced', 'created_at')
     search_fields = ('name', 'ip_address', 'company__name')
     ordering = ('company', 'name')
     list_select_related = ('company',)
+    
+    actions = [
+        'test_device_connection',
+        'import_users_from_devices',
+        'import_attendance_from_devices',
+    ]
     
     fieldsets = (
         (None, {
@@ -346,11 +359,474 @@ class ZkDeviceAdmin(CustomModelAdmin):
             'fields': ('password',),
             'classes': ('collapse',)
         }),
+        (_("Sync Information"), {
+            'fields': ('last_synced',),
+            'classes': ('collapse',)
+        }),
         (_("Description"), {
             'fields': ('description',),
             'classes': ('collapse',)
         }),
     )
+    
+    def get_urls(self):
+        """Add custom URLs for AJAX operations"""
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                'import-users-preview/',
+                self.admin_site.admin_view(self.import_users_preview_view),
+                name='attendance_zkdevice_import_users_preview',
+            ),
+            path(
+                'import-users-execute/',
+                self.admin_site.admin_view(self.import_users_execute_view),
+                name='attendance_zkdevice_import_users_execute',
+            ),
+        ]
+        return custom_urls + urls
+    
+    def connection_status_display(self, obj):
+        """Display connection status with color indicator"""
+        if obj.last_synced:
+            time_diff = timezone.now() - obj.last_synced
+            if time_diff < timedelta(hours=1):
+                color = 'green'
+                status = 'Recently Synced'
+            elif time_diff < timedelta(days=1):
+                color = 'orange'
+                status = 'Synced Today'
+            else:
+                color = 'red'
+                status = 'Not Recently Synced'
+        else:
+            color = 'gray'
+            status = 'Never Synced'
+        
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">●</span> {}',
+            color, status
+        )
+    connection_status_display.short_description = _("Connection Status")
+    
+    def test_device_connection(self, request, queryset):
+        """Test connection to selected devices"""
+        device_manager = ZKTecoDeviceManager()
+        
+        # Prepare device list for testing
+        device_list = []
+        for device in queryset:
+            device_list.append({
+                'name': device.name,
+                'ip': device.ip_address,
+                'port': device.port,
+                'password': device.password or 0,
+            })
+        
+        # Test connections
+        results = device_manager.test_multiple_connections(device_list, max_workers=5)
+        
+        # Process results and update devices
+        success_count = 0
+        failed_count = 0
+        
+        for device in queryset:
+            result = results.get(device.ip_address, {})
+            
+            if result.get('success'):
+                success_count += 1
+                device.last_synced = timezone.now()
+                device.save(update_fields=['last_synced'])
+                
+                # Show device info
+                info = result.get('info', {})
+                self.message_user(
+                    request,
+                    f"Connected: {device.name} ({device.ip_address}) | "
+                    f"Users: {info.get('user_count', 0)}, "
+                    f"Records: {info.get('attendance_count', 0)}, "
+                    f"Firmware: {info.get('firmware_version', 'Unknown')}",
+                    messages.SUCCESS
+                )
+            else:
+                failed_count += 1
+                error = result.get('error', 'Unknown error')
+                self.message_user(
+                    request,
+                    f"Failed: {device.name} ({device.ip_address}) - {error}",
+                    messages.ERROR
+                )
+        
+        # Disconnect all after testing
+        device_manager.disconnect_all()
+        
+        # Summary message
+        summary_level = messages.SUCCESS if failed_count == 0 else messages.WARNING
+        self.message_user(
+            request,
+            f"Connection test completed: {success_count} successful, {failed_count} failed",
+            summary_level
+        )
+    
+    test_device_connection.short_description = _("1. Test Device Connection")
+    
+    def import_users_from_devices(self, request, queryset):
+        """Import users from selected devices with preview"""
+        # Store selected device IDs in session
+        device_ids = list(queryset.values_list('id', flat=True))
+        request.session['import_device_ids'] = device_ids
+        
+        # Redirect to preview page
+        return HttpResponseRedirect(
+            reverse('admin:attendance_zkdevice_import_users_preview')
+        )
+    
+    import_users_from_devices.short_description = _("2. Import Users from Devices")
+    
+# In your admin.py, temporarily add this to import_users_preview_view:
+    def import_users_preview_view(self, request):
+        device_ids = request.session.get('import_device_ids', [])
+        
+        if not device_ids:
+            self.message_user(request, "No devices selected", messages.ERROR)
+            return HttpResponseRedirect(reverse('admin:hr_payroll_zkdevice_changelist'))
+        
+        devices = ZkDevice.objects.filter(id__in=device_ids)
+        
+        # ADD THESE DEBUG LINES:
+        import os
+        from django.conf import settings
+        template_path = 'admin/hr_payroll/zkdevice/import_users_preview.html'
+        print(f"Looking for template: {template_path}")
+        print(f"App dirs: {settings.TEMPLATES[0]['APP_DIRS']}")
+        # END DEBUG LINES
+        
+        context = {
+            **self.admin_site.each_context(request),
+            'title': 'Import Users from ZKTeco Devices',
+            'devices': devices,
+            'opts': self.model._meta,
+            'app_label': self.model._meta.app_label,
+        }
+        
+        return TemplateResponse(
+            request,
+            template_path,
+            context
+        )
+    
+    def import_users_execute_view(self, request):
+        """Execute user import via AJAX"""
+        if request.method != 'POST':
+            return JsonResponse({'error': 'Invalid request method'}, status=400)
+        
+        device_ids = request.session.get('import_device_ids', [])
+        
+        if not device_ids:
+            return JsonResponse({'error': 'No devices selected'}, status=400)
+        
+        try:
+            devices = ZkDevice.objects.filter(id__in=device_ids)
+            device_manager = ZKTecoDeviceManager()
+            
+            # Step 1: Fetch users from devices
+            device_list = []
+            device_map = {}
+            
+            for device in devices:
+                device_list.append({
+                    'name': device.name,
+                    'ip': device.ip_address,
+                    'port': device.port,
+                    'password': device.password or 0,
+                })
+                device_map[device.ip_address] = device
+            
+            # Fetch users
+            all_users_data, fetch_results = device_manager.get_multiple_users_data(
+                device_list, max_workers=3
+            )
+            
+            # Disconnect immediately after fetching
+            device_manager.disconnect_all()
+            
+            # Step 2: Analyze users
+            analysis = self._analyze_users(all_users_data, devices)
+            
+            # Step 3: Import users to database
+            import_results = self._import_users_to_database(
+                analysis['new_users'],
+                analysis['existing_users'],
+                device_map
+            )
+            
+            # Step 4: Update device sync time
+            devices.update(last_synced=timezone.now())
+            
+            # Prepare response
+            response_data = {
+                'success': True,
+                'analysis': analysis,
+                'import_results': import_results,
+                'fetch_results': fetch_results,
+            }
+            
+            return JsonResponse(response_data)
+            
+        except Exception as e:
+            logger.error(f"Error importing users: {str(e)}", exc_info=True)
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    def _analyze_users(self, users_data, devices):
+        """Analyze users data and categorize them"""
+        company_ids = devices.values_list('company_id', flat=True).distinct()
+        
+        # Get existing employees
+        existing_employees = Employee.objects.filter(
+            company_id__in=company_ids
+        ).values('zkteco_id', 'employee_id', 'name', 'company_id')
+        
+        existing_zkteco_ids = {emp['zkteco_id']: emp for emp in existing_employees}
+        
+        new_users = []
+        existing_users = []
+        duplicate_users = []
+        
+        seen_zkteco_ids = set()
+        
+        for user_data in users_data:
+            zkteco_id = user_data['user_id']
+            
+            # Check for duplicates in fetched data
+            if zkteco_id in seen_zkteco_ids:
+                duplicate_users.append(user_data)
+                continue
+            
+            seen_zkteco_ids.add(zkteco_id)
+            
+            # Check if exists in database
+            if zkteco_id in existing_zkteco_ids:
+                existing_user = existing_zkteco_ids[zkteco_id]
+                user_data['existing_employee_id'] = existing_user['employee_id']
+                user_data['existing_name'] = existing_user['name']
+                existing_users.append(user_data)
+            else:
+                new_users.append(user_data)
+        
+        return {
+            'total_fetched': len(users_data),
+            'new_users': new_users,
+            'existing_users': existing_users,
+            'duplicate_users': duplicate_users,
+            'new_count': len(new_users),
+            'existing_count': len(existing_users),
+            'duplicate_count': len(duplicate_users),
+        }
+    
+    def _import_users_to_database(self, new_users, existing_users, device_map):
+        """Import new users to Employee table"""
+        imported_count = 0
+        updated_count = 0
+        error_count = 0
+        errors = []
+        
+        with transaction.atomic():
+            # Import new users
+            for user_data in new_users:
+                try:
+                    device_ip = user_data.get('device_ip')
+                    device = device_map.get(device_ip)
+                    
+                    if not device:
+                        error_count += 1
+                        errors.append(f"Device not found for user {user_data['user_id']}")
+                        continue
+                    
+                    # Create employee
+                    employee = Employee.objects.create(
+                        company=device.company,
+                        employee_id=f"EMP-{user_data['user_id']}",
+                        zkteco_id=user_data['user_id'],
+                        name=user_data['name'],
+                        first_name=user_data['name'].split()[0] if user_data['name'] else '',
+                        last_name=' '.join(user_data['name'].split()[1:]) if len(user_data['name'].split()) > 1 else '',
+                        is_active=True,
+                        basic_salary=0.00,
+                        overtime_rate=0.00,
+                        per_hour_rate=30.00,
+                        expected_working_hours=8.0,
+                    )
+                    
+                    imported_count += 1
+                    logger.info(f"Imported employee: {employee.employee_id} - {employee.name}")
+                    
+                except Exception as e:
+                    error_count += 1
+                    error_msg = f"Error importing user {user_data['user_id']}: {str(e)}"
+                    errors.append(error_msg)
+                    logger.error(error_msg)
+            
+            # Optionally update existing users (name sync)
+            for user_data in existing_users:
+                try:
+                    employee = Employee.objects.get(zkteco_id=user_data['user_id'])
+                    
+                    # Update name if different
+                    if employee.name != user_data['name']:
+                        employee.name = user_data['name']
+                        employee.first_name = user_data['name'].split()[0] if user_data['name'] else ''
+                        employee.last_name = ' '.join(user_data['name'].split()[1:]) if len(user_data['name'].split()) > 1 else ''
+                        employee.save(update_fields=['name', 'first_name', 'last_name'])
+                        updated_count += 1
+                        
+                except Exception as e:
+                    error_count += 1
+                    errors.append(f"Error updating user {user_data['user_id']}: {str(e)}")
+        
+        return {
+            'imported_count': imported_count,
+            'updated_count': updated_count,
+            'error_count': error_count,
+            'errors': errors[:10],  # Limit to first 10 errors
+        }
+    
+    def import_attendance_from_devices(self, request, queryset):
+        """Import attendance logs from selected devices"""
+        device_manager = ZKTecoDeviceManager()
+        
+        # Date range for import (last 30 days by default)
+        end_date = datetime.now().date()
+        start_date = end_date - timedelta(days=30)
+        
+        # Prepare device list
+        device_list = []
+        device_map = {}
+        for device in queryset:
+            device_list.append({
+                'name': device.name,
+                'ip': device.ip_address,
+                'port': device.port,
+                'password': device.password or 0,
+            })
+            device_map[device.ip_address] = device
+        
+        self.message_user(
+            request,
+            f"Fetching attendance data from {start_date} to {end_date}...",
+            messages.INFO
+        )
+        
+        # Fetch attendance from all devices
+        all_attendance_data, results = device_manager.get_multiple_attendance_data(
+            device_list, start_date, end_date, max_workers=3
+        )
+        
+        # Process results and import to database
+        imported_count = 0
+        skipped_count = 0
+        error_count = 0
+        missing_employees = set()
+        
+        with transaction.atomic():
+            for attendance_record in all_attendance_data:
+                try:
+                    # Get device object
+                    device_ip = attendance_record['device_ip']
+                    device = device_map.get(device_ip)
+                    
+                    if not device:
+                        skipped_count += 1
+                        continue
+                    
+                    # Find employee by zkteco_id
+                    zkteco_id = attendance_record['zkteco_id']
+                    try:
+                        employee = Employee.objects.get(
+                            zkteco_id=zkteco_id,
+                            company=device.company
+                        )
+                    except Employee.DoesNotExist:
+                        missing_employees.add(zkteco_id)
+                        skipped_count += 1
+                        continue
+                    
+                    # Create or update attendance log
+                    attendance_log, created = AttendanceLog.objects.get_or_create(
+                        device=device,
+                        employee=employee,
+                        timestamp=attendance_record['timestamp'],
+                        defaults={
+                            'status_code': attendance_record.get('verify_type', 0),
+                            'punch_type': str(attendance_record.get('punch_type', 0)),
+                            'source_type': 'ZK',
+                        }
+                    )
+                    
+                    if created:
+                        imported_count += 1
+                    else:
+                        skipped_count += 1
+                        
+                except Exception as e:
+                    error_count += 1
+                    logger.error(f"Error importing attendance: {str(e)}")
+                    continue
+        
+        # Show import summary
+        if imported_count > 0:
+            self.message_user(
+                request,
+                f"Successfully imported {imported_count} new attendance records",
+                messages.SUCCESS
+            )
+        
+        if skipped_count > 0:
+            self.message_user(
+                request,
+                f"Skipped {skipped_count} records (duplicates or missing employees)",
+                messages.WARNING
+            )
+        
+        if missing_employees:
+            self.message_user(
+                request,
+                f"Missing employees (ZKTeco IDs): {', '.join(list(missing_employees)[:10])}{'...' if len(missing_employees) > 10 else ''}",
+                messages.WARNING
+            )
+        
+        if error_count > 0:
+            self.message_user(
+                request,
+                f"Encountered {error_count} errors during import",
+                messages.ERROR
+            )
+        
+        # Show device-wise results
+        for result in results:
+            device_name = result['device']['name']
+            if result['success']:
+                self.message_user(
+                    request,
+                    f"{device_name}: Fetched {result['records_found']} records",
+                    messages.SUCCESS
+                )
+            else:
+                self.message_user(
+                    request,
+                    f"{device_name}: {result.get('error', 'Unknown error')}",
+                    messages.ERROR
+                )
+        
+        # Update last_synced for all devices
+        queryset.update(last_synced=timezone.now())
+        
+        # Disconnect all
+        device_manager.disconnect_all()
+    
+    import_attendance_from_devices.short_description = _("3. Import Attendance Logs (Last 30 Days)")
 
 
 @admin.register(AttendanceLog)
@@ -373,6 +849,39 @@ class AttendanceLogAdmin(CustomModelAdmin):
             'classes': ('collapse',)
         }),
     )
+    
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('mobile-attendance/', 
+                 self.admin_site.admin_view(self.mobile_attendance_view), 
+                 name='mobile_attendance_admin'),
+        ]
+        return custom_urls + urls
+    
+    def mobile_attendance_view(self, request):
+        """Admin mobile attendance view"""
+        from django.utils import timezone
+        from django.db.models import Count
+        
+        # Get stats for the admin view
+        today = timezone.now().date()
+        
+        context = {
+            'title': 'Mobile Attendance Admin',
+            'subtitle': 'Manage mobile attendance tracking',
+            'mobile_logs_count': AttendanceLog.objects.filter(source_type='MB').count(),
+            'today_logs_count': AttendanceLog.objects.filter(
+                source_type='MB', 
+                timestamp__date=today
+            ).count(),
+            'active_locations_count': Location.objects.filter(is_active=True).count(),
+            'opts': self.model._meta,
+            **self.admin_site.each_context(request),
+        }
+        
+        return render(request, 'admin/mobile_attendance_admin.html', context)
+
 
 
 @admin.register(Attendance)
@@ -540,14 +1049,14 @@ class AttendanceProcessorConfigurationAdmin(ModelAdmin):
 
 from .models import Location, UserLocation
 
+from unfold.admin import TabularInline
 
-class UserLocationInline(admin.TabularInline):
+class UserLocationInline(TabularInline):
     model = UserLocation
     extra = 1
     fields = ('user', 'is_primary')
     verbose_name = _("User Location Assignment")
     verbose_name_plural = _("User Location Assignments")
-
 
 @admin.register(Location)
 class LocationAdmin(ModelAdmin):
@@ -558,16 +1067,27 @@ class LocationAdmin(ModelAdmin):
     list_filter = ('is_active', 'created_at')
     search_fields = ('name', 'address')
     ordering = ('name',)
-    inlines = [UserLocationInline]
+    
+    # Add custom change form template
+    change_form_template = 'admin/location_change_form.html'
     
     fieldsets = (
         (None, {
             'fields': ('name', 'address', 'is_active')
         }),
         (_("Geographic Coordinates"), {
-            'fields': ('latitude', 'longitude', 'radius')
+            'fields': ('latitude', 'longitude', 'radius'),
+            'description': _('Set coordinates manually or use the map below to select location')
         }),
     )
+    
+    class Media:
+        css = {
+            'all': ('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',)
+        }
+        js = (
+            'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+        )
     
     def address_short(self, obj):
         """Display truncated address"""
@@ -578,7 +1098,6 @@ class LocationAdmin(ModelAdmin):
         """Count of users assigned to this location"""
         return obj.user_locations.count()
     user_count.short_description = _("Assigned Users")
-
 
 @admin.register(UserLocation)
 class UserLocationAdmin(ModelAdmin):
@@ -598,3 +1117,41 @@ class UserLocationAdmin(ModelAdmin):
     
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('user', 'location')
+    
+
+class MobileAttendanceAdmin:
+    
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('mobile-attendance/', 
+                 self.admin_site.admin_view(self.mobile_attendance_view), 
+                 name='mobile_attendance_admin'),
+        ]
+        return custom_urls + urls
+    
+    def mobile_attendance_view(self, request):
+        """Admin mobile attendance view"""
+        from ..models import AttendanceLog, Location
+        from django.utils import timezone
+        from django.db.models import Count
+        
+        # Get stats for the admin view
+        today = timezone.now().date()
+        
+        context = {
+            'title': 'Mobile Attendance Admin',
+            'subtitle': 'Manage mobile attendance tracking',
+            'mobile_logs_count': AttendanceLog.objects.filter(source_type='MB').count(),
+            'today_logs_count': AttendanceLog.objects.filter(
+                source_type='MB', 
+                timestamp__date=today
+            ).count(),
+            'active_locations_count': Location.objects.filter(is_active=True).count(),
+            'opts': self.model._meta,
+        }
+        
+        return render(request, 'admin/mobile_attendance_admin.html', context)
+
+# Register the custom admin view
+admin.site.register_view = lambda *args, **kwargs: None  # Placeholder

@@ -1,0 +1,1143 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Premium Dashboard - {{ block.super }}{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<style>
+    /* Premium Dashboard Styles */
+    :root {
+        --gradient-primary: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+        --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        --gradient-info: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    }
+    
+    .premium-card {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: calc(var(--radius));
+        backdrop-filter: blur(10px);
+    }
+    
+    .premium-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        border-color: hsl(var(--primary) / 0.5);
+    }
+    
+    .dark .premium-card:hover {
+        box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.4);
+    }
+    
+    .stat-card-premium {
+        position: relative;
+        overflow: hidden;
+        padding: 28px;
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: calc(var(--radius));
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .stat-card-premium::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--gradient-primary);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .stat-card-premium:hover::before {
+        opacity: 1;
+    }
+    
+    .stat-card-premium:hover {
+        transform: translateY(-6px) scale(1.02);
+        box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.15), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        border-color: hsl(var(--primary) / 0.5);
+    }
+    
+    .gradient-bg-primary {
+        background: var(--gradient-primary);
+    }
+    
+    .gradient-bg-success {
+        background: var(--gradient-success);
+    }
+    
+    .gradient-bg-warning {
+        background: var(--gradient-warning);
+    }
+    
+    .gradient-bg-danger {
+        background: var(--gradient-danger);
+    }
+    
+    .gradient-bg-info {
+        background: var(--gradient-info);
+    }
+    
+    .chart-container-premium {
+        position: relative;
+        height: 360px;
+        width: 100%;
+        background: hsl(var(--card));
+        border-radius: calc(var(--radius));
+        padding: 28px;
+    }
+    
+    .chart-container-premium canvas {
+        background: hsl(var(--card)) !important;
+    }
+    
+    .hero-section {
+        background: linear-gradient(135deg, hsl(var(--primary) / 0.08), hsl(var(--accent) / 0.08));
+        border: 1px solid hsl(var(--border));
+        border-radius: calc(var(--radius));
+        padding: 40px;
+        margin-bottom: 40px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, hsl(var(--primary) / 0.1) 0%, transparent 70%);
+        animation: rotate 20s linear infinite;
+    }
+    
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    .trend-indicator {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        gap: 4px;
+    }
+    
+    .trend-up {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+    
+    .trend-down {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    
+    .pulse-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #10b981;
+        animation: pulse-animation 2s infinite;
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    
+    @keyframes pulse-animation {
+        0% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        }
+    }
+    
+    .activity-item {
+        padding: 16px;
+        border-radius: calc(var(--radius) - 2px);
+        background: hsl(var(--muted) / 0.3);
+        border: 1px solid hsl(var(--border));
+        transition: all 0.2s ease;
+    }
+    
+    .activity-item:hover {
+        background: hsl(var(--muted) / 0.5);
+        transform: translateX(4px);
+        border-color: hsl(var(--primary) / 0.3);
+    }
+    
+    .quick-action-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        border-radius: calc(var(--radius));
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    
+    .quick-action-btn:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        border-color: hsl(var(--primary));
+        background: hsl(var(--primary) / 0.05);
+    }
+    
+    .metric-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 14px;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        gap: 6px;
+    }
+    
+    .fade-in-up {
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .stagger-1 { animation-delay: 0.1s; }
+    .stagger-2 { animation-delay: 0.2s; }
+    .stagger-3 { animation-delay: 0.3s; }
+    .stagger-4 { animation-delay: 0.4s; }
+    
+    .progress-ring {
+        transform: rotate(-90deg);
+    }
+    
+    .progress-ring-circle {
+        transition: stroke-dashoffset 0.5s ease;
+    }
+    
+    .shimmer {
+        background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.1), transparent);
+        background-size: 200% 100%;
+        animation: shimmer 2s infinite;
+    }
+    
+    @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+    
+    .glass-effect {
+        background: hsl(var(--card) / 0.8);
+        backdrop-filter: blur(12px);
+        border: 1px solid hsl(var(--border) / 0.5);
+    }
+</style>
+
+<div class="space-y-10">
+     
+    <div class="hero-section fade-in-up" style="position: relative; z-index: 1;">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center" style="position: relative; z-index: 2;">
+            <div>
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="pulse-dot"></div>
+                    <span class="text-sm font-medium text-muted-foreground">Live Dashboard</span>
+                </div>
+                <h1 class="text-4xl font-bold text-foreground mb-3 text-balance">
+                    Welcome back, {{ request.user.first_name|default:request.user.username }}! 👋
+                </h1>
+                <p class="text-lg text-muted-foreground text-pretty">
+                    Your comprehensive HR analytics and workforce management overview
+                </p>
+                <div class="flex items-center gap-4 mt-6">
+                    <div class="metric-badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        System Healthy
+                    </div>
+                    <div class="metric-badge" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Last sync: {{ stats.last_sync }}
+                    </div>
+                </div>
+            </div>
+            <div class="hidden lg:block">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="glass-effect rounded-xl p-6">
+                        <p class="text-sm text-muted-foreground mb-2">Attendance Rate</p>
+                        <p class="text-3xl font-bold text-foreground">{{ stats.attendance_rate }}%</p>
+                        <div class="trend-indicator trend-up mt-2">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                            </svg>
+                            +5.2%
+                        </div>
+                    </div>
+                    <div class="glass-effect rounded-xl p-6">
+                        <p class="text-sm text-muted-foreground mb-2">System Health</p>
+                        <p class="text-3xl font-bold text-foreground">{{ stats.system_health }}%</p>
+                        <div class="trend-indicator trend-up mt-2">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                            </svg>
+                            Optimal
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="stat-card-premium fade-in-up stagger-1">
+            <div class="flex items-start justify-between mb-4">
+                <div class="w-14 h-14 rounded-xl gradient-bg-primary flex items-center justify-center">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+                <div class="trend-indicator trend-up">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                    +12%
+                </div>
+            </div>
+            <p class="text-sm font-medium text-muted-foreground mb-2">Total Employees</p>
+            <p class="text-4xl font-bold text-foreground mb-1">{{ stats.total_employees|default:0 }}</p>
+            <p class="text-xs text-muted-foreground">Active workforce members</p>
+        </div>
+
+        <div class="stat-card-premium fade-in-up stagger-2">
+            <div class="flex items-start justify-between mb-4">
+                <div class="w-14 h-14 rounded-xl gradient-bg-success flex items-center justify-center">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="trend-indicator trend-up">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                    +8%
+                </div>
+            </div>
+            <p class="text-sm font-medium text-muted-foreground mb-2">Today Present</p>
+            <p class="text-4xl font-bold text-foreground mb-1">{{ stats.today_present|default:0 }}</p>
+            <p class="text-xs text-muted-foreground">{{ stats.attendance_rate }}% attendance rate</p>
+        </div>
+
+        <div class="stat-card-premium fade-in-up stagger-3">
+            <div class="flex items-start justify-between mb-4">
+                <div class="w-14 h-14 rounded-xl gradient-bg-danger flex items-center justify-center">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="trend-indicator trend-down">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17H5m0 0V9m0 8l8-8 4 4 6-6"/>
+                    </svg>
+                    -3%
+                </div>
+            </div>
+            <p class="text-sm font-medium text-muted-foreground mb-2">Today Absent</p>
+            <p class="text-4xl font-bold text-foreground mb-1">{{ stats.today_absent|default:0 }}</p>
+            <p class="text-xs text-muted-foreground">Requires attention</p>
+        </div>
+
+        <div class="stat-card-premium fade-in-up stagger-4">
+            <div class="flex items-start justify-between mb-4">
+                <div class="w-14 h-14 rounded-xl gradient-bg-info flex items-center justify-center">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div class="trend-indicator" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Normal
+                </div>
+            </div>
+            <p class="text-sm font-medium text-muted-foreground mb-2">On Leave</p>
+            <p class="text-4xl font-bold text-foreground mb-1">{{ stats.today_leave|default:0 }}</p>
+            <p class="text-xs text-muted-foreground">{{ stats.monthly_leaves }} this month</p>
+        </div>
+    </div>
+
+<div class="premium-card p-6 fade-in-up">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h3 class="text-xl font-semibold text-foreground">Quick Actions</h3>
+            <p class="text-sm text-muted-foreground">Frequently used operations</p>
+        </div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <!-- Employee Management -->
+        <a href="{% url 'zkteco:employee_list' %}" class="quick-action-btn">
+            <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+                <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-foreground">Employee List</span>
+        </a>
+
+        <!-- Leave Management -->
+        <a href="{% url 'zkteco:leave_list' %}" class="quick-action-btn">
+            <div class="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center mb-3">
+                <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0V6a2 2 0 012-2h4a2 2 0 012 2v1m-6 0h6m-6 0l1 12a2 2 0 002 2h2a2 2 0 002-2l1-12"/>
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-foreground">Leave List</span>
+        </a>
+
+        <!-- Attendance Logs -->
+        <a href="{% url 'zkteco:attendance_logs' %}" class="quick-action-btn">
+            <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center mb-3">
+                <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-foreground">Attendance Logs</span>
+        </a>
+
+        <!-- Attendance Management -->
+        <a href="{% url 'zkteco:attendance_list' %}" class="quick-action-btn">
+            <div class="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center mb-3">
+                <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-foreground">Attendance</span>
+        </a>
+
+        <!-- Device Management -->
+        <a href="{% url 'zkteco:device_list' %}" class="quick-action-btn">
+            <div class="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-3">
+                <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-foreground">Devices</span>
+        </a>
+
+        <!-- Reports -->
+        <a href="{% url 'zkteco:attendance_reports_main' %}" class="quick-action-btn">
+            <div class="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center mb-3">
+                <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-foreground">Reports</span>
+        </a>
+
+        <!-- Location Management -->
+        <a href="{% url 'zkteco:location_list' %}" class="quick-action-btn">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center mb-3">
+                <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-foreground">Locations</span>
+        </a>
+
+        <!-- Configuration -->
+        <a href="{% url 'zkteco:config_list' %}" class="quick-action-btn">
+            <div class="w-12 h-12 rounded-xl bg-gray-500/10 flex items-center justify-center mb-3">
+                <svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-foreground">Configuration</span>
+        </a>
+
+        <!-- Mobile Attendance -->
+        <a href="{% url 'zkteco:mobile_attendance' %}" class="quick-action-btn">
+            <div class="w-12 h-12 rounded-xl bg-pink-500/10 flex items-center justify-center mb-3">
+                <svg class="w-6 h-6 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-foreground">Mobile Attendance</span>
+        </a>
+
+        <!-- Add Employee -->
+        <a href="{% url 'zkteco:employee_create' %}" class="quick-action-btn">
+            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-3">
+                <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-foreground">Add Employee</span>
+        </a>
+
+        <!-- Apply Leave -->
+        <a href="{% url 'zkteco:leave_create' %}" class="quick-action-btn">
+            <div class="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center mb-3">
+                <svg class="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-foreground">Apply Leave</span>
+        </a>
+
+        <!-- Add Location -->
+        <a href="{% url 'zkteco:location_create' %}" class="quick-action-btn">
+            <div class="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center mb-3">
+                <svg class="w-6 h-6 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-foreground">Add Location</span>
+        </a>
+    </div>
+</div>
+     
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+         
+        <div class="premium-card p-6 fade-in-up">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-semibold text-foreground">Attendance Trend</h3>
+                    <p class="text-sm text-muted-foreground">7-day performance overview</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="pulse-dot"></div>
+                    <span class="text-xs text-muted-foreground">Live</span>
+                </div>
+            </div>
+            <div class="chart-container-premium">
+                <canvas id="attendanceTrendChart"></canvas>
+            </div>
+        </div>
+
+
+        <div class="premium-card p-6 fade-in-up">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-semibold text-foreground">Department Distribution</h3>
+                    <p class="text-sm text-muted-foreground">Employee allocation by department</p>
+                </div>
+                <button class="text-primary text-sm font-medium hover:underline">View All</button>
+            </div>
+            <div class="chart-container-premium">
+                <canvas id="departmentChart"></canvas>
+            </div>
+        </div>
+
+         
+        <div class="premium-card p-6 fade-in-up">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-semibold text-foreground">Today's Status</h3>
+                    <p class="text-sm text-muted-foreground">Current attendance breakdown</p>
+                </div>
+            </div>
+            <div class="chart-container-premium">
+                <canvas id="statusPieChart"></canvas>
+            </div>
+        </div>
+
+         
+        <div class="premium-card p-6 fade-in-up">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-semibold text-foreground">Monthly Comparison</h3>
+                    <p class="text-sm text-muted-foreground">Present vs Absent trends</p>
+                </div>
+            </div>
+            <div class="chart-container-premium">
+                <canvas id="monthlyBarChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+     
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+         
+        <div class="premium-card p-6 fade-in-up">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-foreground">Late Comers</h3>
+                    <p class="text-sm text-muted-foreground">Today's late arrivals</p>
+                </div>
+                <div class="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="space-y-3 h-72 overflow-y-auto">
+                {% for item in todays_late_comers %}
+                <div class="activity-item">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center flex-shrink-0">
+                            <span class="text-sm font-bold text-yellow-600 dark:text-yellow-400">{{ item.employee.name|slice:":1"|upper }}</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-foreground truncate">{{ item.employee.name }}</p>
+                            <p class="text-xs text-muted-foreground">{{ item.employee.designation.name|default:'N/A' }}</p>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <p class="text-sm font-semibold text-yellow-600 dark:text-yellow-400">{{ item.check_in|date:"H:i" }}</p>
+                            <p class="text-xs text-muted-foreground">{{ item.shift_start|time:"H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-12">
+                    <div class="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm text-muted-foreground">Excellent! No late comers today.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        
+        <div class="premium-card p-6 fade-in-up">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-foreground">Early Leavers</h3>
+                    <p class="text-sm text-muted-foreground">Left before shift end</p>
+                </div>
+                <div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="space-y-3 h-72 overflow-y-auto">
+                {% for item in todays_early_leavers %}
+                <div class="activity-item">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                            <span class="text-sm font-bold text-blue-600 dark:text-blue-400">{{ item.employee.name|slice:":1"|upper }}</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-foreground truncate">{{ item.employee.name }}</p>
+                            <p class="text-xs text-muted-foreground">{{ item.employee.designation.name|default:'N/A' }}</p>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <p class="text-sm font-semibold text-blue-600 dark:text-blue-400">{{ item.check_out|date:"H:i" }}</p>
+                            <p class="text-xs text-muted-foreground">{{ item.shift_end|time:"H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-12">
+                    <div class="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm text-muted-foreground">Perfect! No early leavers today.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="premium-card p-6 fade-in-up">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-foreground">Pending Approvals</h3>
+                    <p class="text-sm text-muted-foreground">Leave requests</p>
+                </div>
+                <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="space-y-3 h-72 overflow-y-auto">
+                {% for leave in pending_leaves %}
+                <div class="activity-item">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
+                            <span class="text-sm font-bold text-purple-600 dark:text-purple-400">{{ leave.employee.name|slice:":1"|upper }}</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-foreground truncate">{{ leave.employee.name }}</p>
+                            <p class="text-xs text-muted-foreground">{{ leave.leave_type.name }}</p>
+                            <p class="text-xs text-muted-foreground mt-1">{{ leave.start_date|date:"M d" }} - {{ leave.end_date|date:"M d" }}</p>
+                            <span class="inline-block mt-2 px-2 py-0.5 text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-full">Pending</span>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-12">
+                    <div class="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm text-muted-foreground">All caught up! No pending requests.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+     
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+         
+        <div class="premium-card p-6 fade-in-up">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-semibold text-foreground">Device Status</h3>
+                    <p class="text-sm text-muted-foreground">Connected devices overview</p>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between p-4 rounded-xl bg-muted/30">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-foreground">Active Devices</p>
+                            <p class="text-xs text-muted-foreground">Online and syncing</p>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold text-foreground">{{ stats.active_devices }}</p>
+                </div>
+                <div class="flex items-center justify-between p-4 rounded-xl bg-muted/30">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-xl bg-gray-500/10 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-foreground">Total Devices</p>
+                            <p class="text-xs text-muted-foreground">All registered devices</p>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold text-foreground">{{ stats.total_devices }}</p>
+                </div>
+                <div class="flex items-center justify-between p-4 rounded-xl bg-muted/30">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-foreground">Today's Logs</p>
+                            <p class="text-xs text-muted-foreground">Attendance records</p>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold text-foreground">{{ stats.today_logs }}</p>
+                </div>
+            </div>
+        </div>
+
+    
+        <div class="premium-card p-6 fade-in-up">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-semibold text-foreground">Upcoming Holidays</h3>
+                    <p class="text-sm text-muted-foreground">Next scheduled holidays</p>
+                </div>
+                <button class="text-primary text-sm font-medium hover:underline">View Calendar</button>
+            </div>
+            <div class="space-y-3 h-72 overflow-y-auto">
+                {% for holiday in upcoming_holidays %}
+                <div class="activity-item">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-foreground">{{ holiday.name }}</p>
+                                <p class="text-xs text-muted-foreground">{{ holiday.date|date:"F d, Y" }}</p>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full font-medium">
+                            {{ holiday.date|timeuntil }}
+                        </span>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-12">
+                    <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm text-muted-foreground">No upcoming holidays scheduled.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="premium-card p-6 fade-in-up">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h3 class="text-xl font-semibold text-foreground">Recent Activity</h3>
+                <p class="text-sm text-muted-foreground">Latest attendance logs</p>
+            </div>
+            <button class="text-primary text-sm font-medium hover:underline">View All Logs</button>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-border">
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-foreground">Employee</th>
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-foreground">Device</th>
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-foreground">Time</th>
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-foreground">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in recent_logs %}
+                    <tr class="border-b border-border hover:bg-muted/30 transition-colors">
+                        <td class="py-3 px-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                    <span class="text-xs font-bold text-primary">{{ log.employee.name|slice:":1"|upper }}</span>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-foreground">{{ log.employee.name }}</p>
+                                    <p class="text-xs text-muted-foreground">{{ log.employee.employee_id }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <p class="text-sm text-foreground">{{ log.device.device_name }}</p>
+                        </td>
+                        <td class="py-3 px-4">
+                            <p class="text-sm text-foreground">{{ log.timestamp|date:"H:i" }}</p>
+                            <p class="text-xs text-muted-foreground">{{ log.timestamp|date:"M d, Y" }}</p>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="px-3 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full font-medium">
+                                Recorded
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get shadcn theme colors
+    function getShadcnColors() {
+        const computedStyle = getComputedStyle(document.documentElement);
+        const primary = computedStyle.getPropertyValue('--primary').trim();
+        const secondary = computedStyle.getPropertyValue('--secondary').trim();
+        const accent = computedStyle.getPropertyValue('--accent').trim();
+        const muted = computedStyle.getPropertyValue('--muted').trim();
+        const destructive = computedStyle.getPropertyValue('--destructive').trim();
+        const foreground = computedStyle.getPropertyValue('--foreground').trim();
+        const mutedForeground = computedStyle.getPropertyValue('--muted-foreground').trim();
+        const card = computedStyle.getPropertyValue('--card').trim();
+        const border = computedStyle.getPropertyValue('--border').trim();
+        
+        return {
+            primary: `hsl(${primary})`,
+            secondary: `hsl(${secondary})`,
+            accent: `hsl(${accent})`,
+            muted: `hsl(${muted})`,
+            destructive: `hsl(${destructive})`,
+            foreground: `hsl(${foreground})`,
+            mutedForeground: `hsl(${mutedForeground})`,
+            card: `hsl(${card})`,
+            border: `hsl(${border})`,
+            success: '#10b981',
+            warning: '#f59e0b',
+            info: '#3b82f6',
+            primaryLight: `hsl(${primary} / 0.1)`,
+            successLight: 'rgba(16, 185, 129, 0.1)',
+            warningLight: 'rgba(245, 158, 11, 0.1)',
+            destructiveLight: `hsl(${destructive} / 0.1)`,
+            infoLight: 'rgba(59, 130, 246, 0.1)'
+        };
+    }
+
+    function getChartConfig() {
+        const colors = getShadcnColors();
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            backgroundColor: colors.card,
+            interaction: { intersect: false, mode: 'index' },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    align: 'start',
+                    labels: {
+                        color: colors.foreground,
+                        usePointStyle: true,
+                        padding: 20,
+                        font: { family: 'Inter, sans-serif', size: 13, weight: '500' },
+                        boxWidth: 8,
+                        boxHeight: 8
+                    }
+                },
+                tooltip: {
+                    backgroundColor: colors.card,
+                    titleColor: colors.foreground,
+                    bodyColor: colors.foreground,
+                    borderColor: colors.border,
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    padding: 12,
+                    titleFont: { family: 'Inter, sans-serif', size: 13, weight: '600' },
+                    bodyFont: { family: 'Inter, sans-serif', size: 12 }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: colors.mutedForeground,
+                        font: { family: 'Inter, sans-serif', size: 12 },
+                        padding: 8
+                    },
+                    grid: { color: colors.border, drawBorder: false, lineWidth: 1, drawTicks: false },
+                    border: { display: false }
+                },
+                y: {
+                    ticks: {
+                        color: colors.mutedForeground,
+                        font: { family: 'Inter, sans-serif', size: 12 },
+                        padding: 8
+                    },
+                    grid: { color: colors.border, drawBorder: false, lineWidth: 1, drawTicks: false },
+                    border: { display: false }
+                }
+            }
+        };
+    }
+
+    function initializeCharts() {
+        Chart.helpers.each(Chart.instances, function(instance) {
+            instance.destroy();
+        });
+        
+        const colors = getShadcnColors();
+        const config = getChartConfig();
+        
+        // Attendance Trend Chart (Area)
+        const attendanceTrendCtx = document.getElementById('attendanceTrendChart')?.getContext('2d');
+        if (attendanceTrendCtx) {
+            new Chart(attendanceTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: {{ attendance_dates|safe }},
+                    datasets: [{
+                        label: 'Present',
+                        data: {{ present_counts|safe }},
+                        borderColor: colors.success,
+                        backgroundColor: colors.successLight,
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: colors.success,
+                        pointBorderColor: colors.card,
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 8
+                    }, {
+                        label: 'Absent',
+                        data: {{ absent_counts|safe }},
+                        borderColor: colors.destructive,
+                        backgroundColor: colors.destructiveLight,
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: colors.destructive,
+                        pointBorderColor: colors.card,
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: config
+            });
+        }
+
+        // Department Chart (Doughnut)
+        const departmentCtx = document.getElementById('departmentChart')?.getContext('2d');
+        if (departmentCtx) {
+            new Chart(departmentCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: {{ dept_names|safe }},
+                    datasets: [{
+                        data: {{ dept_counts|safe }},
+                        backgroundColor: [
+                            colors.primary,
+                            colors.success,
+                            colors.info,
+                            colors.warning,
+                            colors.destructive,
+                            colors.accent
+                        ],
+                        borderColor: colors.card,
+                        borderWidth: 3,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                color: colors.foreground,
+                                usePointStyle: true,
+                                padding: 20,
+                                font: { family: 'Inter, sans-serif', size: 13, weight: '500' }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: colors.card,
+                            titleColor: colors.foreground,
+                            bodyColor: colors.foreground,
+                            borderColor: colors.border,
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            padding: 12
+                        }
+                    }
+                }
+            });
+        }
+
+        // Status Pie Chart
+        const statusPieCtx = document.getElementById('statusPieChart')?.getContext('2d');
+        if (statusPieCtx) {
+            new Chart(statusPieCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Present', 'Absent', 'On Leave'],
+                    datasets: [{
+                        data: [{{ stats.today_present|default:0 }}, {{ stats.today_absent|default:0 }}, {{ stats.today_leave|default:0 }}],
+                        backgroundColor: [colors.success, colors.destructive, colors.info],
+                        borderColor: colors.card,
+                        borderWidth: 3,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                color: colors.foreground,
+                                usePointStyle: true,
+                                padding: 20,
+                                font: { family: 'Inter, sans-serif', size: 13, weight: '500' }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: colors.card,
+                            titleColor: colors.foreground,
+                            bodyColor: colors.foreground,
+                            borderColor: colors.border,
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            padding: 12
+                        }
+                    }
+                }
+            });
+        }
+
+        // Monthly Bar Chart
+        const monthlyBarCtx = document.getElementById('monthlyBarChart')?.getContext('2d');
+        if (monthlyBarCtx) {
+            new Chart(monthlyBarCtx, {
+                type: 'bar',
+                data: {
+                    labels: {{ attendance_dates|safe }},
+                    datasets: [{
+                        label: 'Present',
+                        data: {{ present_counts|safe }},
+                        backgroundColor: colors.success,
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }, {
+                        label: 'Absent',
+                        data: {{ absent_counts|safe }},
+                        backgroundColor: colors.destructive,
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: config
+            });
+        }
+    }
+    
+    initializeCharts();
+    
+    // Re-initialize on theme change
+    const observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            if (mutation.attributeName === 'class') {
+                setTimeout(initializeCharts, 100);
+                break;
+            }
+        }
+    });
+    
+    observer.observe(document.documentElement, { attributes: true });
+});
+</script>
+{% endblock %}

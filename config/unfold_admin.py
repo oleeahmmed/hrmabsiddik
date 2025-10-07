@@ -89,7 +89,6 @@ def get_navigation_for_user(request):
                     "link": "/admin/hr_payroll/employeeseparation/",
                     "permission": lambda request: request.user.is_superuser,
                 },
-
                 {
                     "title": _("Shifts"),
                     "icon": "event",
@@ -150,8 +149,66 @@ def get_navigation_for_user(request):
                     "link": "/admin/hr_payroll/attendance/",
                     "permission": lambda request: request.user.is_superuser,
                 },
+                # NEW: Attendance Configuration
+                {
+                    "title": _("Attendance Configuration"),
+                    "icon": "settings",
+                    "link": "/admin/hr_payroll/attendanceprocessorconfiguration/",
+                    "permission": lambda request: request.user.is_superuser,
+                },
             ],
         },
+        {
+            "title": _("Location Management"),
+            "separator": True,
+            "collapsible": True,
+            "items": [
+                {
+                    "title": _("Locations"),
+                    "icon": "location_on",
+                    "link": "/admin/hr_payroll/location/",
+                    "permission": lambda request: request.user.is_superuser,
+                },
+                {
+                    "title": _("User Locations"),
+                    "icon": "person_pin_circle",
+                    "link": "/admin/hr_payroll/userlocation/",
+                    "permission": lambda request: request.user.is_superuser,
+                },
+            ],
+        },
+
+{
+    "title": _("Mobile Attendance"),
+    "separator": True,
+    "collapsible": True,
+    "items": [
+        {
+            "title": _("Mobile Dashboard"),
+            "icon": "smartphone",
+            "link": "/admin/hr_payroll/attendancelog/mobile-attendance/",
+            "permission": lambda request: request.user.is_authenticated,
+        },
+        {
+            "title": _("Attendance Logs"),
+            "icon": "list_alt",
+            "link": "/admin/hr_payroll/attendancelog/",
+            "permission": lambda request: request.user.is_superuser,
+        },
+        {
+            "title": _("Locations"),
+            "icon": "location_on",
+            "link": "/admin/hr_payroll/location/",
+            "permission": lambda request: request.user.is_superuser,
+        },
+        {
+            "title": _("User Locations"),
+            "icon": "person_pin_circle",
+            "link": "/admin/hr_payroll/userlocation/",
+            "permission": lambda request: request.user.is_superuser,
+        },
+    ],
+},
     ]
 
 

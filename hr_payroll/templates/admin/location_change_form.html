@@ -1,0 +1,267 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrahead %}
+{{ block.super }}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    .map-container {
+        margin: 20px 0;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    #location-map {
+        height: 400px;
+        width: 100%;
+    }
+    .map-controls {
+        background: #f8fafc;
+        padding: 15px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    .map-controls button {
+        padding: 8px 16px;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .map-controls button:hover {
+        background: #2563eb;
+    }
+    .map-controls button:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+    }
+    .coordinates-display {
+        margin-left: auto;
+        font-family: monospace;
+        background: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        border: 1px solid #d1d5db;
+    }
+    .leaflet-popup-content {
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block field_sets %}
+{{ block.super }}
+
+<!-- Map Section -->
+<div class="map-container">
+    <div class="map-controls">
+        <button type="button" onclick="getCurrentLocation()" id="current-location-btn">
+            📍 {% trans "Use Current Location" %}
+        </button>
+        <button type="button" onclick="clearMapSelection()" id="clear-map-btn">
+            🗑️ {% trans "Clear Selection" %}
+        </button>
+        <div class="coordinates-display" id="coordinates-display">
+            {% trans "Click on map to select location" %}
+        </div>
+    </div>
+    <div id="location-map"></div>
+</div>
+{% endblock %}
+
+{% block admin_change_form_document_ready %}
+{{ block.super }}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+let map;
+let marker;
+let circle;
+
+// Initialize map when document is ready
+document.addEventListener('DOMContentLoaded', function() {
+    initializeMap();
+});
+
+function initializeMap() {
+    // Get current coordinates from form or use default
+    const latInput = document.getElementById('id_latitude');
+    const lngInput = document.getElementById('id_longitude');
+    const radiusInput = document.getElementById('id_radius');
+    
+    let initialLat = 23.8103; // Default: Dhaka, Bangladesh
+    let initialLng = 90.4125;
+    let initialZoom = 12;
+    
+    // Use existing coordinates if available
+    if (latInput.value && lngInput.value) {
+        initialLat = parseFloat(latInput.value);
+        initialLng = parseFloat(lngInput.value);
+        initialZoom = 15;
+    }
+    
+    // Initialize map
+    map = L.map('location-map').setView([initialLat, initialLng], initialZoom);
+    
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(map);
+    
+    // Add marker if coordinates exist
+    if (latInput.value && lngInput.value) {
+        addMarker(initialLat, initialLng);
+        updateRadiusCircle();
+    }
+    
+    // Add click event to map
+    map.on('click', function(e) {
+        const { lat, lng } = e.latlng;
+        updateFormCoordinates(lat, lng);
+        addMarker(lat, lng);
+        updateRadiusCircle();
+    });
+    
+    // Update radius circle when radius changes
+    if (radiusInput) {
+        radiusInput.addEventListener('change', updateRadiusCircle);
+        radiusInput.addEventListener('input', updateRadiusCircle);
+    }
+}
+
+function addMarker(lat, lng) {
+    // Remove existing marker
+    if (marker) {
+        map.removeLayer(marker);
+    }
+    
+    // Add new marker
+    marker = L.marker([lat, lng])
+        .addTo(map)
+        .bindPopup('Selected Location<br>Lat: ' + lat.toFixed(6) + '<br>Lng: ' + lng.toFixed(6))
+        .openPopup();
+    
+    // Center map on marker
+    map.setView([lat, lng], 15);
+}
+
+function updateRadiusCircle() {
+    const latInput = document.getElementById('id_latitude');
+    const lngInput = document.getElementById('id_longitude');
+    const radiusInput = document.getElementById('id_radius');
+    
+    if (!latInput.value || !lngInput.value || !radiusInput.value) return;
+    
+    const lat = parseFloat(latInput.value);
+    const lng = parseFloat(lngInput.value);
+    const radius = parseFloat(radiusInput.value);
+    
+    // Remove existing circle
+    if (circle) {
+        map.removeLayer(circle);
+    }
+    
+    // Add new circle (convert meters to degrees approximately)
+    const radiusInDegrees = radius / 111320; // Rough conversion
+    circle = L.circle([lat, lng], {
+        color: 'blue',
+        fillColor: '#3b82f6',
+        fillOpacity: 0.2,
+        radius: radius
+    }).addTo(map);
+}
+
+function updateFormCoordinates(lat, lng) {
+    const latInput = document.getElementById('id_latitude');
+    const lngInput = document.getElementById('id_longitude');
+    
+    latInput.value = lat.toFixed(6);
+    lngInput.value = lng.toFixed(6);
+    
+    // Update coordinates display
+    document.getElementById('coordinates-display').textContent = 
+        `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
+}
+
+function getCurrentLocation() {
+    const btn = document.getElementById('current-location-btn');
+    btn.disabled = true;
+    btn.innerHTML = '⏳ {% trans "Getting location..." %}';
+    
+    if (!navigator.geolocation) {
+        alert('{% trans "Geolocation is not supported by this browser" %}');
+        btn.disabled = false;
+        btn.innerHTML = '📍 {% trans "Use Current Location" %}';
+        return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            
+            updateFormCoordinates(lat, lng);
+            addMarker(lat, lng);
+            updateRadiusCircle();
+            
+            btn.disabled = false;
+            btn.innerHTML = '📍 {% trans "Use Current Location" %}';
+            
+            // Show success message
+            alert('{% trans "Current location obtained successfully!" %}');
+        },
+        function(error) {
+            let message = '{% trans "Unable to get current location" %}';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    message = '{% trans "Location access denied by user" %}';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    message = '{% trans "Location information unavailable" %}';
+                    break;
+                case error.TIMEOUT:
+                    message = '{% trans "Location request timed out" %}';
+                    break;
+            }
+            alert(message);
+            
+            btn.disabled = false;
+            btn.innerHTML = '📍 {% trans "Use Current Location" %}';
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 60000
+        }
+    );
+}
+
+function clearMapSelection() {
+    const latInput = document.getElementById('id_latitude');
+    const lngInput = document.getElementById('id_longitude');
+    
+    latInput.value = '';
+    lngInput.value = '';
+    
+    if (marker) {
+        map.removeLayer(marker);
+        marker = null;
+    }
+    
+    if (circle) {
+        map.removeLayer(circle);
+        circle = null;
+    }
+    
+    document.getElementById('coordinates-display').textContent = 
+        '{% trans "Click on map to select location" %}';
+}
+</script>
+{% endblock %}

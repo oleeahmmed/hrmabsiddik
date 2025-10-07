@@ -18,11 +18,11 @@
         </div>
         <div class="flex items-center gap-3">
             <a href="{% url 'zkteco:location_list' %}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-            </svg>
-            Back to List
-        </a>
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Back to List
+            </a>
         </div>
     </div>
 
@@ -49,22 +49,22 @@
             <!-- Basic Information -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Location Name -->
-                        <div class="space-y-2">
+                <div class="space-y-2">
                     <label for="{{ form.name.id_for_label }}" class="text-sm font-medium text-foreground flex items-center gap-2">
                         <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
                         </svg>
                         Location Name *
-                            </label>
+                    </label>
                     {{ form.name }}
-                            {% if form.name.errors %}
+                    {% if form.name.errors %}
                         <div class="text-sm text-destructive">{{ form.name.errors.0 }}</div>
-                            {% endif %}
+                    {% endif %}
                     <p class="text-xs text-muted-foreground">Enter a descriptive name for this location</p>
-                        </div>
+                </div>
 
                 <!-- Status -->
-                        <div class="space-y-2">
+                <div class="space-y-2">
                     <label for="{{ form.is_active.id_for_label }}" class="text-sm font-medium text-foreground flex items-center gap-2">
                         <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -72,17 +72,17 @@
                         Status
                     </label>
                     <div class="flex items-center space-x-3">
-                                <label class="switch">
+                        <label class="switch">
                             {{ form.is_active }}
-                                    <span class="switch-slider"></span>
-                                </label>
+                            <span class="switch-slider"></span>
+                        </label>
                         <span class="text-sm text-muted-foreground">Enable this location for attendance tracking</span>
                     </div>
                     {% if form.is_active.errors %}
                         <div class="text-sm text-destructive">{{ form.is_active.errors.0 }}</div>
                     {% endif %}
-                            </div>
-                        </div>
+                </div>
+            </div>
 
             <!-- Address -->
             <div class="space-y-2">
@@ -91,23 +91,50 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                     </svg>
                     Address
-                            </label>
+                </label>
                 {{ form.address }}
-                            {% if form.address.errors %}
+                {% if form.address.errors %}
                     <div class="text-sm text-destructive">{{ form.address.errors.0 }}</div>
-                            {% endif %}
+                {% endif %}
                 <p class="text-xs text-muted-foreground">Full address of the location (optional but recommended)</p>
-                        </div>
+            </div>
+
+            <!-- Map Section -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                        </svg>
+                        <h3 class="text-lg font-semibold text-foreground">Location Map</h3>
+                    </div>
+                    <button type="button" onclick="getCurrentLocation()" class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow hover:bg-blue-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        Use Current Location
+                    </button>
+                </div>
+                
+                <!-- Map Container -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+                    <div id="map" class="w-full h-96"></div>
+                </div>
+                
+                <!-- Map Instructions -->
+                <div class="bg-muted/50 rounded-lg p-4">
+                    <h4 class="text-sm font-semibold text-foreground mb-2">Map Instructions</h4>
+                    <ul class="text-xs text-muted-foreground space-y-1">
+                        <li>• Click on the map to set the location center</li>
+                        <li>• Use the current location button to detect your current position</li>
+                        <li>• Adjust the radius below to define the attendance boundary</li>
+                    </ul>
+                </div>
+            </div>
 
             <!-- Coordinates Section -->
             <div class="space-y-4">
-                <div class="flex items-center gap-2">
-                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                    </svg>
-                    <h3 class="text-lg font-semibold text-foreground">Geographic Coordinates</h3>
-                </div>
-
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <!-- Latitude -->
                     <div class="space-y-2">
@@ -122,48 +149,38 @@
                     </div>
 
                     <!-- Longitude -->
-                        <div class="space-y-2">
+                    <div class="space-y-2">
                         <label for="{{ form.longitude.id_for_label }}" class="text-sm font-medium text-foreground">
                             Longitude *
-                            </label>
+                        </label>
                         {{ form.longitude }}
-                            {% if form.longitude.errors %}
+                        {% if form.longitude.errors %}
                             <div class="text-sm text-destructive">{{ form.longitude.errors.0 }}</div>
-                            {% endif %}
+                        {% endif %}
                         <p class="text-xs text-muted-foreground">Decimal degrees (-180 to 180)</p>
-                        </div>
+                    </div>
 
                     <!-- Radius -->
-                        <div class="space-y-2">
+                    <div class="space-y-2">
                         <label for="{{ form.radius.id_for_label }}" class="text-sm font-medium text-foreground">
                             Radius (meters) *
-                            </label>
+                        </label>
                         {{ form.radius }}
-                            {% if form.radius.errors %}
+                        {% if form.radius.errors %}
                             <div class="text-sm text-destructive">{{ form.radius.errors.0 }}</div>
-                            {% endif %}
+                        {% endif %}
                         <p class="text-xs text-muted-foreground">Attendance allowed within this radius</p>
                     </div>
-                    </div>
+                </div>
 
                 <!-- Coordinate Helper Tools -->
-                <div class="bg-muted/50 rounded-lg p-4 space-y-3">
-                    <h4 class="text-sm font-semibold text-foreground">Coordinate Helper Tools</h4>
-                    <div class="flex flex-wrap gap-3">
-                        <button type="button" onclick="getCurrentLocation()" class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow hover:bg-blue-700">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            </svg>
-                            Use Current Location
-                        </button>
-                        <button type="button" onclick="validateCoordinates()" class="inline-flex items-center gap-2 rounded-md bg-purple-600 px-3 py-2 text-sm font-medium text-white shadow hover:bg-purple-700">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            Validate
-                        </button>
-                    </div>
+                <div class="flex flex-wrap gap-3">
+                    <button type="button" onclick="validateCoordinates()" class="inline-flex items-center gap-2 rounded-md bg-purple-600 px-3 py-2 text-sm font-medium text-white shadow hover:bg-purple-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Validate Coordinates
+                    </button>
                 </div>
             </div>
 
@@ -184,16 +201,24 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                         </svg>
                         {% if object %}Update Location{% else %}Create Location{% endif %}
-                            </button>
+                    </button>
                 </div>
             </div>
         </form>
     </div>
 </div>
 
+<!-- Leaflet CSS and JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
-// Form styling
-    document.addEventListener('DOMContentLoaded', function() {
+let map = null;
+let locationMarker = null;
+let locationCircle = null;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
     // Style form inputs
     const inputs = document.querySelectorAll('input[type="text"], input[type="number"], textarea, select');
     inputs.forEach(input => {
@@ -205,15 +230,112 @@
     textareas.forEach(textarea => {
         textarea.className = 'flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
     });
+
+    // Initialize map
+    initMap();
+    
+    // Add event listeners to coordinate fields
+    document.getElementById('{{ form.latitude.id_for_label }}').addEventListener('change', updateMapFromForm);
+    document.getElementById('{{ form.longitude.id_for_label }}').addEventListener('change', updateMapFromForm);
+    document.getElementById('{{ form.radius.id_for_label }}').addEventListener('change', updateMapFromForm);
 });
+
+// Initialize map
+function initMap() {
+    // Get initial coordinates from form or use default
+    let initialLat = parseFloat(document.getElementById('{{ form.latitude.id_for_label }}').value);
+    let initialLng = parseFloat(document.getElementById('{{ form.longitude.id_for_label }}').value);
+    
+    if (isNaN(initialLat) || isNaN(initialLng)) {
+        initialLat = 23.8103; // Default to Dhaka, Bangladesh
+        initialLng = 90.4125;
+    }
+    
+    // Initialize map
+    map = L.map('map').setView([initialLat, initialLng], 15);
+    
+    // Add tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(map);
+    
+    // Add click event to map
+    map.on('click', function(e) {
+        updateFormFromMap(e.latlng.lat, e.latlng.lng);
+    });
+    
+    // Update map with initial values
+    updateMapFromForm();
+}
+
+// Update form fields from map click
+function updateFormFromMap(lat, lng) {
+    document.getElementById('{{ form.latitude.id_for_label }}').value = lat.toFixed(6);
+    document.getElementById('{{ form.longitude.id_for_label }}').value = lng.toFixed(6);
+    
+    updateMapFromForm();
+    showToast('Location updated from map click', 'success');
+}
+
+// Update map visualization from form values
+function updateMapFromForm() {
+    const lat = parseFloat(document.getElementById('{{ form.latitude.id_for_label }}').value);
+    const lng = parseFloat(document.getElementById('{{ form.longitude.id_for_label }}').value);
+    const radius = parseFloat(document.getElementById('{{ form.radius.id_for_label }}').value);
+    
+    if (isNaN(lat) || isNaN(lng)) return;
+    
+    // Update map view
+    map.setView([lat, lng], 15);
+    
+    // Remove existing marker and circle
+    if (locationMarker) {
+        map.removeLayer(locationMarker);
+    }
+    if (locationCircle) {
+        map.removeLayer(locationCircle);
+    }
+    
+    // Add new marker
+    locationMarker = L.marker([lat, lng], {
+        icon: L.divIcon({
+            className: 'location-marker',
+            html: '<div class="w-6 h-6 bg-red-500 rounded-full border-2 border-white shadow-lg"></div>',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+        })
+    }).addTo(map);
+    
+    // Add circle if radius is valid
+    if (!isNaN(radius) && radius > 0) {
+        locationCircle = L.circle([lat, lng], {
+            radius: radius,
+            color: '#ef4444',
+            fillColor: '#ef4444',
+            fillOpacity: 0.1,
+            weight: 2
+        }).addTo(map);
+    }
+    
+    // Add popup to marker
+    locationMarker.bindPopup(`
+        <div class="p-2">
+            <h4 class="font-semibold">${document.getElementById('{{ form.name.id_for_label }}').value || 'Location'}</h4>
+            <p class="text-sm">Lat: ${lat.toFixed(6)}</p>
+            <p class="text-sm">Lng: ${lng.toFixed(6)}</p>
+            ${!isNaN(radius) ? `<p class="text-sm">Radius: ${radius}m</p>` : ''}
+        </div>
+    `);
+}
 
 // Get current location using GPS
 function getCurrentLocation() {
     if (!navigator.geolocation) {
         showToast('Geolocation is not supported by this browser', 'error');
-            return;
-        }
-        
+        return;
+    }
+    
     navigator.geolocation.getCurrentPosition(
         function(position) {
             const lat = position.coords.latitude;
@@ -222,6 +344,7 @@ function getCurrentLocation() {
             document.getElementById('{{ form.latitude.id_for_label }}').value = lat.toFixed(6);
             document.getElementById('{{ form.longitude.id_for_label }}').value = lng.toFixed(6);
             
+            updateMapFromForm();
             showToast('Current location obtained successfully!', 'success');
         },
         function(error) {
@@ -238,6 +361,11 @@ function getCurrentLocation() {
                     break;
             }
             showToast(message, 'error');
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 60000
         }
     );
 }
@@ -300,9 +428,26 @@ function showToast(message, type = 'success', duration = 3000) {
     
     document.body.appendChild(toast);
     
-                    setTimeout(() => {
+    setTimeout(() => {
         toast.remove();
     }, duration);
-    }
+}
 </script>
+
+<style>
+.location-marker {
+    background: none;
+    border: none;
+}
+
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+}
+
+@media (max-width: 640px) {
+    #map {
+        height: 250px;
+    }
+}
+</style>
 {% endblock %}

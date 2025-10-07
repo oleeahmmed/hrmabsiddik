@@ -1,0 +1,285 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrahead %}
+<style>
+    .container { max-width: 1200px; margin: 40px auto; padding: 20px; }
+    .device-card { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+    .device-badge { display: inline-block; background: white; padding: 8px 15px; margin: 5px; border-radius: 5px; border: 1px solid #ddd; }
+    .date-selector { background: white; padding: 20px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 20px; }
+    .date-selector label { display: block; margin-bottom: 10px; font-weight: 500; }
+    .date-selector select { padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px; }
+    .btn { padding: 12px 24px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: 500; }
+    .btn-primary { background: #0d6efd; color: white; }
+    .btn-primary:hover { background: #0b5ed7; }
+    .btn-success { background: #198754; color: white; }
+    .btn-success:hover { background: #157347; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    
+    /* Loader */
+    .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; }
+    .loader-overlay.active { display: flex; }
+    .loader-box { background: white; padding: 40px; border-radius: 12px; text-align: center; min-width: 300px; }
+    .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #0d6efd; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    /* Results */
+    .result-box { display: none; background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin-top: 20px; }
+    .result-box.active { display: block; }
+    .stats { display: flex; gap: 20px; margin-bottom: 20px; }
+    .stat-card { flex: 1; text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px; }
+    .stat-value { font-size: 32px; font-weight: bold; color: #0d6efd; }
+    .stat-label { font-size: 14px; color: #6c757d; margin-top: 5px; }
+    
+    /* Table */
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #dee2e6; font-size: 14px; }
+    th { background: #f8f9fa; font-weight: 600; }
+    tr:hover { background: #f8f9fa; }
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+    .badge-new { background: #d1e7dd; color: #0f5132; }
+    .badge-exists { background: #fff3cd; color: #664d03; }
+    .badge-error { background: #f8d7da; color: #842029; }
+    input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+    
+    .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+    .alert-success { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+    .alert-warning { background: #fff3cd; color: #664d03; border: 1px solid #ffecb5; }
+    .text-center { text-align: center; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Import Attendance Logs</h2>
+    
+    <div class="device-card">
+        <strong>Selected Devices:</strong><br>
+        {% for device in devices %}
+            <span class="device-badge">{{ device.name }} ({{ device.ip_address }})</span>
+        {% endfor %}
+    </div>
+    
+    <div class="date-selector">
+        <label for="daysSelect">Select Date Range:</label>
+        <select id="daysSelect">
+            <option value="7">Last 7 Days</option>
+            <option value="15">Last 15 Days</option>
+            <option value="30" selected>Last 30 Days</option>
+            <option value="60">Last 60 Days</option>
+            <option value="90">Last 90 Days</option>
+        </select>
+        <button id="fetchBtn" class="btn btn-primary" onclick="fetchAttendance()" style="margin-left: 10px;">
+            Fetch Attendance Logs
+        </button>
+    </div>
+    
+    <!-- Results -->
+    <div id="resultBox" class="result-box">
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalLogs">0</div>
+                <div class="stat-label">Total Logs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: #198754;" id="newLogs">0</div>
+                <div class="stat-label">New Logs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="displayedLogs">0</div>
+                <div class="stat-label">Displayed</div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label><input type="checkbox" id="selectAll" onchange="toggleAll(this)"> Select All New Logs</label>
+            <button class="btn btn-success" onclick="saveLogs()" style="float: right;">
+                Import Selected Logs
+            </button>
+        </div>
+        
+        <div style="max-height: 500px; overflow-y: auto;">
+            <table id="logsTable">
+                <thead>
+                    <tr>
+                        <th width="50"><input type="checkbox" id="selectAllHeader" onchange="toggleAll(this)"></th>
+                        <th>ZKTeco ID</th>
+                        <th>Employee ID</th>
+                        <th>Timestamp</th>
+                        <th>Device</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="logsBody"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div id="successBox" class="result-box">
+        <div class="alert alert-success">
+            <strong>✓ Success!</strong> <span id="successMessage"></span>
+        </div>
+        <div id="warningMessage" class="alert alert-warning" style="display: none;">
+            <strong>⚠ Note:</strong> <span id="warningText"></span>
+        </div>
+        <div class="text-center">
+            <a href="{% url 'admin:hr_payroll_zkdevice_changelist' %}" class="btn btn-primary">
+                Back to Devices
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Loader -->
+<div id="loader" class="loader-overlay">
+    <div class="loader-box">
+        <div class="spinner"></div>
+        <div id="loaderText">Connecting to devices...</div>
+    </div>
+</div>
+
+<script>
+let logsData = [];
+
+function showLoader(text) {
+    document.getElementById('loaderText').textContent = text;
+    document.getElementById('loader').classList.add('active');
+}
+
+function hideLoader() {
+    document.getElementById('loader').classList.remove('active');
+}
+
+function fetchAttendance() {
+    const days = document.getElementById('daysSelect').value;
+    showLoader('Fetching attendance logs from devices...');
+    document.getElementById('fetchBtn').disabled = true;
+    
+    fetch('{% url "admin:hr_payroll_zkdevice_fetch_attendance" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ days: days })
+    })
+    .then(res => res.json())
+    .then(data => {
+        hideLoader();
+        if (data.success) {
+            logsData = data.logs;
+            displayLogs(data);
+        } else {
+            alert('Error: ' + data.error);
+            document.getElementById('fetchBtn').disabled = false;
+        }
+    })
+    .catch(err => {
+        hideLoader();
+        alert('Failed to fetch attendance: ' + err);
+        document.getElementById('fetchBtn').disabled = false;
+    });
+}
+
+function displayLogs(data) {
+    document.getElementById('totalLogs').textContent = data.total;
+    document.getElementById('newLogs').textContent = data.new;
+    document.getElementById('displayedLogs').textContent = data.displayed;
+    
+    const tbody = document.getElementById('logsBody');
+    tbody.innerHTML = '';
+    
+    let hasWarning = false;
+    
+    data.logs.forEach((log, index) => {
+        const row = tbody.insertRow();
+        let status = '';
+        let statusClass = '';
+        let canSelect = false;
+        
+        if (!log.has_employee) {
+            status = 'No Employee';
+            statusClass = 'badge-error';
+            hasWarning = true;
+        } else if (log.exists) {
+            status = 'Exists';
+            statusClass = 'badge-exists';
+        } else {
+            status = 'New';
+            statusClass = 'badge-new';
+            canSelect = true;
+        }
+        
+        row.innerHTML = `
+            <td>${canSelect ? `<input type="checkbox" value="${index}" checked class="log-checkbox">` : ''}</td>
+            <td>${log.zkteco_id}</td>
+            <td>${log.employee_id || '-'}</td>
+            <td>${log.timestamp}</td>
+            <td>${log.device_name}</td>
+            <td><span class="badge ${statusClass}">${status}</span></td>
+        `;
+    });
+    
+    if (hasWarning && data.total > data.displayed) {
+        const notice = tbody.insertRow();
+        notice.innerHTML = `
+            <td colspan="6" style="text-align: center; color: #6c757d; padding: 20px;">
+                Showing ${data.displayed} of ${data.total} logs. Some logs couldn't be matched to employees.
+            </td>
+        `;
+    }
+    
+    document.getElementById('resultBox').classList.add('active');
+}
+
+function toggleAll(checkbox) {
+    document.querySelectorAll('.log-checkbox').forEach(cb => cb.checked = checkbox.checked);
+}
+
+function saveLogs() {
+    const selected = [];
+    document.querySelectorAll('.log-checkbox:checked').forEach(cb => {
+        selected.push(logsData[parseInt(cb.value)]);
+    });
+    
+    if (selected.length === 0) {
+        alert('Please select at least one log to import');
+        return;
+    }
+    
+    showLoader(`Importing ${selected.length} logs...`);
+    
+    fetch('{% url "admin:hr_payroll_zkdevice_save_attendance" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ logs: selected })
+    })
+    .then(res => res.json())
+    .then(data => {
+        hideLoader();
+        if (data.success) {
+            document.getElementById('successMessage').textContent = 
+                `Imported ${data.imported} attendance log(s) successfully!`;
+            
+            if (data.skipped > 0) {
+                document.getElementById('warningText').textContent = 
+                    `${data.skipped} log(s) were skipped (duplicates or errors).`;
+                document.getElementById('warningMessage').style.display = 'block';
+            }
+            
+            document.getElementById('resultBox').classList.remove('active');
+            document.getElementById('successBox').classList.add('active');
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(err => {
+        hideLoader();
+        alert('Failed to save logs: ' + err);
+    });
+}
+</script>
+{% endblock %}
