@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ object.name }} - মুছে ফেলুন{% endblock %}
+{% block page_title %}{{ object.name }} মুছে ফেলুন{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-foreground">টেমপ্লেট মুছে ফেলুন</h1>
+            <p class="text-muted-foreground">আপনি কি নিশ্চিত এই টেমপ্লেট মুছে ফেলতে চান?</p>
+        </div>
+    </div>
+
+    <!-- Warning Card -->
+    <div class="rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20 p-6">
+        <div class="flex items-start gap-3">
+            <svg class="h-6 w-6 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+            </svg>
+            <div>
+                <h3 class="text-lg font-semibold text-red-800 dark:text-red-400">সতর্কতা</h3>
+                <p class="text-red-700 dark:text-red-300 mt-1">
+                    আপনি <strong>"{{ object.name }}"</strong> টেমপ্লেট মুছে ফেলতে চলেছেন। 
+                    এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না।
+                </p>
+                {% if object.is_active %}
+                <p class="text-red-700 dark:text-red-300 mt-2 font-medium">
+                    ⚠️ এই টেমপ্লেট বর্তমানে সক্রিয় রয়েছে। মুছে ফেলা বাঞ্ছনীয় নয়।
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Details -->
+    <div class="rounded-lg border bg-card shadow-sm">
+        <div class="border-b px-6 py-4">
+            <h3 class="text-lg font-semibold text-foreground">টেমপ্লেট বিবরণ</h3>
+        </div>
+        <div class="p-6 space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <span class="text-sm font-medium text-muted-foreground">টেমপ্লেট নাম</span>
+                    <p class="text-foreground">{{ object.name }}</p>
+                </div>
+                <div>
+                    <span class="text-sm font-medium text-muted-foreground">স্ট্যাটাস</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                        {% if object.is_active %}bg-green-100 text-green-800
+                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {% if object.is_active %}সক্রিয়{% else %}নিষ্ক্রিয়{% endif %}
+                    </span>
+                </div>
+                <div>
+                    <span class="text-sm font-medium text-muted-foreground">ডিফল্ট সাইকেল</span>
+                    <p class="text-foreground">{{ object.get_default_cycle_type_display }}</p>
+                </div>
+                <div>
+                    <span class="text-sm font-medium text-muted-foreground">পরিশোধের দিন</span>
+                    <p class="text-foreground">{{ object.payment_day }}</p>
+                </div>
+                {% if object.description %}
+                <div class="col-span-2">
+                    <span class="text-sm font-medium text-muted-foreground">বর্ণনা</span>
+                    <p class="text-foreground">{{ object.description }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex justify-end gap-3">
+        <a href="{% url 'zkteco:payroll_template_list' %}" class="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">
+            বাতিল
+        </a>
+        <form method="post" class="inline">
+            {% csrf_token %}
+            <button type="submit" class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                মুছে ফেলুন
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

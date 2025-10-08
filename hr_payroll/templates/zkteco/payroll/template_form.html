@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if object %}টেমপ্লেট এডিট করুন{% else %}নতুন টেমপ্লেট তৈরি করুন{% endif %}
+{% endblock %}
+
+{% block page_title %}
+    {% if object %}{{ object.name }} এডিট করুন{% else %}নতুন টেমপ্লেট তৈরি করুন{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-foreground">
+                {% if object %}টেমপ্লেট এডিট করুন{% else %}নতুন টেমপ্লেট তৈরি করুন{% endif %}
+            </h1>
+            <p class="text-muted-foreground">
+                {% if object %}টেমপ্লেট তথ্য আপডেট করুন{% else %}একটি নতুন পেরোল টেমপ্লেট তৈরি করুন{% endif %}
+            </p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'zkteco:payroll_template_list' %}" class="inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-accent">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                পিছনে
+            </a>
+        </div>
+    </div>
+
+    <!-- Template Form -->
+    <div class="rounded-lg border bg-card shadow-sm">
+        <div class="border-b px-6 py-4">
+            <h3 class="text-lg font-semibold text-foreground">টেমপ্লেট তথ্য</h3>
+        </div>
+        
+        <div class="p-6">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="space-y-6">
+                    <!-- Basic Information -->
+                    <div class="space-y-4">
+                        <h4 class="text-md font-semibold text-foreground border-b pb-2">মৌলিক তথ্য</h4>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2" for="{{ form.name.id_for_label }}">
+                                    {{ form.name.label }} *
+                                </label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                <p class="text-xs text-red-600 mt-1">{{ form.name.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2" for="{{ form.default_cycle_type.id_for_label }}">
+                                    {{ form.default_cycle_type.label }}
+                                </label>
+                                {{ form.default_cycle_type }}
+                                {% if form.default_cycle_type.errors %}
+                                <p class="text-xs text-red-600 mt-1">{{ form.default_cycle_type.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-foreground mb-2" for="{{ form.description.id_for_label }}">
+                                {{ form.description.label }}
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <p class="text-xs text-red-600 mt-1">{{ form.description.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2" for="{{ form.payment_day.id_for_label }}">
+                                    {{ form.payment_day.label }}
+                                </label>
+                                {{ form.payment_day }}
+                                {% if form.payment_day.errors %}
+                                <p class="text-xs text-red-600 mt-1">{{ form.payment_day.errors.0 }}</p>
+                                {% endif %}
+                                <p class="text-xs text-muted-foreground mt-1">মাসের কত তারিখ বেতন পরিশোধ করা হবে</p>
+                            </div>
+
+                            <div class="flex items-center gap-2 pt-6">
+                                {{ form.is_active }}
+                                <label class="text-sm font-medium text-foreground" for="{{ form.is_active.id_for_label }}">
+                                    {{ form.is_active.label }}
+                                </label>
+                                {% if form.is_active.errors %}
+                                <p class="text-xs text-red-600 mt-1">{{ form.is_active.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Auto-calculation Settings -->
+                    <div class="space-y-4">
+                        <h4 class="text-md font-semibold text-foreground border-b pb-2">অটো-ক্যালকুলেশন সেটিংস</h4>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="flex items-center gap-2">
+                                {{ form.auto_calculate_overtime }}
+                                <label class="text-sm font-medium text-foreground" for="{{ form.auto_calculate_overtime.id_for_label }}">
+                                    {{ form.auto_calculate_overtime.label }}
+                                </label>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                {{ form.auto_calculate_deductions }}
+                                <label class="text-sm font-medium text-foreground" for="{{ form.auto_calculate_deductions.id_for_label }}">
+                                    {{ form.auto_calculate_deductions.label }}
+                                </label>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                {{ form.auto_calculate_bonuses }}
+                                <label class="text-sm font-medium text-foreground" for="{{ form.auto_calculate_bonuses.id_for_label }}">
+                                    {{ form.auto_calculate_bonuses.label }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bonus Rules -->
+                    <div class="space-y-4">
+                        <h4 class="text-md font-semibold text-foreground border-b pb-2">বোনাস নিয়ম</h4>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2" for="{{ form.perfect_attendance_bonus.id_for_label }}">
+                                    {{ form.perfect_attendance_bonus.label }}
+                                </label>
+                                {{ form.perfect_attendance_bonus }}
+                                {% if form.perfect_attendance_bonus.errors %}
+                                <p class="text-xs text-red-600 mt-1">{{ form.perfect_attendance_bonus.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2" for="{{ form.minimum_attendance_for_bonus.id_for_label }}">
+                                    {{ form.minimum_attendance_for_bonus.label }}
+                                </label>
+                                {{ form.minimum_attendance_for_bonus }}
+                                {% if form.minimum_attendance_for_bonus.errors %}
+                                <p class="text-xs text-red-600 mt-1">{{ form.minimum_attendance_for_bonus.errors.0 }}</p>
+                                {% endif %}
+                                <p class="text-xs text-muted-foreground mt-1">বোনাসের জন্য ন্যূনতম উপস্থিতি শতাংশ</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Deduction Rules -->
+                    <div class="space-y-4">
+                        <h4 class="text-md font-semibold text-foreground border-b pb-2">কর্তন নিয়ম</h4>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2" for="{{ form.per_day_absence_deduction_rate.id_for_label }}">
+                                    {{ form.per_day_absence_deduction_rate.label }}
+                                </label>
+                                {{ form.per_day_absence_deduction_rate }}
+                                {% if form.per_day_absence_deduction_rate.errors %}
+                                <p class="text-xs text-red-600 mt-1">{{ form.per_day_absence_deduction_rate.errors.0 }}</p>
+                                {% endif %}
+                                <p class="text-xs text-muted-foreground mt-1">প্রতিদিনের বেতনের কত শতাংশ কর্তন হবে</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2" for="{{ form.late_arrival_penalty.id_for_label }}">
+                                    {{ form.late_arrival_penalty.label }}
+                                </label>
+                                {{ form.late_arrival_penalty }}
+                                {% if form.late_arrival_penalty.errors %}
+                                <p class="text-xs text-red-600 mt-1">{{ form.late_arrival_penalty.errors.0 }}</p>
+                                {% endif %}
+                                <p class="text-xs text-muted-foreground mt-1">প্রতি বিলম্বের জন্য জরিমানা</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end gap-3">
+                    <a href="{% url 'zkteco:payroll_template_list' %}" class="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">
+                        বাতিল
+                    </a>
+                    <button type="submit" class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                        {% if object %}আপডেট করুন{% else %}তৈরি করুন{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Style form fields to match the design */
+input, select, textarea {
+    width: 100%;
+    border-radius: 0.375rem;
+    border: 1px solid hsl(var(--input));
+    background-color: hsl(var(--background));
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    ring: 2px;
+    ring-color: hsl(var(--primary));
+}
+
+/* Style checkboxes */
+input[type="checkbox"] {
+    width: auto;
+}
+</style>
+{% endblock %}

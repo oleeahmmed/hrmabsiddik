@@ -1155,3 +1155,223 @@ class MobileAttendanceAdmin:
 
 # Register the custom admin view
 admin.site.register_view = lambda *args, **kwargs: None  # Placeholder
+
+
+# admin.py
+
+from django.contrib import admin
+from unfold.admin import ModelAdmin, TabularInline   # <-- Unfold
+from .models import (
+    PayrollCycle, PayrollRecord, PayrollAdjustment,
+    PayrollPayment, PayrollTemplate
+)
+
+# ---------- PayrollCycle ----------
+@admin.register(PayrollCycle)
+class PayrollCycleAdmin(ModelAdmin):
+    list_display = [
+        'name', 'company', 'start_date', 'end_date', 'status',
+        'total_employees', 'total_net_salary', 'generated_at'
+    ]
+    list_filter = ['status', 'company', 'cycle_type', 'start_date']
+    search_fields = ['name', 'company__name']
+    readonly_fields = [
+        'total_gross_salary', 'total_deductions', 'total_net_salary',
+        'total_overtime_amount', 'generated_at', 'approved_at'
+    ]
+
+    fieldsets = (
+        ('মূল তথ্য', {
+            'fields': ('company', 'name', 'cycle_type', 'status')
+        }),
+        ('সময়কাল', {
+            'fields': ('start_date', 'end_date', 'payment_date')
+        }),
+        ('আর্থিক সারাংশ', {
+            'fields': (
+                'total_gross_salary', 'total_deductions',
+                'total_net_salary', 'total_overtime_amount'
+            )
+        }),
+        ('মেটাডেটা', {
+            'fields': ('generated_at', 'generated_by', 'approved_at', 'approved_by', 'notes')
+        }),
+    )
+
+    def total_employees(self, obj):
+        return obj.total_employees
+    total_employees.short_description = 'মোট কর্মচারী'
+
+
+# ---------- PayrollRecord ----------
+class PayrollAdjustmentInline(TabularInline):  # <-- Unfold TabularInline
+    model = PayrollAdjustment
+    extra = 0
+    fields = ['adjustment_type', 'title', 'amount', 'description']
+    readonly_fields = ['created_by', 'created_at']
+
+
+@admin.register(PayrollRecord)
+class PayrollRecordAdmin(ModelAdmin):
+    list_display = [
+        'employee', 'payroll_cycle', 'present_days', 'working_days',
+        'gross_salary', 'net_salary', 'payment_status', 'payment_date'
+    ]
+    list_filter = ['payment_status', 'payroll_cycle', 'payment_method', 'payment_date']
+    search_fields = ['employee__employee_id', 'employee__name', 'payroll_cycle__name']
+    readonly_fields = [
+        'total_allowances', 'total_deductions', 'gross_salary',
+        'net_salary', 'overtime_amount', 'hourly_wage_amount'
+    ]
+    inlines = [PayrollAdjustmentInline]
+
+    fieldsets = (
+        ('মূল তথ্য', {
+            'fields': ('payroll_cycle', 'employee')
+        }),
+        ('বেতন উপাদান', {
+            'fields': (
+                'basic_salary', 'house_rent_allowance', 'medical_allowance',
+                'conveyance_allowance', 'food_allowance', 'attendance_bonus',
+                'festival_bonus', 'other_allowances', 'total_allowances'
+            )
+        }),
+        ('ওভারটাইম ও ঘণ্টাভিত্তিক', {
+            'fields': (
+                'overtime_hours', 'overtime_rate', 'overtime_amount',
+                'working_hours', 'hourly_rate', 'hourly_wage_amount'
+            )
+        }),
+        ('কর্তন', {
+            'fields': (
+                'provident_fund', 'tax_deduction', 'loan_deduction',
+                'absence_deduction', 'other_deductions', 'total_deductions'
+            )
+        }),
+        ('উপস্থিতি তথ্য', {
+            'fields': (
+                'working_days', 'present_days', 'absent_days', 'leave_days',
+                'half_days', 'late_arrivals', 'early_departures'
+            )
+        }),
+        ('মোট হিসাব', {
+            'fields': ('gross_salary', 'net_salary')
+        }),
+        ('পেমেন্ট তথ্য', {
+            'fields': (
+                'payment_status', 'payment_method', 'payment_date',
+                'payment_reference', 'bank_name', 'bank_account'
+            )
+        }),
+        ('অতিরিক্ত', {
+            'fields': ('remarks',)
+        }),
+    )
+
+    actions = ['mark_as_paid', 'mark_as_pending', 'export_selected']
+
+    def mark_as_paid(self, request, queryset):
+        updated = queryset.update(payment_status='paid')
+        self.message_user(request, f'{updated} টি রেকর্ড পরিশোধিত হিসেবে চিহ্নিত করা হয়েছে।')
+    mark_as_paid.short_description = 'পরিশোধিত হিসেবে চিহ্নিত করুন'
+
+    def mark_as_pending(self, request, queryset):
+        updated = queryset.update(payment_status='pending')
+        self.message_user(request, f'{updated} টি রেকর্ড বকেয়া হিসেবে চিহ্নিত করা হয়েছে।')
+    mark_as_pending.short_description = 'বকেয়া হিসেবে চিহ্নিত করুন'
+
+
+# ---------- PayrollAdjustment ----------
+@admin.register(PayrollAdjustment)
+class PayrollAdjustmentAdmin(ModelAdmin):
+    list_display = ['title', 'payroll_record', 'adjustment_type', 'amount', 'created_by', 'created_at']
+    list_filter = ['adjustment_type', 'created_at']
+    search_fields = ['title', 'payroll_record__employee__name']
+    readonly_fields = ['created_by', 'created_at']
+
+    fieldsets = (
+        ('মূল তথ্য', {
+            'fields': ('payroll_record', 'adjustment_type', 'title', 'amount')
+        }),
+        ('বিস্তারিত', {
+            'fields': ('description',)
+        }),
+        ('মেটাডেটা', {
+            'fields': ('created_by', 'created_at')
+        }),
+    )
+
+
+# ---------- PayrollPayment ----------
+@admin.register(PayrollPayment)
+class PayrollPaymentAdmin(ModelAdmin):
+    list_display = ['payroll_record', 'amount', 'payment_date', 'payment_method', 'status', 'reference_number']
+    list_filter = ['status', 'payment_method', 'payment_date']
+    search_fields = ['payroll_record__employee__name', 'reference_number', 'transaction_id']
+    readonly_fields = ['created_at', 'updated_at']
+
+    fieldsets = (
+        ('মূল তথ্য', {
+            'fields': ('payroll_record', 'amount', 'payment_date', 'payment_method')
+        }),
+        ('রেফারেন্স', {
+            'fields': ('reference_number', 'transaction_id')
+        }),
+        ('স্ট্যাটাস', {
+            'fields': ('status', 'notes')
+        }),
+        ('প্রসেসিং', {
+            'fields': ('processed_by', 'created_at', 'updated_at')
+        }),
+    )
+
+
+# ---------- PayrollTemplate ----------
+@admin.register(PayrollTemplate)
+class PayrollTemplateAdmin(ModelAdmin):
+    list_display = ['name', 'company', 'default_cycle_type', 'payment_day', 'is_active', 'created_at']
+    list_filter = ['is_active', 'default_cycle_type', 'company']
+    search_fields = ['name', 'company__name']
+
+    fieldsets = (
+        ('মূল তথ্য', {
+            'fields': ('company', 'name', 'description', 'is_active')
+        }),
+        ('ডিফল্ট সেটিংস', {
+            'fields': ('default_cycle_type', 'payment_day')
+        }),
+        ('স্বয়ংক্রিয় গণনা', {
+            'fields': ('auto_calculate_overtime', 'auto_calculate_deductions', 'auto_calculate_bonuses')
+        }),
+        ('বোনাস নিয়ম', {
+            'fields': ('perfect_attendance_bonus', 'minimum_attendance_for_bonus')
+        }),
+        ('কর্তন নিয়ম', {
+            'fields': ('per_day_absence_deduction_rate', 'late_arrival_penalty')
+        }),
+    )
+
+    actions = ['duplicate_template', 'activate_template', 'deactivate_template']
+
+    def duplicate_template(self, request, queryset):
+        count = 0
+        for template in queryset:
+            # make a shallow copy
+            original_pk = template.pk
+            template.pk = None
+            template.name = f"{template.name} (কপি)"
+            template.is_active = False
+            template.save()
+            count += 1
+        self.message_user(request, f'{count} টি টেমপ্লেট কপি করা হয়েছে।')
+    duplicate_template.short_description = 'টেমপ্লেট কপি করুন'
+
+    def activate_template(self, request, queryset):
+        updated = queryset.update(is_active=True)
+        self.message_user(request, f'{updated} টি টেমপ্লেট সক্রিয় করা হয়েছে।')
+    activate_template.short_description = 'সক্রিয় করুন'
+
+    def deactivate_template(self, request, queryset):
+        updated = queryset.update(is_active=False)
+        self.message_user(request, f'{updated} টি টেমপ্লেট নিষ্ক্রিয় করা হয়েছে।')
+    deactivate_template.short_description = 'নিষ্ক্রিয় করুন'

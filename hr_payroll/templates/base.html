@@ -523,8 +523,8 @@
                             </svg>
                         </div>
                         <div>
-                            <h1 class="text-sm font-semibold text-foreground">{% block company_name %}HRM System{% endblock %}</h1>
-                            <p class="text-xs text-muted-foreground">{% block company_type %}Enterprise{% endblock %}</p>
+                            <h1 class="text-sm font-semibold text-foreground">{% block company_name %}{% if company %}{{ company.name }}{% else %}কোম্পানির নাম{% endif %}{% endblock %}</h1>
+                            <!-- <p class="text-xs text-muted-foreground">{% block company_type %}Enterprise{% endblock %}</p> -->
                         </div>
                     </div>
                     <div class="flex items-center space-x-1">

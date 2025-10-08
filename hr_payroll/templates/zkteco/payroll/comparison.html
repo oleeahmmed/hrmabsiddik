@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}পেরোল তুলনা{% endblock %}
+{% block page_title %}পেরোল তুলনা ও বিশ্লেষণ{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-foreground">পেরোল তুলনা</h1>
+            <p class="text-muted-foreground">বিভিন্ন পেরোল সাইকেলের মধ্যে তুলনা করুন</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'zkteco:payroll_dashboard' %}" class="inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-accent">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                ড্যাশবোর্ড
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Form -->
+    <div class="rounded-lg border bg-card shadow-sm">
+        <div class="border-b px-6 py-4">
+            <h3 class="text-lg font-semibold text-foreground">সাইকেল নির্বাচন করুন</h3>
+        </div>
+        <div class="p-6">
+            <form method="get" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-foreground mb-2">তুলনার জন্য সাইকেল নির্বাচন করুন</label>
+                    <select name="cycles" multiple size="6" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                        {% for cycle in all_cycles %}
+                        <option value="{{ cycle.id }}" {% if cycle.id in selected_cycle_ids %}selected{% endif %}>
+                            {{ cycle.name }} ({{ cycle.start_date|date:"d M Y" }} - {{ cycle.end_date|date:"d M Y" }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <p class="text-xs text-muted-foreground mt-1">Ctrl/Cmd চেপে একাধিক সাইকেল নির্বাচন করুন (সর্বোচ্চ ৩টি)</p>
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                        তুলনা করুন
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if comparison_data %}
+    <!-- Comparison Results -->
+    <div class="space-y-6">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for data in comparison_data %}
+            <div class="rounded-lg border bg-card shadow-sm">
+                <div class="border-b px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50">
+                    <h3 class="text-lg font-semibold text-foreground">{{ data.cycle.name }}</h3>
+                    <p class="text-sm text-muted-foreground">
+                        {{ data.cycle.start_date|date:"d M Y" }} - {{ data.cycle.end_date|date:"d M Y" }}
+                    </p>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-muted-foreground">কর্মচারী</span>
+                            <p class="font-bold text-foreground">{{ data.total_employees }}</p>
+                        </div>
+                        <div>
+                            <span class="text-muted-foreground">পরিশোধিত</span>
+                            <p class="font-bold text-green-600">{{ data.paid_count }}</p>
+                        </div>
+                        <div>
+                            <span class="text-muted-foreground">মোট বেতন</span>
+                            <p class="font-bold text-foreground">৳{{ data.total_gross|floatformat:0 }}</p>
+                        </div>
+                        <div>
+                            <span class="text-muted-foreground">নেট বেতন</span>
+                            <p class="font-bold text-foreground">৳{{ data.total_net|floatformat:0 }}</p>
+                        </div>
+                        <div>
+                            <span class="text-muted-foreground">ওভারটাইম</span>
+                            <p class="font-bold text-blue-600">৳{{ data.total_overtime|floatformat:0 }}</p>
+                        </div>
+                        <div>
+                            <span class="text-muted-foreground">কর্তন</span>
+                            <p class="font-bold text-red-600">৳{{ data.total_deductions|floatformat:0 }}</p>
+                        </div>
+                    </div>
+                    <div class="border-t pt-3">
+                        <div class="text-center">
+                            <span class="text-sm text-muted-foreground">গড় বেতন</span>
+                            <p class="text-lg font-bold text-foreground">৳{{ data.avg_salary|floatformat:0 }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Comparison Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Total Salary Comparison -->
+            <div class="rounded-lg border bg-card shadow-sm">
+                <div class="border-b px-6 py-4">
+                    <h3 class="text-lg font-semibold text-foreground">মোট বেতন তুলনা</h3>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        {% for data in comparison_data %}
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-sm font-medium text-foreground">{{ data.cycle.name }}</span>
+                                <span class="text-sm font-bold text-foreground">৳{{ data.total_net|floatformat:0 }}</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3">
+                                <div class="bg-blue-600 h-3 rounded-full" 
+                                     style="width: {% widthratio data.total_net comparison_data.0.total_net 100 %}%">
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employee Count Comparison -->
+            <div class="rounded-lg border bg-card shadow-sm">
+                <div class="border-b px-6 py-4">
+                    <h3 class="text-lg font-semibold text-foreground">কর্মচারী সংখ্যা তুলনা</h3>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        {% for data in comparison_data %}
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-sm font-medium text-foreground">{{ data.cycle.name }}</span>
+                                <span class="text-sm font-bold text-foreground">{{ data.total_employees }} জন</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3">
+                                <div class="bg-green-600 h-3 rounded-full" 
+                                     style="width: {% widthratio data.total_employees comparison_data.0.total_employees 100 %}%">
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Comparison Table -->
+        <div class="rounded-lg border bg-card shadow-sm">
+            <div class="border-b px-6 py-4">
+                <h3 class="text-lg font-semibold text-foreground">বিস্তারিত তুলনা</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="border-b bg-muted/30">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">মেট্রিক</th>
+                            {% for data in comparison_data %}
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">{{ data.cycle.name }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-border">
+                        <tr>
+                            <td class="px-6 py-4 font-medium text-foreground">মোট কর্মচারী</td>
+                            {% for data in comparison_data %}
+                            <td class="px-6 py-4 text-foreground">{{ data.total_employees }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 font-medium text-foreground">পরিশোধিত কর্মচারী</td>
+                            {% for data in comparison_data %}
+                            <td class="px-6 py-4 text-green-600">{{ data.paid_count }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 font-medium text-foreground">মোট বেতন</td>
+                            {% for data in comparison_data %}
+                            <td class="px-6 py-4 text-foreground">৳{{ data.total_gross|floatformat:0 }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 font-medium text-foreground">নেট বেতন</td>
+                            {% for data in comparison_data %}
+                            <td class="px-6 py-4 text-foreground">৳{{ data.total_net|floatformat:0 }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 font-medium text-foreground">ওভারটাইম</td>
+                            {% for data in comparison_data %}
+                            <td class="px-6 py-4 text-blue-600">৳{{ data.total_overtime|floatformat:0 }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 font-medium text-foreground">কর্তন</td>
+                            {% for data in comparison_data %}
+                            <td class="px-6 py-4 text-red-600">৳{{ data.total_deductions|floatformat:0 }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 font-medium text-foreground">গড় বেতন</td>
+                            {% for data in comparison_data %}
+                            <td class="px-6 py-4 font-bold text-foreground">৳{{ data.avg_salary|floatformat:0 }}</td>
+                            {% endfor %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="rounded-lg border border-dashed border-border p-12 text-center">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-foreground">কোনো তুলনা ডেটা নেই</h3>
+        <p class="mt-1 text-sm text-muted-foreground">তুলনা করার জন্য কমপক্ষে একটি পেরোল সাইকেল নির্বাচন করুন।</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -3,6 +3,11 @@ from django.utils.translation import gettext_lazy as _
 from django.urls import reverse_lazy
 from django.utils.functional import lazy
 from django.conf import settings
+# Optional helper (উপরে রেখে দিন)
+from django.urls import reverse_lazy
+
+def admin_changelist(app_label, model_name):
+    return reverse_lazy(f"admin:{app_label}_{model_name}_changelist")
 
 static_lazy = lazy(static, str)
 
@@ -209,6 +214,46 @@ def get_navigation_for_user(request):
         },
     ],
 },
+
+# ---- Add this block inside the returned list from get_navigation_for_user ----
+{
+    "title": _("Payroll"),
+    "separator": True,
+    "collapsible": True,
+    "items": [
+        {
+            "title": _("Payroll Templates"),
+            "icon": "rule",
+            "link": admin_changelist("hr_payroll", "payrolltemplate"),
+            "permission": lambda request: request.user.has_perm("hr_payroll.view_payrolltemplate"),
+        },
+        {
+            "title": _("Payroll Cycles"),
+            "icon": "schedule",
+            "link": admin_changelist("hr_payroll", "payrollcycle"),
+            "permission": lambda request: request.user.has_perm("hr_payroll.view_payrollcycle"),
+        },
+        {
+            "title": _("Payroll Records"),
+            "icon": "receipt_long",
+            "link": admin_changelist("hr_payroll", "payrollrecord"),
+            "permission": lambda request: request.user.has_perm("hr_payroll.view_payrollrecord"),
+        },
+        {
+            "title": _("Adjustments"),
+            "icon": "tune",
+            "link": admin_changelist("hr_payroll", "payrolladjustment"),
+            "permission": lambda request: request.user.has_perm("hr_payroll.view_payrolladjustment"),
+        },
+        {
+            "title": _("Payments"),
+            "icon": "payments",
+            "link": admin_changelist("hr_payroll", "payrollpayment"),
+            "permission": lambda request: request.user.has_perm("hr_payroll.view_payrollpayment"),
+        },
+    ],
+}
+
     ]
 
 

@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ cycle.name }} - পেরোল বিস্তারিত{% endblock %}
+{% block page_title %}{{ cycle.name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-foreground">{{ cycle.name }}</h1>
+            <p class="text-muted-foreground">
+                {{ cycle.start_date|date:"d M Y" }} - {{ cycle.end_date|date:"d M Y" }} 
+                • {{ cycle.get_status_display }}
+            </p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'zkteco:payroll_cycle_list' %}" class="inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-accent">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                পিছনে
+            </a>
+            <a href="{% url 'zkteco:payroll_export_csv' cycle.id %}" class="inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-accent">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                CSV এক্সপোর্ট
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="relative overflow-hidden p-6 rounded-lg border border-border bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/20 dark:to-indigo-900/20">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-muted-foreground">মোট কর্মচারী</p>
+                    <p class="text-3xl font-bold text-foreground">{{ stats.total_records }}</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="relative overflow-hidden p-6 rounded-lg border border-border bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950/20 dark:to-emerald-900/20">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-muted-foreground">পরিশোধিত</p>
+                    <p class="text-3xl font-bold text-foreground">{{ stats.paid_records }}</p>
+                </div>
+                <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="relative overflow-hidden p-6 rounded-lg border border-border bg-gradient-to-br from-yellow-50 to-orange-100 dark:from-yellow-950/20 dark:to-orange-900/20">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-muted-foreground">বকেয়া</p>
+                    <p class="text-3xl font-bold text-foreground">{{ stats.pending_records }}</p>
+                </div>
+                <div class="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="relative overflow-hidden p-6 rounded-lg border border-border bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-950/20 dark:to-pink-900/20">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-muted-foreground">মোট নেট বেতন</p>
+                    <p class="text-2xl font-bold text-foreground">৳{{ stats.total_net|floatformat:0 }}</p>
+                </div>
+                <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cycle Information -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Records Table -->
+        <div class="lg:col-span-2 rounded-lg border bg-card shadow-sm">
+            <div class="border-b px-6 py-4">
+                <h3 class="text-lg font-semibold text-foreground">পেরোল রেকর্ডস</h3>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="border-b bg-muted/30">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">কর্মচারী</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">বিভাগ</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">উপস্থিতি</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">নেট বেতন</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">স্ট্যাটাস</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-foreground">কার্যক্রম</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-border">
+                        {% for record in records %}
+                        <tr class="hover:bg-muted/50 transition-colors">
+                            <td class="px-6 py-4">
+                                <div class="font-medium text-foreground">{{ record.employee.name }}</div>
+                                <div class="text-sm text-muted-foreground">{{ record.employee.employee_id }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-foreground">
+                                    {{ record.employee.department.name|default:"-" }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-foreground">
+                                    {{ record.present_days }}/{{ record.working_days }} দিন
+                                </div>
+                                <div class="text-xs text-muted-foreground">
+                                    {% widthratio record.present_days record.working_days 100 %}%
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-lg font-bold text-foreground">৳{{ record.net_salary|floatformat:0 }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if record.payment_status == 'paid' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
+                                    {% elif record.payment_status == 'processing' %}bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400
+                                    {% elif record.payment_status == 'hold' %}bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400
+                                    {% else %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400{% endif %}">
+                                    {{ record.get_payment_status_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <button onclick="openRecordModal({{ record.id }})" 
+                                        class="inline-flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700">
+                                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                    এডিট
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sidebar - Cycle Summary -->
+        <div class="space-y-6">
+            <!-- Cycle Info Card -->
+            <div class="rounded-lg border bg-card shadow-sm">
+                <div class="border-b px-6 py-4">
+                    <h3 class="text-lg font-semibold text-foreground">সাইকেল তথ্য</h3>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-muted-foreground">স্ট্যাটাস</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                            {% if cycle.status == 'paid' %}bg-green-100 text-green-800
+                            {% elif cycle.status == 'approved' %}bg-blue-100 text-blue-800
+                            {% elif cycle.status == 'generated' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ cycle.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-muted-foreground">শুরুর তারিখ</span>
+                        <span class="text-sm text-foreground">{{ cycle.start_date|date:"d M Y" }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-muted-foreground">শেষ তারিখ</span>
+                        <span class="text-sm text-foreground">{{ cycle.end_date|date:"d M Y" }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-muted-foreground">সাইকেল টাইপ</span>
+                        <span class="text-sm text-foreground">{{ cycle.get_cycle_type_display }}</span>
+                    </div>
+                    {% if cycle.payment_date %}
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-muted-foreground">পরিশোধের তারিখ</span>
+                        <span class="text-sm text-foreground">{{ cycle.payment_date|date:"d M Y" }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Financial Summary Card -->
+            <div class="rounded-lg border bg-card shadow-sm">
+                <div class="border-b px-6 py-4">
+                    <h3 class="text-lg font-semibold text-foreground">আর্থিক সারাংশ</h3>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-muted-foreground">মোট বেতন</span>
+                        <span class="text-sm font-bold text-foreground">৳{{ cycle.total_gross_salary|floatformat:0 }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-muted-foreground">মোট কর্তন</span>
+                        <span class="text-sm font-bold text-red-600">৳{{ cycle.total_deductions|floatformat:0 }}</span>
+                    </div>
+                    <div class="flex justify-between items-center border-t pt-3">
+                        <span class="text-sm font-medium text-foreground">নেট বেতন</span>
+                        <span class="text-lg font-bold text-green-600">৳{{ cycle.total_net_salary|floatformat:0 }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-muted-foreground">ওভারটাইম</span>
+                        <span class="text-sm font-bold text-blue-600">৳{{ cycle.total_overtime_amount|floatformat:0 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Record Edit Modal -->
+<div class="fixed inset-0 z-50 hidden items-center justify-center bg-background/80 backdrop-blur-sm" id="record-modal">
+    <div class="w-full max-w-2xl rounded-lg border bg-card shadow-lg">
+        <div class="border-b px-6 py-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-foreground">পেমেন্ট স্ট্যাটাস আপডেট</h2>
+                <button onclick="closeRecordModal()" class="p-2 rounded-lg hover:bg-accent transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <div class="p-6">
+            <form id="record-form">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-foreground mb-2">পেমেন্ট স্ট্যাটাস</label>
+                        <select name="payment_status" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="pending">বকেয়া</option>
+                            <option value="processing">প্রক্রিয়াধীন</option>
+                            <option value="paid">পরিশোধিত</option>
+                            <option value="hold">স্থগিত</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-foreground mb-2">পেমেন্ট তারিখ</label>
+                        <input type="date" name="payment_date" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-foreground mb-2">পেমেন্ট রেফারেন্স</label>
+                        <input type="text" name="payment_reference" placeholder="ট্রানজেকশন আইডি বা রেফারেন্স" 
+                               class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <div class="border-t px-6 py-4">
+            <div class="flex justify-end gap-3">
+                <button onclick="closeRecordModal()" class="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">
+                    বাতিল
+                </button>
+                <button onclick="updatePaymentStatus()" class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                    আপডেট করুন
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentRecordId = null;
+
+function openRecordModal(recordId) {
+    currentRecordId = recordId;
+    document.getElementById('record-modal').classList.remove('hidden');
+    document.getElementById('record-modal').classList.add('flex');
+}
+
+function closeRecordModal() {
+    document.getElementById('record-modal').classList.add('hidden');
+    document.getElementById('record-modal').classList.remove('flex');
+    currentRecordId = null;
+}
+
+async function updatePaymentStatus() {
+    const form = document.getElementById('record-form');
+    const formData = new FormData(form);
+    
+    const data = {
+        payment_status: formData.get('payment_status'),
+        payment_date: formData.get('payment_date'),
+        payment_reference: formData.get('payment_reference')
+    };
+
+    try {
+        const response = await fetch(`/payroll/records/${currentRecordId}/mark-paid/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('পেমেন্ট স্ট্যাটাস সফলভাবে আপডেট হয়েছে');
+            location.reload();
+        } else {
+            alert('ত্রুটি: ' + result.error);
+        }
+    } catch (error) {
+        alert('নেটওয়ার্ক এরর: ' + error.message);
+    }
+    
+    closeRecordModal();
+}
+
+// Close modal on Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeRecordModal();
+    }
+});
+</script>
+{% endblock %}

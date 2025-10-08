@@ -157,12 +157,12 @@ def daily_attendance_report(request):
 
     return render(request, 'zkteco/reports/daily_attendance.html', context)
 
-# ==================== Report 2: Monthly Attendance Summary Report ====================
 @login_required
 def monthly_attendance_summary(request):
     """
     Monthly Attendance Summary Report
     মাসিক অ্যাটেনডেন্স পার্সেন্টেজ, প্রেজেন্ট/অ্যাবসেন্ট/লিভ ডেজ, টোটাল ওয়ার্ক আওয়ারস
+    সব ডেটা Attendance রেকর্ড থেকে সরাসরি আসবে
     """
     company = get_company_from_request(request)
     if not company:
@@ -198,13 +198,13 @@ def monthly_attendance_summary(request):
     attendance_records = Attendance.objects.filter(
         employee__company=company,
         date__range=[start_date, end_date]
-    ).select_related('employee', 'employee__department')
+    ).select_related('employee', 'employee__department', 'shift')
     
     if department_id:
         attendance_records = attendance_records.filter(employee__department_id=department_id)
     
     # Get all active employees
-    all_employees = Employee.objects.filter(employees_filter)
+    all_employees = Employee.objects.filter(employees_filter).select_related('department', 'designation', 'default_shift')
     
     # Process data by employee
     report_data = []
@@ -213,44 +213,88 @@ def monthly_attendance_summary(request):
     for employee in all_employees:
         employee_attendance = attendance_records.filter(employee=employee)
         
-        # Count different statuses
+        # Count different statuses DIRECTLY from attendance records
         present_days = employee_attendance.filter(status='P').count()
         absent_days = employee_attendance.filter(status='A').count()
         leave_days = employee_attendance.filter(status='L').count()
         holiday_days = employee_attendance.filter(status='H').count()
+        weekly_off_days = employee_attendance.filter(status='W').count()
+        
+        # Half days count (if you track half day status)
+        half_days = employee_attendance.filter(status__icontains='Half').count()
         
         # Calculate working statistics
-        total_work_hours = sum([record.work_hours for record in employee_attendance])
+        total_work_hours = sum([record.work_hours for record in employee_attendance.filter(status='P')])
         total_overtime_hours = sum([float(record.overtime_hours) for record in employee_attendance if record.overtime_hours])
         
-        # Calculate attendance percentage
-        working_days = total_days - holiday_days
-        attendance_percentage = (present_days / max(working_days, 1)) * 100 if working_days > 0 else 0
+        # Calculate total working days (excluding weekends and holidays)
+        total_working_days = total_days - weekly_off_days - holiday_days
+        
+        # Calculate attendance percentage based on working days
+        if total_working_days > 0:
+            attendance_percentage = (present_days / total_working_days) * 100
+        else:
+            attendance_percentage = 0
+        
+        # Late arrivals and early departures calculation
+        late_arrivals = 0
+        early_departures = 0
+        
+        for record in employee_attendance.filter(status='P'):
+            if record.shift and record.check_in_time:
+                # Calculate late arrival
+                shift_start = timezone.datetime.combine(record.date, record.shift.start_time)
+                shift_start = timezone.make_aware(shift_start)
+                grace_minutes = record.shift.grace_time
+                late_minutes = (record.check_in_time - shift_start).total_seconds() / 60
+                if late_minutes > grace_minutes:
+                    late_arrivals += 1
+            
+            if record.shift and record.check_out_time:
+                # Calculate early departure
+                shift_end = timezone.datetime.combine(record.date, record.shift.end_time)
+                shift_end = timezone.make_aware(shift_end)
+                # Handle overnight shifts
+                if record.shift.end_time < record.shift.start_time:
+                    shift_end += timedelta(days=1)
+                early_minutes = (shift_end - record.check_out_time).total_seconds() / 60
+                if early_minutes > 0:
+                    early_departures += 1
         
         report_data.append({
             'employee_id': employee.employee_id,
             'employee_name': employee.name,
             'department': employee.department.name if employee.department else 'No Department',
             'total_days': total_days,
+            'working_days': total_working_days,
             'present_days': present_days,
             'absent_days': absent_days,
             'leave_days': leave_days,
             'holiday_days': holiday_days,
+            'weekly_off_days': weekly_off_days,
+            'half_days': half_days,
+            'late_arrivals': late_arrivals,
+            'early_departures': early_departures,
             'total_work_hours': round(total_work_hours, 2),
             'total_overtime_hours': round(total_overtime_hours, 2),
             'avg_daily_hours': round(total_work_hours / max(present_days, 1), 2),
             'attendance_percentage': round(attendance_percentage, 1),
         })
     
-    # Summary data
+    # Summary data - সব তথ্য attendance রেকর্ড থেকে
     summary = {
         'total_employees': len(report_data),
-        'date_range_days': total_days,
+        'total_days': total_days,
         'total_present_days': sum([emp['present_days'] for emp in report_data]),
         'total_absent_days': sum([emp['absent_days'] for emp in report_data]),
         'total_leave_days': sum([emp['leave_days'] for emp in report_data]),
-        'total_work_hours': sum([emp['total_work_hours'] for emp in report_data]),
-        'total_overtime_hours': sum([emp['total_overtime_hours'] for emp in report_data]),
+        'total_holiday_days': sum([emp['holiday_days'] for emp in report_data]),
+        'total_weekly_off_days': sum([emp['weekly_off_days'] for emp in report_data]),
+        'total_half_days': sum([emp['half_days'] for emp in report_data]),
+        'total_late_arrivals': sum([emp['late_arrivals'] for emp in report_data]),
+        'total_early_departures': sum([emp['early_departures'] for emp in report_data]),
+        'total_work_hours': round(sum([emp['total_work_hours'] for emp in report_data]), 2),
+        'total_overtime_hours': round(sum([emp['total_overtime_hours'] for emp in report_data]), 2),
         'avg_attendance_percentage': round(sum([emp['attendance_percentage'] for emp in report_data]) / max(len(report_data), 1), 1),
     }
     
@@ -269,8 +313,6 @@ def monthly_attendance_summary(request):
     }
     
     return render(request, 'zkteco/reports/monthly_summary.html', context)
-
-# ==================== Report 3: Overtime Hours and Payment Report ====================
 @login_required
 def overtime_payment_report(request):
     """
