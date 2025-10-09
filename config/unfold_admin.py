@@ -52,19 +52,32 @@ def get_navigation_for_user(request):
                 },
             ],
         },
+{
+    "title": _("Core Management"),
+    "separator": True,
+    "collapsible": True,
+    "items": [
         {
-            "title": _("Core Management"),
-            "separator": True,
-            "collapsible": True,
-            "items": [
-                {
-                    "title": _("Companies"),
-                    "icon": "business",
-                    "link": "/admin/core/company/",
-                    "permission": lambda request: request.user.is_superuser,
-                },
-            ],
+            "title": _("Companies"),
+            "icon": "business",
+            "link": admin_changelist("core", "company"),
+            "permission": lambda request: request.user.has_perm("core.view_company"),
         },
+        {
+            "title": _("Projects"),
+            "icon": "folder_special",
+            "link": admin_changelist("core", "project"),
+            "permission": lambda request: request.user.has_perm("core.view_project"),
+        },
+        {
+            "title": _("Tasks"),
+            "icon": "task",
+            "link": admin_changelist("core", "task"),
+            "permission": lambda request: request.user.has_perm("core.view_task"),
+        },
+    ],
+},
+
         {
             "title": _("HR & Payroll"),
             "separator": True,
@@ -258,8 +271,8 @@ def get_navigation_for_user(request):
 
 
 UNFOLD = {
-    "SITE_TITLE": "Kreatech ERP",
-    "SITE_HEADER": "Kreatech ERP",
+    "SITE_TITLE": "Ezydream Hrm",
+    "SITE_HEADER": "Ezydream Hrm",
     "SITE_LOGO": static_lazy("images/logo/logo.svg"),
     "SITE_URL": "/",
     "SHOW_HISTORY": True,

@@ -127,40 +127,86 @@ class ShiftAdmin(CustomModelAdmin):
 class EmployeeAdmin(CustomModelAdmin):
     list_display = (
         'employee_id', 'name', 'company', 'department', 
-        'designation', 'basic_salary', 'is_active', 'created_at'
+        'designation', 'base_salary', 'is_active', 'created_at'
     )
     list_filter = ('company', 'department', 'designation', 'is_active', 'created_at')
     search_fields = (
         'employee_id', 'name', 'first_name', 'last_name', 
-        'zkteco_id', 'department__name', 'designation__name'
+        'zkteco_id', 'department__name', 'designation__name',
+        'contact_number', 'nid'
     )
     ordering = ('company', 'employee_id')
-    list_select_related = ('company', 'department', 'designation')
-    inlines = [LeaveBalanceInline, LeaveApplicationInline, RosterAssignmentInline]
+    list_select_related = ('company', 'department', 'designation', 'default_shift')
     
     fieldsets = (
-        (None, {
-            'fields': ('company', 'employee_id', 'zkteco_id')
-        }),
-        (_("Personal Information"), {
-            'fields': ('user','name', 'first_name', 'last_name')
-        }),
-        (_("Employment Details"), {
-            'fields': ('department', 'designation', 'default_shift', 'is_active')
-        }),
-        (_("Salary & Hours"), {
+        (_("🏢 Organization"), {
             'fields': (
-                'basic_salary', 'overtime_rate', 
-                'expected_working_hours', 'overtime_grace_minutes'
-            )
+                'company',
+                'department',
+                'designation',
+                'default_shift',
+                'employee_id',
+                'zkteco_id',
+                'joining_date',
+                'is_active',
+            ),
+            'classes': ('tab', 'col2'),
+        }),
+        (_("👤 Personal Info"), {
+            'fields': (
+                'user',
+                'name',
+                'first_name', 
+                'last_name',
+                'contact_number',
+                'date_of_birth',
+                'marital_status',
+                'nid',
+            ),
+            'classes': ('tab', 'col2'),
+        }),
+        (_("💰 Salary Structure"), {
+            'fields': (
+                'base_salary',
+                'per_hour_rate',
+                'expected_working_hours',
+                'overtime_rate',
+                'overtime_grace_minutes',
+            ),
+            'classes': ('tab', 'col2'),
+        }),
+        (_("💵 Allowances"), {
+            'fields': (
+                'house_rent_allowance',
+                'medical_allowance',
+                'conveyance_allowance',
+                'food_allowance',
+                'attendance_bonus',
+                'festival_bonus',
+            ),
+            'classes': ('tab', 'col2'),
+        }),
+        (_("📉 Deductions"), {
+            'fields': (
+                'provident_fund',
+                'tax_deduction',
+                'loan_deduction',
+            ),
+            'classes': ('tab', 'col2'),
+        }),
+        (_("🏦 Banking"), {
+            'fields': (
+                'bank_account_no',
+                'payment_method',
+            ),
+            'classes': ('tab', 'col2'),
         }),
     )
     
     def get_queryset(self, request):
         return super().get_queryset(request).select_related(
-            'company', 'department', 'designation', 'default_shift'
-    )
-
+            'company', 'department', 'designation', 'default_shift', 'user'
+        )
 
 @admin.register(EmployeeSeparation)
 class EmployeeSeparationAdmin(CustomModelAdmin):
@@ -654,7 +700,7 @@ class ZkDeviceAdmin(ModelAdmin):
                         first_name=user_data['name'].split()[0] if user_data['name'] else '',
                         last_name=' '.join(user_data['name'].split()[1:]) if len(user_data['name'].split()) > 1 else '',
                         is_active=True,
-                        basic_salary=0.00,
+                        base_salary=0.00,
                         overtime_rate=0.00,
                         per_hour_rate=30.00,
                         expected_working_hours=8.0,

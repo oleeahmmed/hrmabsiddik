@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Project - {{ project.name }}{% endblock %}
+{% block page_title %}Delete Project{% endblock %}
+{% block page_subtitle %}Confirm deletion of this project{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+    <!-- Warning Card -->
+    <div class="card overflow-hidden border border-border/50">
+        <!-- Card Header -->
+        <div class="p-4 border-b border-border/30 bg-gradient-to-r from-destructive/5 to-destructive/3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-lg font-semibold text-foreground">Delete Project</h2>
+                    <p class="text-sm text-muted-foreground mt-1">This action cannot be undone</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="p-6">
+            <div class="space-y-4">
+                <p class="text-foreground">
+                    You are about to delete the project <strong>"{{ project.name }}"</strong>. This action will permanently remove all project data from the system.
+                </p>
+                
+                <!-- Project Details -->
+                <div class="bg-muted/10 border border-border/30 rounded-lg p-4">
+                    <h3 class="font-semibold text-foreground mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                        Project Details
+                    </h3>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-muted-foreground">Name:</span>
+                            <p class="font-medium text-foreground">{{ project.name }}</p>
+                        </div>
+                        <div>
+                            <span class="text-muted-foreground">Company:</span>
+                            <p class="font-medium text-foreground">{{ project.company.name }}</p>
+                        </div>
+                        <div>
+                            <span class="text-muted-foreground">Status:</span>
+                            <p class="font-medium text-foreground">
+                                {% if project.is_active %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                    Active
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                    Inactive
+                                </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div>
+                            <span class="text-muted-foreground">Tasks:</span>
+                            <p class="font-medium text-foreground">{{ task_count }} tasks</p>
+                        </div>
+                        {% if project.start_date %}
+                        <div>
+                            <span class="text-muted-foreground">Start Date:</span>
+                            <p class="font-medium text-foreground">{{ project.start_date|date:"M d, Y" }}</p>
+                        </div>
+                        {% endif %}
+                        {% if project.end_date %}
+                        <div>
+                            <span class="text-muted-foreground">End Date:</span>
+                            <p class="font-medium text-foreground">{{ project.end_date|date:"M d, Y" }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Impact Warning -->
+                <div class="bg-warning/10 border border-warning/20 rounded-lg p-4">
+                    <h4 class="font-semibold text-foreground mb-2 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                        </svg>
+                        Important Considerations
+                    </h4>
+                    <ul class="space-y-1 text-sm text-foreground">
+                        <li class="flex items-start gap-2">
+                            <svg class="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            <span>This project and all its data will be permanently removed</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            <span><strong>{{ task_count }} tasks</strong> associated with this project will also be deleted</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            <span>All time tracking data for these tasks will be lost</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            <span>This action cannot be undone</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Footer -->
+        <div class="p-4 border-t border-border/30 bg-gradient-to-r from-muted/10 to-muted/5">
+            <form method="post">
+                {% csrf_token %}
+                <div class="flex items-center justify-between">
+                    <a href="{% if project %}{% url 'core:project_detail' project.pk %}{% else %}{% url 'core:project_list' %}{% endif %}" 
+                       class="btn btn-outline">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-destructive">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        Delete Project Permanently
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Match the same styling as task form */
+    .card {
+        background: hsl(var(--card));
+        border-radius: var(--radius);
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius);
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s;
+        cursor: pointer;
+        border: 1px solid transparent;
+    }
+
+    .btn-outline {
+        background: transparent;
+        border-color: hsl(var(--border));
+        color: hsl(var(--foreground));
+    }
+
+    .btn-outline:hover {
+        background: hsl(var(--accent));
+        border-color: hsl(var(--border));
+    }
+
+    .btn-destructive {
+        background: hsl(var(--destructive));
+        color: hsl(var(--destructive-foreground));
+        border-color: hsl(var(--destructive));
+    }
+
+    .btn-destructive:hover {
+        background: hsl(var(--destructive) / 0.9);
+        border-color: hsl(var(--destructive));
+    }
+
+    /* Very Light Gradient Backgrounds */
+    .bg-gradient-to-r.from-destructive\/5.to-destructive\/3 {
+        background: linear-gradient(135deg, hsl(var(--destructive) / 0.05) 0%, hsl(var(--destructive) / 0.03) 100%);
+    }
+
+    .bg-gradient-to-r.from-muted\/10.to-muted\/5 {
+        background: linear-gradient(135deg, hsl(var(--muted) / 0.1) 0%, hsl(var(--muted) / 0.05) 100%);
+    }
+
+    /* Dark mode adjustments */
+    .dark .bg-gradient-to-r.from-destructive\/5.to-destructive\/3 {
+        background: linear-gradient(135deg, hsl(var(--destructive) / 0.08) 0%, hsl(var(--destructive) / 0.04) 100%);
+    }
+
+    .dark .bg-gradient-to-r.from-muted\/10.to-muted\/5 {
+        background: linear-gradient(135deg, hsl(var(--muted) / 0.15) 0%, hsl(var(--muted) / 0.08) 100%);
+    }
+
+    .dark .card {
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+    }
+</style>
+{% endblock %}

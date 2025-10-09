@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ project.name }} - Project Details{% endblock %}
+
+{% block page_title %}Project Details{% endblock %}
+
+{% block page_subtitle %}View complete project information{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+    <!-- Action Buttons -->
+    <div class="flex items-center justify-between">
+        <a href="{% url 'core:project_list' %}" class="btn btn-outline">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Back to List
+        </a>
+        <div class="flex gap-3">
+            <a href="{% url 'core:project_update' project.pk %}" class="btn btn-primary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                Edit Project
+            </a>
+            <a href="{% url 'core:project_delete' project.pk %}" class="btn btn-outline btn-destructive">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                Delete
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Card -->
+    <div class="card-lg overflow-hidden">
+        <!-- Header -->
+        <div class="p-6 border-b border-border/30 bg-gradient-to-r from-primary/5 to-primary/3">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <h1 class="text-2xl font-bold text-foreground mb-2">{{ project.name }}</h1>
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <span class="badge {% if project.is_active %}badge-success{% else %}badge-warning{% endif %}">
+                            {% if project.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                        <span class="text-sm text-muted-foreground">
+                            Created {{ project.created_at|timesince }} ago
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Project Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="card p-4 text-center">
+                            <div class="text-2xl font-bold text-foreground">{{ task_count }}</div>
+                            <div class="text-sm text-muted-foreground mt-1">Total Tasks</div>
+                        </div>
+                        <div class="card p-4 text-center">
+                            <div class="text-2xl font-bold text-foreground">{{ completed_tasks }}</div>
+                            <div class="text-sm text-muted-foreground mt-1">Completed</div>
+                        </div>
+                        <div class="card p-4 text-center">
+                            <div class="text-2xl font-bold text-foreground">{{ total_hours }}</div>
+                            <div class="text-sm text-muted-foreground mt-1">Total Hours</div>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    {% if project.description %}
+                    <div>
+                        <label class="block text-sm font-medium text-muted-foreground mb-3">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Description
+                        </label>
+                        <div class="bg-muted/30 rounded-lg p-4 border border-border">
+                            <p class="text-foreground whitespace-pre-wrap">{{ project.description }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Recent Tasks -->
+                    {% if recent_tasks %}
+                    <div>
+                        <label class="block text-sm font-medium text-muted-foreground mb-3">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                            Recent Tasks
+                        </label>
+                        <div class="space-y-2">
+                            {% for task in recent_tasks %}
+                            <div class="bg-muted/30 rounded-lg p-3 border border-border flex items-center justify-between">
+                                <div>
+                                    <p class="font-medium text-foreground text-sm">{{ task.title }}</p>
+                                    <p class="text-xs text-muted-foreground">{{ task.employee.name }} • {{ task.date|date:"M d, Y" }}</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-mono">{{ task.hours_spent }}h</span>
+                                    {% if task.status == 'done' %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                        Done
+                                    </span>
+                                    {% elif task.status == 'in_progress' %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        In Progress
+                                    </span>
+                                    {% else %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                        To Do
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Right Column -->
+                <div class="space-y-6">
+                    <!-- Company Info -->
+                    <div>
+                        <label class="block text-sm font-medium text-muted-foreground mb-2">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                            Company
+                        </label>
+                        <div class="bg-muted/30 rounded-lg p-4 border border-border">
+                            <p class="font-semibold text-foreground">{{ project.company.name }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Owner Info -->
+                    {% if project.owner %}
+                    <div>
+                        <label class="block text-sm font-medium text-muted-foreground mb-2">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Project Owner
+                        </label>
+                        <div class="bg-muted/30 rounded-lg p-4 border border-border">
+                            <p class="font-semibold text-foreground">{{ project.owner.get_full_name|default:project.owner.username }}</p>
+                            <p class="text-sm text-muted-foreground mt-1">{{ project.owner.email }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Date Info -->
+                    <div>
+                        <label class="block text-sm font-medium text-muted-foreground mb-2">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            Project Timeline
+                        </label>
+                        <div class="bg-muted/30 rounded-lg p-4 border border-border space-y-2">
+                            {% if project.start_date %}
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-muted-foreground">Start:</span>
+                                <span class="font-medium">{{ project.start_date|date:"M d, Y" }}</span>
+                            </div>
+                            {% endif %}
+                            {% if project.end_date %}
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-muted-foreground">End:</span>
+                                <span class="font-medium">{{ project.end_date|date:"M d, Y" }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Timestamps -->
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-muted-foreground">Created:</span>
+                            <span class="font-medium">{{ project.created_at|date:"M d, Y H:i" }}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-muted-foreground">Last Updated:</span>
+                            <span class="font-medium">{{ project.updated_at|date:"M d, Y H:i" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-destructive {
+        color: hsl(var(--destructive));
+        border-color: hsl(var(--destructive));
+    }
+
+    .btn-destructive:hover {
+        background-color: hsl(var(--destructive-light));
+        border-color: hsl(var(--destructive));
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        showDjangoMessages();
+    });
+</script>
+{% endblock %}

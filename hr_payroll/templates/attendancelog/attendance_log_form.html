@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if object %}Edit Attendance Log - {{ object.employee.name }}{% else %}Create New Attendance Log{% endif %}
+{% endblock %}
+
+{% block page_title %}
+    {% if object %}Edit Attendance Log{% else %}Create New Attendance Log{% endif %}
+{% endblock %}
+
+{% block page_subtitle %}
+    {% if object %}Update attendance log details{% else %}Add a new attendance log to the system{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Main Form Card -->
+    <div class="card overflow-hidden border border-border/50">
+        <!-- Card Header with Very Light Gradient -->
+        <div class="p-4 border-b border-border/30 bg-gradient-to-r from-primary/5 to-primary/3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <h2 class="text-lg font-semibold text-foreground">Attendance Log Information</h2>
+                </div>
+                <a href="{% url 'zkteco:attendance_log_list' %}" class="btn btn-outline btn-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Back to List
+                </a>
+            </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="p-6">
+            <form method="post" id="attendance-log-form" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Display non-field errors -->
+                {% if form.non_field_errors %}
+                <div class="bg-destructive-light border border-destructive/20 rounded-lg p-4">
+                    <div class="flex items-start space-x-2">
+                        <svg class="w-5 h-5 text-destructive mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            {% for error in form.non_field_errors %}
+                            <p class="text-sm text-destructive">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Left Column -->
+                    <div class="space-y-6">
+                        <!-- Employee Selection -->
+                        <div class="form-group">
+                            <label for="{{ form.employee.id_for_label }}" class="form-label">
+                                Employee *
+                            </label>
+                            {{ form.employee }}
+                            {% if form.employee.errors %}
+                            <div class="text-destructive text-sm mt-1">
+                                {% for error in form.employee.errors %}
+                                <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Device Selection -->
+                        <div class="form-group">
+                            <label for="{{ form.device.id_for_label }}" class="form-label">
+                                Device
+                            </label>
+                            {{ form.device }}
+                            {% if form.device.errors %}
+                            <div class="text-destructive text-sm mt-1">
+                                {% for error in form.device.errors %}
+                                <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <p class="text-xs text-muted-foreground mt-1">Leave empty for manual entries</p>
+                        </div>
+                        
+                        <!-- Timestamp -->
+                        <div class="form-group">
+                            <label for="{{ form.timestamp.id_for_label }}" class="form-label">
+                                Timestamp *
+                            </label>
+                            {{ form.timestamp }}
+                            {% if form.timestamp.errors %}
+                            <div class="text-destructive text-sm mt-1">
+                                {% for error in form.timestamp.errors %}
+                                <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column -->
+                    <div class="space-y-6">
+                        <!-- Source Type -->
+                        <div class="form-group">
+                            <label for="{{ form.source_type.id_for_label }}" class="form-label">
+                                Source Type *
+                            </label>
+                            {{ form.source_type }}
+                            {% if form.source_type.errors %}
+                            <div class="text-destructive text-sm mt-1">
+                                {% for error in form.source_type.errors %}
+                                <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Attendance Type -->
+                        <div class="form-group">
+                            <label for="{{ form.attendance_type.id_for_label }}" class="form-label">
+                                Attendance Type *
+                            </label>
+                            {{ form.attendance_type }}
+                            {% if form.attendance_type.errors %}
+                            <div class="text-destructive text-sm mt-1">
+                                {% for error in form.attendance_type.errors %}
+                                <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Location -->
+                        <div class="form-group">
+                            <label for="{{ form.location.id_for_label }}" class="form-label">
+                                Location
+                            </label>
+                            {{ form.location }}
+                            {% if form.location.errors %}
+                            <div class="text-destructive text-sm mt-1">
+                                {% for error in form.location.errors %}
+                                <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- GPS Coordinates Section -->
+                <div class="border-t border-border/30 pt-6">
+                    <h3 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        GPS Coordinates
+                    </h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="form-group">
+                            <label for="{{ form.latitude.id_for_label }}" class="form-label">
+                                Latitude
+                            </label>
+                            {{ form.latitude }}
+                            {% if form.latitude.errors %}
+                            <div class="text-destructive text-sm mt-1">
+                                {% for error in form.latitude.errors %}
+                                <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.longitude.id_for_label }}" class="form-label">
+                                Longitude
+                            </label>
+                            {{ form.longitude }}
+                            {% if form.longitude.errors %}
+                            <div class="text-destructive text-sm mt-1">
+                                {% for error in form.longitude.errors %}
+                                <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Form Actions -->
+                <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border/30">
+                    <button type="submit" class="btn btn-primary flex-1">
+                        {% if object %}
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Update Attendance Log
+                        {% else %}
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        Create Attendance Log
+                        {% endif %}
+                    </button>
+                    <a href="{% url 'zkteco:attendance_log_list' %}" class="btn btn-outline">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-group {
+    @apply space-y-2;
+}
+
+.form-label {
+    @apply block text-sm font-medium text-foreground;
+}
+
+.input {
+    @apply w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors;
+}
+
+.input:focus {
+    @apply ring-2 ring-primary/20 border-primary;
+}
+
+.card {
+    @apply bg-card rounded-xl shadow-sm;
+}
+
+.btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary/20 shadow-sm;
+}
+
+.btn-outline {
+    @apply border border-border bg-transparent text-foreground hover:bg-accent hover:text-accent-foreground focus:ring-primary/20;
+}
+
+.btn-sm {
+    @apply px-3 py-1.5 text-sm;
+}
+
+.btn-ghost {
+    @apply bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground;
+}
+</style>
+{% endblock %}

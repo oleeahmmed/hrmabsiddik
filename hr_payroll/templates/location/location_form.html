@@ -5,30 +5,12 @@
 {% block page_title %}{% if object %}Edit Location{% else %}Add Location{% endif %}{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
-    <!-- Header Section -->
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-3xl font-bold tracking-tight text-foreground">
-                {% if object %}Edit Location{% else %}Add New Location{% endif %}
-            </h1>
-            <p class="text-muted-foreground">
-                {% if object %}Update location details and geographical boundaries{% else %}Create a new attendance location with geographical boundaries{% endif %}
-            </p>
-        </div>
-        <div class="flex items-center gap-3">
-            <a href="{% url 'zkteco:location_list' %}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                </svg>
-                Back to List
-            </a>
-        </div>
-    </div>
+<div class="max-w-6xl mx-auto space-y-6">
 
     <!-- Form Card -->
-    <div class="rounded-lg border bg-card shadow-sm">
-        <div class="border-b bg-muted/50 px-6 py-4">
+    <div class="card overflow-hidden border border-border/50">
+        <!-- Card Header with Light Gradient -->
+        <div class="flex items-center justify-between p-4 border-b border-border/30 bg-gradient-to-r from-primary/5 to-primary/3">
             <div class="flex items-center gap-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -41,6 +23,15 @@
                     <p class="text-sm text-muted-foreground">Configure location details and geographical settings</p>
                 </div>
             </div>
+
+                    <div class="flex items-center gap-3">
+            <a href="{% url 'zkteco:location_list' %}" class="btn btn-outline">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Back to List
+            </a>
+        </div>
         </div>
 
         <form method="post" class="p-6 space-y-6" id="location-form">
@@ -49,29 +40,30 @@
             <!-- Basic Information -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Location Name -->
-                <div class="space-y-2">
-                    <label for="{{ form.name.id_for_label }}" class="text-sm font-medium text-foreground flex items-center gap-2">
-                        <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="form-group">
+                    <label for="{{ form.name.id_for_label }}" class="form-label required">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
                         </svg>
-                        Location Name *
+                        Location Name
                     </label>
                     {{ form.name }}
                     {% if form.name.errors %}
-                        <div class="text-sm text-destructive">{{ form.name.errors.0 }}</div>
+                        <p class="form-error">{{ form.name.errors.0 }}</p>
+                    {% else %}
+                        <p class="form-help">Enter a descriptive name for this location</p>
                     {% endif %}
-                    <p class="text-xs text-muted-foreground">Enter a descriptive name for this location</p>
                 </div>
 
                 <!-- Status -->
-                <div class="space-y-2">
-                    <label for="{{ form.is_active.id_for_label }}" class="text-sm font-medium text-foreground flex items-center gap-2">
-                        <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="form-group">
+                    <label for="{{ form.is_active.id_for_label }}" class="form-label">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         Status
                     </label>
-                    <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-3 mt-2">
                         <label class="switch">
                             {{ form.is_active }}
                             <span class="switch-slider"></span>
@@ -79,24 +71,25 @@
                         <span class="text-sm text-muted-foreground">Enable this location for attendance tracking</span>
                     </div>
                     {% if form.is_active.errors %}
-                        <div class="text-sm text-destructive">{{ form.is_active.errors.0 }}</div>
+                        <p class="form-error">{{ form.is_active.errors.0 }}</p>
                     {% endif %}
                 </div>
             </div>
 
             <!-- Address -->
-            <div class="space-y-2">
-                <label for="{{ form.address.id_for_label }}" class="text-sm font-medium text-foreground flex items-center gap-2">
-                    <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="form-group">
+                <label for="{{ form.address.id_for_label }}" class="form-label">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                     </svg>
                     Address
                 </label>
                 {{ form.address }}
                 {% if form.address.errors %}
-                    <div class="text-sm text-destructive">{{ form.address.errors.0 }}</div>
+                    <p class="form-error">{{ form.address.errors.0 }}</p>
+                {% else %}
+                    <p class="form-help">Full address of the location (optional but recommended)</p>
                 {% endif %}
-                <p class="text-xs text-muted-foreground">Full address of the location (optional but recommended)</p>
             </div>
 
             <!-- Map Section -->
@@ -108,8 +101,8 @@
                         </svg>
                         <h3 class="text-lg font-semibold text-foreground">Location Map</h3>
                     </div>
-                    <button type="button" onclick="getCurrentLocation()" class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow hover:bg-blue-700">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button type="button" onclick="getCurrentLocation()" class="btn btn-primary btn-sm">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
@@ -118,7 +111,7 @@
                 </div>
                 
                 <!-- Map Container -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+                <div class="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
                     <div id="map" class="w-full h-96"></div>
                 </div>
                 
@@ -137,55 +130,60 @@
             <div class="space-y-4">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <!-- Latitude -->
-                    <div class="space-y-2">
-                        <label for="{{ form.latitude.id_for_label }}" class="text-sm font-medium text-foreground">
-                            Latitude *
+                    <div class="form-group">
+                        <label for="{{ form.latitude.id_for_label }}" class="form-label required">
+                            Latitude
                         </label>
                         {{ form.latitude }}
                         {% if form.latitude.errors %}
-                            <div class="text-sm text-destructive">{{ form.latitude.errors.0 }}</div>
+                            <p class="form-error">{{ form.latitude.errors.0 }}</p>
+                        {% else %}
+                            <p class="form-help">Decimal degrees (-90 to 90)</p>
                         {% endif %}
-                        <p class="text-xs text-muted-foreground">Decimal degrees (-90 to 90)</p>
                     </div>
 
                     <!-- Longitude -->
-                    <div class="space-y-2">
-                        <label for="{{ form.longitude.id_for_label }}" class="text-sm font-medium text-foreground">
-                            Longitude *
+                    <div class="form-group">
+                        <label for="{{ form.longitude.id_for_label }}" class="form-label required">
+                            Longitude
                         </label>
                         {{ form.longitude }}
                         {% if form.longitude.errors %}
-                            <div class="text-sm text-destructive">{{ form.longitude.errors.0 }}</div>
+                            <p class="form-error">{{ form.longitude.errors.0 }}</p>
+                        {% else %}
+                            <p class="form-help">Decimal degrees (-180 to 180)</p>
                         {% endif %}
-                        <p class="text-xs text-muted-foreground">Decimal degrees (-180 to 180)</p>
                     </div>
 
                     <!-- Radius -->
-                    <div class="space-y-2">
-                        <label for="{{ form.radius.id_for_label }}" class="text-sm font-medium text-foreground">
-                            Radius (meters) *
+                    <div class="form-group">
+                        <label for="{{ form.radius.id_for_label }}" class="form-label required">
+                            Radius (meters)
                         </label>
                         {{ form.radius }}
                         {% if form.radius.errors %}
-                            <div class="text-sm text-destructive">{{ form.radius.errors.0 }}</div>
+                            <p class="form-error">{{ form.radius.errors.0 }}</p>
+                        {% else %}
+                            <p class="form-help">Attendance allowed within this radius</p>
                         {% endif %}
-                        <p class="text-xs text-muted-foreground">Attendance allowed within this radius</p>
                     </div>
                 </div>
 
                 <!-- Coordinate Helper Tools -->
                 <div class="flex flex-wrap gap-3">
-                    <button type="button" onclick="validateCoordinates()" class="inline-flex items-center gap-2 rounded-md bg-purple-600 px-3 py-2 text-sm font-medium text-white shadow hover:bg-purple-700">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button type="button" onclick="validateCoordinates()" class="btn btn-outline btn-sm">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         Validate Coordinates
                     </button>
                 </div>
             </div>
+        </form>
 
-            <!-- Form Actions -->
-            <div class="flex items-center justify-between pt-6 border-t border-border">
+        <!-- Card Footer with Light Gradient -->
+        <div class="p-4 border-t border-border/30 bg-gradient-to-r from-primary/5 to-primary/3">
+            <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2 text-sm text-muted-foreground">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -193,24 +191,186 @@
                     <span>* Required fields</span>
                 </div>
                 <div class="flex items-center gap-3">
-                    <a href="{% url 'zkteco:location_list' %}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                    <a href="{% url 'zkteco:location_list' %}" class="btn btn-outline">
                         Cancel
                     </a>
-                    <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                    <button type="submit" form="location-form" class="btn btn-primary">
+                        {% if object %}
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                         </svg>
-                        {% if object %}Update Location{% else %}Create Location{% endif %}
+                        Update Location
+                        {% else %}
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Create Location
+                        {% endif %}
                     </button>
                 </div>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 
 <!-- Leaflet CSS and JS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+    .form-group {
+        margin-bottom: 0;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: hsl(var(--foreground));
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-label.required::after {
+        content: ' *';
+        color: hsl(var(--destructive));
+    }
+    
+    .form-help {
+        font-size: 0.75rem;
+        color: hsl(var(--muted-foreground));
+        margin-top: 0.25rem;
+    }
+
+    .form-error {
+        font-size: 0.75rem;
+        color: hsl(var(--destructive));
+        margin-top: 0.25rem;
+        font-weight: 500;
+    }
+
+    /* Input Field Styles */
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background-color: hsl(var(--background));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        color: hsl(var(--foreground));
+        font-size: 0.875rem;
+        line-height: 1.5;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        font-family: inherit;
+    }
+
+    /* Error state for inputs */
+    .form-group:has(.form-error) input,
+    .form-group:has(.form-error) select,
+    .form-group:has(.form-error) textarea {
+        border-color: hsl(var(--destructive));
+    }
+
+    .form-group:has(.form-error) input:focus,
+    .form-group:has(.form-error) select:focus,
+    .form-group:has(.form-error) textarea:focus {
+        box-shadow: 0 0 0 3px hsl(var(--destructive) / 0.1);
+    }
+
+    /* Focus States */
+    input:focus,
+    select:focus,
+    textarea:focus {
+        outline: none;
+        border-color: hsl(var(--primary));
+        box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    /* Select Dropdown */
+    select {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='hsl(var(--muted-foreground))' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.75rem center;
+        background-repeat: no-repeat;
+        background-size: 1.25rem 1.25rem;
+        padding-right: 2.5rem;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+
+    /* Switch Styles */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .switch-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: hsl(var(--muted));
+        transition: .4s;
+        border-radius: 24px;
+    }
+
+    .switch-slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    input:checked + .switch-slider {
+        background-color: hsl(var(--primary));
+    }
+
+    input:checked + .switch-slider:before {
+        transform: translateX(20px);
+    }
+
+
+
+
+   
+
+    .location-marker {
+        background: none;
+        border: none;
+    }
+
+    .leaflet-popup-content-wrapper {
+        border-radius: 8px;
+    }
+
+    @media (max-width: 640px) {
+        #map {
+            height: 250px;
+        }
+    }
+</style>
 
 <script>
 let map = null;
@@ -433,21 +593,4 @@ function showToast(message, type = 'success', duration = 3000) {
     }, duration);
 }
 </script>
-
-<style>
-.location-marker {
-    background: none;
-    border: none;
-}
-
-.leaflet-popup-content-wrapper {
-    border-radius: 8px;
-}
-
-@media (max-width: 640px) {
-    #map {
-        height: 250px;
-    }
-}
-</style>
 {% endblock %}

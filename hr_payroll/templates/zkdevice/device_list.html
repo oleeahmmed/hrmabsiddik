@@ -1,0 +1,1226 @@
+{% extends 'base.html' %}
+
+{% block title %}Devices - {{ block.super }}{% endblock %}
+{% block page_title %}Device Management{% endblock %}
+{% block page_subtitle %}Manage and track all ZKTeco devices{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header with Actions and Stats -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-foreground">Devices</h1>
+            <p class="text-muted-foreground mt-1">Manage ZKTeco devices and sync attendance data</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'zkteco:device_add' %}" class="btn btn-primary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Add Device
+            </a>
+        </div>
+    </div>
+
+    <!-- Device Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="card p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-muted-foreground">Total Devices</p>
+                    <p class="text-2xl font-bold text-foreground mt-1">{{ total_devices }}</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-muted-foreground">Active</p>
+                    <p class="text-2xl font-bold text-foreground mt-1">{{ active_devices }}</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-muted-foreground">Inactive</p>
+                    <p class="text-2xl font-bold text-foreground mt-1">{{ inactive_devices }}</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-muted-foreground">Records</p>
+                    <p class="text-2xl font-bold text-foreground mt-1">{{ total_attendance_records }}</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Actions Card -->
+    <div class="card p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-foreground">Bulk Operations</h3>
+            <span class="text-sm text-muted-foreground bg-muted px-2 py-1 rounded" id="selected-count">0 selected</span>
+        </div>
+        <div class="flex flex-wrap gap-3">
+            <button onclick="testSelectedDevices()" class="btn btn-primary" id="test-btn" disabled>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                Test Connection
+            </button>
+
+            <button onclick="openFetchUsersModal()" class="btn btn-primary" id="users-btn" disabled>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                </svg>
+                Fetch Users
+            </button>
+
+            <button onclick="openFetchAttendanceModal()" class="btn btn-primary" id="attendance-btn" disabled>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                Fetch Attendance
+            </button>
+        </div>
+    </div>
+
+    <!-- Devices Table -->
+    <div class="card">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-border bg-muted/30">
+                        <th class="text-left p-4 text-sm font-semibold text-muted-foreground w-12">
+                            <input type="checkbox" id="select-all" class="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring cursor-pointer"/>
+                        </th>
+                        <th class="text-left p-4 text-sm font-semibold text-muted-foreground">Device Info</th>
+                        <th class="text-left p-4 text-sm font-semibold text-muted-foreground">IP Address</th>
+                        <th class="text-left p-4 text-sm font-semibold text-muted-foreground">Status</th>
+                        <th class="text-left p-4 text-sm font-semibold text-muted-foreground">Last Sync</th>
+                        <th class="text-center p-4 text-sm font-semibold text-muted-foreground">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for device in objects %}
+                    <tr class="border-b border-border hover:bg-accent/50 transition-colors">
+                        <td class="p-4">
+                            <input type="checkbox" class="device-checkbox h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring cursor-pointer" 
+                                   data-device-id="{{ device.id }}" data-device-ip="{{ device.ip_address }}" 
+                                   data-device-port="{{ device.port }}" data-device-name="{{ device.name }}" 
+                                   data-device-password="{{ device.password|default:'0' }}"/>
+                        </td>
+                        
+                        <!-- Device Info -->
+                        <td class="p-4">
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mt-1">
+                                    <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-foreground">{{ device.name }}</div>
+                                    {% if device.description %}
+                                    <div class="text-xs text-muted-foreground mt-1 line-clamp-2">{{ device.description|truncatewords:10 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <!-- IP Address -->
+                        <td class="p-4">
+                            <code class="text-sm font-mono text-foreground bg-muted px-2 py-1 rounded">{{ device.ip_address }}:{{ device.port }}</code>
+                        </td>
+                        
+                        <!-- Status -->
+                        <td class="p-4">
+                            {% if device.is_active %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                Active
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                                Inactive
+                            </span>
+                            {% endif %}
+                        </td>
+                        
+                        <!-- Last Sync -->
+                        <td class="p-4 text-sm text-foreground">
+                            {% if device.last_synced %}
+                            {{ device.last_synced|timesince }} ago
+                            {% else %}
+                            <span class="text-muted-foreground">Never synced</span>
+                            {% endif %}
+                        </td>
+                        
+                        <!-- Actions -->
+                        <td class="p-4">
+                            <div class="flex items-center justify-center gap-1">
+                                <a href="{% url 'zkteco:device_detail' device.pk %}" class="btn-ghost p-2 rounded hover:bg-accent" title="View">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                </a>
+                                <a href="{% url 'zkteco:device_edit' device.pk %}" class="btn-ghost p-2 rounded hover:bg-accent" title="Edit">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </a>
+                                <button onclick="testSingleDevice({{ device.id }}, '{{ device.ip_address }}', {{ device.port }}, '{{ device.password|default:'0'|escapejs }}', '{{ device.name|escapejs }}')" 
+                                        class="btn-ghost p-2 rounded hover:bg-accent" title="Test Connection">
+                                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>
+                                    </svg>
+                                </button>
+                                <button onclick="confirmDeleteDevice({{ device.id }}, '{{ device.name|escapejs }}')" class="btn-ghost p-2 rounded hover:bg-destructive-light hover:text-destructive" title="Delete">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="p-8 text-center">
+                            <div class="flex flex-col items-center justify-center space-y-3">
+                                <div class="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-foreground font-medium">No devices found</p>
+                                    <p class="text-sm text-muted-foreground mt-1">Get started by adding your first device</p>
+                                </div>
+                                <a href="{% url 'zkteco:device_add' %}" class="btn btn-primary mt-2">
+                                    Add First Device
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="border-t border-border px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="text-sm text-muted-foreground">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </div>
+                <div class="flex items-center gap-2">
+                    {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn btn-outline btn-sm">
+                        Previous
+                    </a>
+                    {% endif %}
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn btn-outline btn-sm">
+                        Next
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2 max-w-sm"></div>
+
+<!-- Loading Overlay -->
+<div id="loading" class="fixed inset-0 z-50 hidden items-center justify-center bg-background/80 backdrop-blur-sm">
+    <div class="card p-6 flex items-center gap-3">
+        <svg class="h-6 w-6 animate-spin text-primary" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+        <span class="text-foreground font-medium">Processing...</span>
+    </div>
+</div>
+
+<!-- Fetch Users Modal -->
+<div class="fixed inset-0 z-50 hidden items-center justify-center bg-background/80 backdrop-blur-sm p-4" id="fetch-users-modal">
+    <div class="w-full max-w-4xl max-h-[90vh] flex flex-col rounded-lg border border-border bg-card shadow-lg">
+        <div class="border-b border-border px-4 sm:px-6 py-4 flex-shrink-0">
+            <div class="flex items-start justify-between">
+                <div>
+                    <h2 class="text-base sm:text-lg font-semibold text-foreground">Fetch Users from Devices</h2>
+                    <p class="text-xs sm:text-sm text-muted-foreground mt-1">Selected devices: <span id="users-device-count" class="font-medium">0</span></p>
+                </div>
+                <button onclick="closeModal('fetch-users-modal')" class="text-muted-foreground hover:text-foreground transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="p-4 sm:p-6 overflow-y-auto flex-1">
+            <div id="fetch-users-results" class="hidden space-y-3">
+                <div class="rounded-lg border bg-muted/50 p-4">
+                    <div class="flex items-center gap-3">
+                        <svg class="h-5 w-5 animate-spin text-primary flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                        </svg>
+                        <div class="text-sm font-medium text-foreground">Fetching users from devices...</div>
+                    </div>
+                </div>
+            </div>
+            <div id="users-preview" class="hidden">
+                <div class="mb-4">
+                    <h3 class="text-sm font-semibold text-foreground">Found Users</h3>
+                    <p class="text-sm text-muted-foreground">Select users to import into the system</p>
+                </div>
+                <div class="rounded-lg border overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="sticky top-0 border-b bg-muted z-10">
+                                <tr>
+                                    <th class="px-3 sm:px-4 py-3 text-left">
+                                        <input type="checkbox" id="select-all-users" class="h-4 w-4 rounded border-gray-300 cursor-pointer"/>
+                                    </th>
+                                    <th class="px-3 sm:px-4 py-3 text-left font-medium">User ID</th>
+                                    <th class="px-3 sm:px-4 py-3 text-left font-medium">Name</th>
+                                    <th class="hidden sm:table-cell px-3 sm:px-4 py-3 text-left font-medium">Device</th>
+                                    <th class="px-3 sm:px-4 py-3 text-left font-medium">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body" class="divide-y"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="border-t border-border px-4 sm:px-6 py-4 flex-shrink-0">
+            <div class="flex flex-col-reverse sm:flex-row justify-end gap-2">
+                <button onclick="closeModal('fetch-users-modal')" class="rounded-md border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground hover:bg-accent transition-colors">Cancel</button>
+                <button onclick="fetchUsersData()" id="fetch-users-btn" class="rounded-md bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors shadow-sm">
+                    <span class="flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        Fetch Users
+                    </span>
+                </button>
+                <button onclick="importUsers()" id="import-users-btn" class="hidden rounded-md bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700 transition-colors shadow-sm">
+                    <span class="flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Import Selected
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fetch Attendance Modal -->
+<div class="fixed inset-0 z-50 hidden items-center justify-center bg-background/80 backdrop-blur-sm p-4" id="fetch-attendance-modal">
+    <div class="w-full max-w-4xl max-h-[90vh] flex flex-col rounded-lg border border-border bg-card shadow-lg">
+        <div class="border-b border-border px-4 sm:px-6 py-4 flex-shrink-0">
+            <div class="flex items-start justify-between">
+                <div>
+                    <h2 class="text-base sm:text-lg font-semibold text-foreground">Fetch Attendance Logs</h2>
+                    <p class="text-xs sm:text-sm text-muted-foreground mt-1">Selected devices: <span id="attendance-device-count" class="font-medium">0</span></p>
+                </div>
+                <button onclick="closeModal('fetch-attendance-modal')" class="text-muted-foreground hover:text-foreground transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4">
+            <div class="grid gap-3 sm:grid-cols-2">
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-foreground">Start Date</label>
+                    <input type="date" id="start-date" class="w-full rounded-md border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"/>
+                </div>
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-foreground">End Date</label>
+                    <input type="date" id="end-date" class="w-full rounded-md border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"/>
+                </div>
+            </div>
+            <div id="fetch-attendance-results" class="hidden space-y-3"></div>
+            <div id="attendance-preview" class="hidden">
+                <div class="mb-4">
+                    <h3 class="text-sm font-semibold text-foreground">Found Attendance Records</h3>
+                    <p class="text-sm text-muted-foreground">Total records: <span id="total-records" class="font-medium">0</span></p>
+                </div>
+                <div class="rounded-lg border overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="sticky top-0 border-b bg-muted z-10">
+                                <tr>
+                                    <th class="px-3 sm:px-4 py-3 text-left font-medium">Employee ID</th>
+                                    <th class="px-3 sm:px-4 py-3 text-left font-medium">Timestamp</th>
+                                    <th class="hidden sm:table-cell px-3 sm:px-4 py-3 text-left font-medium">Device</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendance-table-body" class="divide-y"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="border-t border-border px-4 sm:px-6 py-4 flex-shrink-0">
+            <div class="flex flex-col-reverse sm:flex-row justify-end gap-2">
+                <button onclick="closeModal('fetch-attendance-modal')" class="rounded-md border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground hover:bg-accent transition-colors">Cancel</button>
+                <button onclick="fetchAttendanceData()" id="fetch-attendance-btn" class="rounded-md bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700 transition-colors shadow-sm">
+                    <span class="flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        Fetch Attendance
+                    </span>
+                </button>
+                <button onclick="importAttendance()" id="import-attendance-btn" class="hidden rounded-md bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors shadow-sm">
+                    <span class="flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Import All
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Modal -->
+<div class="fixed inset-0 z-50 hidden items-center justify-center bg-background/80 backdrop-blur-sm p-4" id="results-modal">
+    <div class="w-full max-w-2xl max-h-[80vh] flex flex-col rounded-lg border border-border bg-card shadow-lg">
+        <div class="border-b border-border px-4 sm:px-6 py-4 flex-shrink-0">
+            <h2 class="text-base sm:text-lg font-semibold text-foreground">Operation Results</h2>
+        </div>
+        <div class="p-4 sm:p-6 overflow-y-auto flex-1">
+            <div id="results-content" class="space-y-3"></div>
+        </div>
+        <div class="border-t border-border px-4 sm:px-6 py-4 flex-shrink-0">
+            <div class="flex justify-end">
+                <button onclick="closeModal('results-modal')" class="rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="fixed inset-0 z-50 hidden items-center justify-center bg-background/80 backdrop-blur-sm p-4" id="delete-device-modal">
+    <div class="w-full max-w-md rounded-lg border border-border bg-card shadow-lg">
+        <div class="p-4 sm:p-6">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-base sm:text-lg font-semibold text-foreground">Delete Device</h3>
+                    <p class="text-sm text-muted-foreground mt-1">This action cannot be undone</p>
+                </div>
+            </div>
+            <p class="mt-4 text-sm text-foreground">Are you sure you want to delete <span id="device-to-delete-name" class="font-medium"></span>? All associated data will be permanently removed.</p>
+            <div class="mt-6 flex flex-col-reverse sm:flex-row justify-end gap-2">
+                <button onclick="closeModal('delete-device-modal')" class="rounded-md border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground hover:bg-accent transition-colors">Cancel</button>
+                <button onclick="deleteDevice()" class="rounded-md bg-red-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-700 transition-colors shadow-sm">
+                    <span class="flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        Delete Device
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// CSRF Token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
+// Global variables
+let selectedDevices = [];
+let deviceToDelete = null;
+
+function showToast(message, type = 'info', duration = 5000) {
+    const container = document.getElementById('toast-container');
+    if (!container) {
+        console.error('Toast container not found');
+        return;
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = 'pointer-events-auto animate-slide-in rounded-lg border shadow-lg p-4 max-w-sm';
+    
+    // Color scheme based on type
+    const colors = {
+        success: 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/90',
+        error: 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/90',
+        warning: 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/90',
+        info: 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/90'
+    };
+    
+    const icons = {
+        success: '<svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>',
+        error: '<svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>',
+        warning: '<svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>',
+        info: '<svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+    };
+    
+    toast.className += ' ' + colors[type];
+    
+    toast.innerHTML = `
+        <div class="flex items-start gap-3">
+            <div class="flex-shrink-0">${icons[type]}</div>
+            <div class="flex-1 text-sm font-medium text-foreground">${message}</div>
+            <button onclick="this.parentElement.parentElement.remove()" class="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Auto remove after duration
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.classList.add('animate-slide-out');
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, duration);
+}
+
+// Modal Functions
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+    }
+}
+
+function showLoading() {
+    const loading = document.getElementById('loading');
+    if (loading) {
+        loading.classList.remove('hidden');
+        loading.classList.add('flex');
+    }
+}
+
+function hideLoading() {
+    const loading = document.getElementById('loading');
+    if (loading) {
+        loading.classList.add('hidden');
+        loading.classList.remove('flex');
+    }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Select all checkbox functionality
+    const selectAllCheckbox = document.getElementById('select-all');
+    const deviceCheckboxes = document.querySelectorAll('.device-checkbox');
+    
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+            deviceCheckboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+            updateSelectedCount();
+        });
+    }
+    
+    // Individual checkbox functionality
+    deviceCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+    });
+    
+    updateSelectedCount();
+});
+
+function updateSelectedCount() {
+    const selected = document.querySelectorAll('.device-checkbox:checked').length;
+    const selectedCount = document.getElementById('selected-count');
+    if (selectedCount) {
+        selectedCount.textContent = `${selected} selected`;
+    }
+    
+    // Enable/disable buttons
+    const hasSelection = selected > 0;
+    const testBtn = document.getElementById('test-btn');
+    const usersBtn = document.getElementById('users-btn');
+    const attendanceBtn = document.getElementById('attendance-btn');
+    
+    if (testBtn) testBtn.disabled = !hasSelection;
+    if (usersBtn) usersBtn.disabled = !hasSelection;
+    if (attendanceBtn) attendanceBtn.disabled = !hasSelection;
+}
+
+function getSelectedDevices() {
+    return Array.from(document.querySelectorAll('.device-checkbox:checked')).map(cb => ({
+        id: cb.dataset.deviceId,
+        ip: cb.dataset.deviceIp,
+        port: cb.dataset.devicePort,
+        name: cb.dataset.deviceName,
+        password: cb.dataset.devicePassword || '0'
+    }));
+}
+
+// Test Connection
+async function testSelectedDevices() {
+    const devices = getSelectedDevices();
+    if (devices.length === 0) {
+        showToast('Please select at least one device', 'warning');
+        return;
+    }
+
+    showLoading();
+    try {
+        const response = await fetch('{% url "zkteco:test_connections" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ device_ids: devices.map(d => d.id) })
+        });
+
+        const data = await response.json();
+        hideLoading();
+
+        if (data.success) {
+            showResults(data.results);
+        } else {
+            showToast(data.error || 'Connection test failed', 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showToast('Error: ' + error.message, 'error');
+    }
+}
+
+// Test Single Device Connection
+async function testSingleDevice(deviceId, ip, port, password, deviceName) {
+    showLoading();
+    try {
+        const response = await fetch('{% url "zkteco:test_connections" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ device_ids: [deviceId] })
+        });
+
+        const data = await response.json();
+        hideLoading();
+
+        if (data.success && data.results && data.results.length > 0) {
+            const result = data.results[0];
+            if (result.success) {
+                let message = `Connection successful for "${deviceName}"`;
+                if (result.info) {
+                    message += `\nUsers: ${result.info.user_count || 0}, Records: ${result.info.attendance_count || 0}`;
+                }
+                showToast(message, 'success');
+            } else {
+                showToast(`Connection failed for "${deviceName}": ${result.message}`, 'error');
+            }
+        } else {
+            showToast(data.error || 'Connection test failed', 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showToast('Error: ' + error.message, 'error');
+    }
+}
+
+// Fetch Users
+function openFetchUsersModal() {
+    const devices = getSelectedDevices();
+    const deviceCount = document.getElementById('users-device-count');
+    if (deviceCount) {
+        deviceCount.textContent = devices.length;
+    }
+    
+    const fetchResults = document.getElementById('fetch-users-results');
+    const usersPreview = document.getElementById('users-preview');
+    const fetchBtn = document.getElementById('fetch-users-btn');
+    const importBtn = document.getElementById('import-users-btn');
+    
+    if (fetchResults) fetchResults.classList.add('hidden');
+    if (usersPreview) usersPreview.classList.add('hidden');
+    if (fetchBtn) fetchBtn.classList.remove('hidden');
+    if (importBtn) importBtn.classList.add('hidden');
+    
+    openModal('fetch-users-modal');
+}
+
+let fetchedUsersData = [];
+
+async function fetchUsersData() {
+    const devices = getSelectedDevices();
+    if (devices.length === 0) return;
+
+    const fetchBtn = document.getElementById('fetch-users-btn');
+    const fetchResults = document.getElementById('fetch-users-results');
+    
+    if (fetchBtn) fetchBtn.disabled = true;
+    if (fetchResults) fetchResults.classList.remove('hidden');
+
+    try {
+        const response = await fetch('{% url "zkteco:fetch_users_data" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ device_ids: devices.map(d => d.id) })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            fetchedUsersData = data.users_data;
+            displayUsersPreview(data.users_data);
+            
+            const fetchBtn = document.getElementById('fetch-users-btn');
+            const importBtn = document.getElementById('import-users-btn');
+            if (fetchBtn) fetchBtn.classList.add('hidden');
+            if (importBtn) importBtn.classList.remove('hidden');
+            
+            showToast(`Found ${data.total_users} users (${data.new_users} new)`, 'success');
+        } else {
+            showToast(data.error || 'Failed to fetch users', 'error');
+        }
+    } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+    } finally {
+        const fetchBtn = document.getElementById('fetch-users-btn');
+        const fetchResults = document.getElementById('fetch-users-results');
+        
+        if (fetchBtn) fetchBtn.disabled = false;
+        if (fetchResults) fetchResults.classList.add('hidden');
+    }
+}
+
+function displayUsersPreview(users) {
+    const tbody = document.getElementById('users-table-body');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    users.forEach((user, index) => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-muted/30';
+        row.innerHTML = `
+            <td class="px-3 sm:px-4 py-3">
+                <input type="checkbox" class="user-checkbox h-4 w-4 rounded border-gray-300 cursor-pointer" 
+                       data-index="${index}" ${user.can_import ? '' : 'disabled'}/>
+            </td>
+            <td class="px-3 sm:px-4 py-3 font-mono text-xs">${user.user_id}</td>
+            <td class="px-3 sm:px-4 py-3 text-sm">${user.name}</td>
+            <td class="hidden sm:table-cell px-3 sm:px-4 py-3 text-xs text-muted-foreground">${user.device_name}</td>
+            <td class="px-3 sm:px-4 py-3">
+                ${user.is_existing ? 
+                    '<span class="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">Exists</span>' : 
+                    '<span class="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/20 dark:text-green-400">New</span>'}
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    const usersPreview = document.getElementById('users-preview');
+    if (usersPreview) usersPreview.classList.remove('hidden');
+    
+    // Select all users checkbox
+    const selectAllUsers = document.getElementById('select-all-users');
+    if (selectAllUsers) {
+        selectAllUsers.addEventListener('change', function() {
+            document.querySelectorAll('.user-checkbox:not([disabled])').forEach(cb => cb.checked = this.checked);
+        });
+    }
+}
+
+async function importUsers() {
+    const selectedIndices = Array.from(document.querySelectorAll('.user-checkbox:checked'))
+        .map(cb => parseInt(cb.dataset.index));
+
+    if (selectedIndices.length === 0) {
+        showToast('Please select users to import', 'warning');
+        return;
+    }
+
+    showLoading();
+    try {
+        const response = await fetch('{% url "zkteco:import_users_data" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ 
+                selected_indices: selectedIndices,
+                import_all: false
+            })
+        });
+
+        const data = await response.json();
+        hideLoading();
+
+        if (data.success) {
+            closeModal('fetch-users-modal');
+            showToast(`Imported ${data.imported_count} users successfully!`, 'success');
+            if (data.duplicate_count > 0) {
+                setTimeout(() => {
+                    showToast(`${data.duplicate_count} duplicates skipped`, 'info', 3000);
+                }, 500);
+            }
+        } else {
+            showToast(data.error || 'Import failed', 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showToast('Error: ' + error.message, 'error');
+    }
+}
+
+// Fetch Attendance
+function openFetchAttendanceModal() {
+    const devices = getSelectedDevices();
+    const deviceCount = document.getElementById('attendance-device-count');
+    if (deviceCount) {
+        deviceCount.textContent = devices.length;
+    }
+    
+    // Set default dates (last 7 days)
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 7);
+    
+    const startDateInput = document.getElementById('start-date');
+    const endDateInput = document.getElementById('end-date');
+    
+    if (startDateInput) startDateInput.value = startDate.toISOString().split('T')[0];
+    if (endDateInput) endDateInput.value = endDate.toISOString().split('T')[0];
+    
+    const fetchResults = document.getElementById('fetch-attendance-results');
+    const attendancePreview = document.getElementById('attendance-preview');
+    const fetchBtn = document.getElementById('fetch-attendance-btn');
+    const importBtn = document.getElementById('import-attendance-btn');
+    
+    if (fetchResults) fetchResults.classList.add('hidden');
+    if (attendancePreview) attendancePreview.classList.add('hidden');
+    if (fetchBtn) fetchBtn.classList.remove('hidden');
+    if (importBtn) importBtn.classList.add('hidden');
+    
+    openModal('fetch-attendance-modal');
+}
+
+let fetchedAttendanceData = [];
+
+async function fetchAttendanceData() {
+    const devices = getSelectedDevices();
+    const startDateInput = document.getElementById('start-date');
+    const endDateInput = document.getElementById('end-date');
+    
+    const startDate = startDateInput ? startDateInput.value : '';
+    const endDate = endDateInput ? endDateInput.value : '';
+
+    if (!startDate || !endDate) {
+        showToast('Please select date range', 'warning');
+        return;
+    }
+
+    if (new Date(startDate) > new Date(endDate)) {
+        showToast('Start date must be before end date', 'warning');
+        return;
+    }
+
+    if (devices.length === 0) {
+        showToast('Please select at least one device', 'warning');
+        return;
+    }
+
+    const fetchBtn = document.getElementById('fetch-attendance-btn');
+    const fetchResults = document.getElementById('fetch-attendance-results');
+    
+    if (fetchBtn) fetchBtn.disabled = true;
+    if (fetchResults) {
+        fetchResults.classList.remove('hidden');
+        fetchResults.innerHTML = `
+            <div class="rounded-lg border bg-muted/50 p-4">
+                <div class="flex items-center gap-3">
+                    <svg class="h-5 w-5 animate-spin text-primary" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                    </svg>
+                    <div class="text-sm font-medium text-foreground">Fetching attendance records...</div>
+                </div>
+            </div>
+        `;
+    }
+
+    try {
+        const response = await fetch('{% url "zkteco:fetch_attendance_data" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ 
+                device_ids: devices.map(d => d.id),
+                start_date: startDate,
+                end_date: endDate
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            const attendanceData = data.attendance_data || data.data || data.records || [];
+            fetchedAttendanceData = attendanceData;
+            
+            displayAttendancePreview(attendanceData, data);
+            
+            const fetchBtn = document.getElementById('fetch-attendance-btn');
+            const importBtn = document.getElementById('import-attendance-btn');
+            if (fetchBtn) fetchBtn.classList.add('hidden');
+            if (importBtn) importBtn.classList.remove('hidden');
+            
+            const totalRecords = data.total_records || attendanceData.length;
+            showToast(`Found ${totalRecords} attendance records`, 'success');
+        } else {
+            showToast(data.error || 'Failed to fetch attendance', 'error');
+        }
+    } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+    } finally {
+        const fetchBtn = document.getElementById('fetch-attendance-btn');
+        const fetchResults = document.getElementById('fetch-attendance-results');
+        
+        if (fetchBtn) fetchBtn.disabled = false;
+        if (fetchResults) fetchResults.classList.add('hidden');
+    }
+}
+
+function displayAttendancePreview(records, responseData = {}) {
+    const tbody = document.getElementById('attendance-table-body');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    const safeRecords = Array.isArray(records) ? records : [];
+    const totalRecords = responseData.total_records || safeRecords.length;
+    
+    const totalRecordsEl = document.getElementById('total-records');
+    if (totalRecordsEl) totalRecordsEl.textContent = totalRecords;
+
+    const previewRecords = safeRecords.slice(0, 100);
+    
+    if (previewRecords.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td colspan="3" class="px-4 py-8 text-center text-sm text-muted-foreground">
+                No attendance records found for the selected period.
+            </td>
+        `;
+        tbody.appendChild(row);
+    } else {
+        previewRecords.forEach(record => {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-muted/30';
+            const timestamp = record.timestamp ? new Date(record.timestamp) : new Date();
+            const employeeId = record.employee_id || record.zkteco_id || record.user_id || 'Unknown';
+            const deviceName = record.device_name || record.device_ip || 'Unknown';
+            
+            row.innerHTML = `
+                <td class="px-3 sm:px-4 py-3 font-mono text-xs">${employeeId}</td>
+                <td class="px-3 sm:px-4 py-3 text-sm">${timestamp.toLocaleString()}</td>
+                <td class="hidden sm:table-cell px-3 sm:px-4 py-3 text-xs text-muted-foreground">${deviceName}</td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        if (safeRecords.length > 100) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td colspan="3" class="px-4 py-3 text-center text-sm text-muted-foreground bg-muted/30">
+                    ... and ${safeRecords.length - 100} more records
+                </td>
+            `;
+            tbody.appendChild(row);
+        }
+    }
+
+    const attendancePreview = document.getElementById('attendance-preview');
+    if (attendancePreview) attendancePreview.classList.remove('hidden');
+}
+
+async function importAttendance() {
+    if (!fetchedAttendanceData || fetchedAttendanceData.length === 0) {
+        showToast('No attendance data to import', 'warning');
+        return;
+    }
+
+    showLoading();
+    try {
+        const response = await fetch('{% url "zkteco:import_attendance_data" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ 
+                import_all: true,
+                device_ids: getSelectedDevices().map(d => d.id)
+            })
+        });
+
+        const data = await response.json();
+        hideLoading();
+
+        if (data.success) {
+            closeModal('fetch-attendance-modal');
+            let message = `Imported ${data.imported_count || 0} attendance records!`;
+            
+            if (data.duplicate_count > 0) {
+                message += ` (${data.duplicate_count} duplicates skipped)`;
+            }
+            if (data.missing_employee_count > 0) {
+                message += ` (${data.missing_employee_count} records with missing employees)`;
+            }
+            
+            showToast(message, 'success');
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } else {
+            showToast(data.error || 'Import failed', 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showToast('Error: ' + error.message, 'error');
+    }
+}
+
+// Results Display
+function showResults(results) {
+    const content = document.getElementById('results-content');
+    if (!content) return;
+
+    content.innerHTML = '';
+
+    if (Array.isArray(results)) {
+        results.forEach(result => {
+            const div = document.createElement('div');
+            div.className = `rounded-lg border p-4 ${result.success ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20' : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/20'}`;
+            
+            div.innerHTML = `
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex-1 min-w-0">
+                        <div class="font-medium text-sm ${result.success ? 'text-green-900 dark:text-green-100' : 'text-red-900 dark:text-red-100'}">
+                            ${result.device_name}
+                        </div>
+                        <div class="text-sm mt-1 ${result.success ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'} break-words">
+                            ${result.message || result.error || 'No details'}
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0">
+                        ${result.success ? 
+                            '<svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>' : 
+                            '<svg class="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>'}
+                    </div>
+                </div>
+            `;
+            content.appendChild(div);
+        });
+    } else {
+        content.innerHTML = `<pre class="rounded-lg bg-muted p-4 text-sm overflow-auto">${JSON.stringify(results, null, 2)}</pre>`;
+    }
+
+    openModal('results-modal');
+}
+
+// Delete Device Functions
+function confirmDeleteDevice(deviceId, deviceName) {
+    deviceToDelete = deviceId;
+    const deviceNameEl = document.getElementById('device-to-delete-name');
+    if (deviceNameEl) {
+        deviceNameEl.textContent = deviceName;
+    }
+    openModal('delete-device-modal');
+}
+
+async function deleteDevice() {
+    if (!deviceToDelete) return;
+
+    showLoading();
+    try {
+        const response = await fetch(`{% url "zkteco:device_delete" 0 %}`.replace('0', deviceToDelete), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            }
+        });
+
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.success) {
+                closeModal('delete-device-modal');
+                showToast(`Device deleted successfully!`, 'success');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                showToast(data.error || 'Failed to delete device', 'error');
+            }
+        } else {
+            hideLoading();
+            closeModal('delete-device-modal');
+            showToast(`Device deleted successfully!`, 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        }
+    } catch (error) {
+        hideLoading();
+        showToast('Error: ' + error.message, 'error');
+    }
+}
+
+// Close modals on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('[id$="-modal"]').forEach(modal => {
+            if (!modal.classList.contains('hidden')) {
+                closeModal(modal.id);
+            }
+        });
+    }
+});
+
+// Close modals when clicking outside
+document.querySelectorAll('[id$="-modal"]').forEach(modal => {
+    modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModal(this.id);
+        }
+    });
+});
+</script>
+
+<style>
+@keyframes slide-in {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slide-out {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+.animate-slide-in {
+    animation: slide-in 0.3s ease-out;
+}
+
+.animate-slide-out {
+    animation: slide-out 0.3s ease-in;
+}
+
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>
+
+{% endblock %}

@@ -1,5 +1,7 @@
 from django.db import models
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
+
 
 class Company(models.Model):
     """Represents a company in the multi-company system."""
@@ -16,7 +18,7 @@ class Company(models.Model):
     website = models.URLField(max_length=255, blank=True, null=True)
     tax_id = models.CharField(max_length=50, blank=True, null=True, help_text="e.g., VAT, EIN, GST")
     currency = models.CharField(max_length=10, default='USD', help_text="e.g., USD, EUR, GBP")
-    logo = models.ImageField(upload_to='company_logos/', blank=True, null=True)  # Add this line
+    logo = models.ImageField(upload_to='company_logos/', blank=True, null=True)
     is_active = models.BooleanField(_("Is Active"), default=True)
     created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
@@ -28,3 +30,90 @@ class Company(models.Model):
 
     def __str__(self):
         return self.name
+
+    @classmethod
+    def get_active_company(cls):
+        """Return the first active company."""
+        return cls.objects.filter(is_active=True).first()
+
+
+class Project(models.Model):
+    """Represents a project under a company."""
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name=_("Company"))
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="owned_projects",
+        verbose_name=_("Owner"),
+    )
+    name = models.CharField(_("Project Name"), max_length=200)
+    description = models.TextField(_("Description"), blank=True, null=True)
+    start_date = models.DateField(_("Start Date"), blank=True, null=True)
+    end_date = models.DateField(_("End Date"), blank=True, null=True)
+    is_active = models.BooleanField(_("Active"), default=True)
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+
+    class Meta:
+        verbose_name = _("Project")
+        verbose_name_plural = _("Projects")
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} ({self.company.name})"
+
+    def save(self, *args, **kwargs):
+        """Automatically set company if not provided."""
+        if not self.company_id:
+            active_company = Company.get_active_company()
+            if active_company:
+                self.company = active_company
+        super().save(*args, **kwargs)
+
+
+class Task(models.Model):
+    """Represents a daily task done by an employee under a project."""
+    STATUS_CHOICES = [
+        ('todo', _('To Do')),
+        ('in_progress', _('In Progress')),
+        ('done', _('Done')),
+    ]
+
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name=_("Company"))
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, verbose_name=_("Project"))
+    employee = models.ForeignKey('hr_payroll.Employee', on_delete=models.CASCADE, verbose_name=_("Employee"))
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="owned_tasks",
+        verbose_name=_("Owner"),
+    )
+
+    title = models.CharField(_("Task Title"), max_length=255)
+    description = models.TextField(_("Description"), blank=True, null=True)
+    date = models.DateField(_("Date of Task"), auto_now_add=True)
+    hours_spent = models.DecimalField(_("Hours Spent"), max_digits=5, decimal_places=2, default=0.00)
+    status = models.CharField(_("Status"), max_length=20, choices=STATUS_CHOICES, default='todo')
+
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+
+    class Meta:
+        verbose_name = _("Task")
+        verbose_name_plural = _("Tasks")
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.employee.name} - {self.project.name} ({self.title})"
+
+    def save(self, *args, **kwargs):
+        """Automatically set company if not provided."""
+        if not self.company_id:
+            active_company = Company.get_active_company()
+            if active_company:
+                self.company = active_company
+        super().save(*args, **kwargs)

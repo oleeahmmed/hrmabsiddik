@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ device.name }} - Device Details{% endblock %}
+
+{% block page_title %}Device Details{% endblock %}
+
+{% block page_subtitle %}View complete device information and statistics{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+    <!-- Action Buttons -->
+    <div class="flex items-center justify-between">
+        <a href="{% url 'zkteco:device_list' %}" class="btn btn-outline">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Back to List
+        </a>
+        <div class="flex gap-3">
+            <a href="{% url 'zkteco:device_edit' device.pk %}" class="btn btn-primary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                Edit Device
+            </a>
+            <a href="{% url 'zkteco:device_delete' device.pk %}" class="btn btn-outline btn-destructive">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                Delete
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Card -->
+    <div class="card-lg overflow-hidden">
+        <!-- Header -->
+        <div class="p-6 border-b border-border/30 bg-gradient-to-r from-primary/5 to-primary/3">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <h1 class="text-2xl font-bold text-foreground mb-2">{{ device.name }}</h1>
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <span class="badge {% if device.is_active %}badge-success{% else %}badge-warning{% endif %}">
+                            {% if device.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                        <span class="text-sm text-muted-foreground">
+                            Created {{ device.created_at|timesince }} ago
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Device Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="card p-4 text-center">
+                            <div class="text-2xl font-bold text-foreground">{{ users_count }}</div>
+                            <div class="text-sm text-muted-foreground mt-1">Total Users</div>
+                        </div>
+                        <div class="card p-4 text-center">
+                            <div class="text-2xl font-bold text-foreground">{{ attendance_logs_count }}</div>
+                            <div class="text-sm text-muted-foreground mt-1">Attendance Records</div>
+                        </div>
+                        <div class="card p-4 text-center">
+                            <div class="text-2xl font-bold text-foreground">{{ sync_count }}</div>
+                            <div class="text-sm text-muted-foreground mt-1">Sync Operations</div>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    {% if device.description %}
+                    <div>
+                        <label class="block text-sm font-medium text-muted-foreground mb-3">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Description
+                        </label>
+                        <div class="bg-muted/30 rounded-lg p-4 border border-border">
+                            <p class="text-foreground whitespace-pre-wrap">{{ device.description }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Quick Actions -->
+                    <div>
+                        <label class="block text-sm font-medium text-muted-foreground mb-3">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            Quick Actions
+                        </label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button onclick="testSingleDevice({{ device.id }}, '{{ device.ip_address }}', {{ device.port }}, '{{ device.password|default:'0'|escapejs }}', '{{ device.name|escapejs }}')" 
+                                    class="btn btn-outline justify-start">
+                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>
+                                </svg>
+                                Test Connection
+                            </button>
+                            <button onclick="fetchDeviceUsers({{ device.id }})" 
+                                    class="btn btn-outline justify-start">
+                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                                </svg>
+                                Fetch Users
+                            </button>
+                            <button onclick="fetchDeviceAttendance({{ device.id }})" 
+                                    class="btn btn-outline justify-start">
+                                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                </svg>
+                                Fetch Attendance
+                            </button>
+                            {% if device.is_active %}
+                            <button onclick="toggleDeviceStatus({{ device.id }}, '{{ device.name|escapejs }}')" 
+                                    class="btn btn-outline justify-start">
+                                <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Deactivate
+                            </button>
+                            {% else %}
+                            <button onclick="toggleDeviceStatus({{ device.id }}, '{{ device.name|escapejs }}')" 
+                                    class="btn btn-outline justify-start">
+                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Activate
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="space-y-6">
+                    <!-- Connection Info -->
+                    <div>
+                        <label class="block text-sm font-medium text-muted-foreground mb-2">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                            </svg>
+                            Connection Details
+                        </label>
+                        <div class="bg-muted/30 rounded-lg p-4 border border-border space-y-2">
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-muted-foreground">IP Address:</span>
+                                <code class="font-mono font-medium">{{ device.ip_address }}</code>
+                            </div>
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-muted-foreground">Port:</span>
+                                <span class="font-medium">{{ device.port }}</span>
+                            </div>
+                            {% if device.password %}
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-muted-foreground">Password:</span>
+                                <span class="font-medium">••••••</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Sync Info -->
+                    <div>
+                        <label class="block text-sm font-medium text-muted-foreground mb-2">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            Sync Information
+                        </label>
+                        <div class="bg-muted/30 rounded-lg p-4 border border-border space-y-2">
+                            {% if device.last_synced %}
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-muted-foreground">Last Sync:</span>
+                                <span class="font-medium">{{ device.last_synced|timesince }} ago</span>
+                            </div>
+                            {% else %}
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-muted-foreground">Last Sync:</span>
+                                <span class="font-medium text-muted-foreground">Never</span>
+                            </div>
+                            {% endif %}
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-muted-foreground">Sync Count:</span>
+                                <span class="font-medium">{{ sync_count }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timestamps -->
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-muted-foreground">Created:</span>
+                            <span class="font-medium">{{ device.created_at|date:"M d, Y H:i" }}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-muted-foreground">Last Updated:</span>
+                            <span class="font-medium">{{ device.updated_at|date:"M d, Y H:i" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-destructive {
+        color: hsl(var(--destructive));
+        border-color: hsl(var(--destructive));
+    }
+
+    .btn-destructive:hover {
+        background-color: hsl(var(--destructive-light));
+        border-color: hsl(var(--destructive));
+    }
+</style>
+
+<script>
+    // Include your existing JavaScript functions for device operations
+    // testSingleDevice, toggleDeviceStatus, fetchDeviceUsers, fetchDeviceAttendance
+    
+    async function fetchDeviceUsers(deviceId) {
+        // Implement single device user fetch
+        showToast('Fetching users from device...', 'info');
+        // Your existing fetch users logic for single device
+    }
+
+    async function fetchDeviceAttendance(deviceId) {
+        // Implement single device attendance fetch
+        showToast('Fetching attendance from device...', 'info');
+        // Your existing fetch attendance logic for single device
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        showDjangoMessages();
+    });
+</script>
+{% endblock %}

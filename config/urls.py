@@ -7,6 +7,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # path('__debug__/', include('debug_toolbar.urls')),  # Debug Toolbar
     path('', include('hr_payroll.urls')),  # Your app URLs
+    path('core/', include('core.urls')),
 ]
 
 # Serve media/static in development

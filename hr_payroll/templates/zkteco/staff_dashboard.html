@@ -423,7 +423,7 @@
         </a>
 
         <!-- Attendance Logs -->
-        <a href="{% url 'zkteco:attendance_logs' %}" class="quick-action-btn">
+        <a href="{% url 'zkteco:attendance_log_list' %}" class="quick-action-btn">
             <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center mb-3">
                 <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
@@ -846,8 +846,7 @@
                             </div>
                         </td>
                         <td class="py-3 px-4">
-                            <p class="text-sm text-foreground">{{ log.device.device_name }}</p>
-                        </td>
+                            <p class="text-sm text-foreground">{{ log.device.name }}</p>                        </td>
                         <td class="py-3 px-4">
                             <p class="text-sm text-foreground">{{ log.timestamp|date:"H:i" }}</p>
                             <p class="text-xs text-muted-foreground">{{ log.timestamp|date:"M d, Y" }}</p>

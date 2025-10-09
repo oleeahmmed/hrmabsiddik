@@ -47,13 +47,16 @@ urlpatterns = [
     path('api/import-users/', device_views.ImportUsersDataView.as_view(), name='import_users_data'),
     path('api/clear-device-data/', device_views.ClearDeviceDataView.as_view(), name='clear_device_data'),
     
-    # ==================== ATTENDANCE LOG VIEWS ====================
-    path('attendance-logs/', attendance_log_views.attendance_logs, name='attendance_logs'),
+    # Attendance Log Management
+    path('attendance-logs/', attendance_log_views.AttendanceLogListView.as_view(), name='attendance_log_list'),
+    path('attendance-logs/create/', attendance_log_views.AttendanceLogCreateView.as_view(), name='attendance_log_create'),
+    path('attendance-logs/<int:pk>/', attendance_log_views.AttendanceLogDetailView.as_view(), name='attendance_log_detail'),
+    path('attendance-logs/<int:pk>/edit/', attendance_log_views.AttendanceLogUpdateView.as_view(), name='attendance_log_update'),
+    path('attendance-logs/<int:pk>/delete/', attendance_log_views.AttendanceLogDeleteView.as_view(), name='attendance_log_delete'),
     
-    # Attendance Log Management AJAX API Endpoints
-    path('api/fetch-attendance/', attendance_log_views.fetch_attendance_data, name='fetch_attendance_data'),
-    path('api/import-attendance/', attendance_log_views.import_attendance_data, name='import_attendance_data'),
-    path('api/attendance-analytics/', attendance_log_views.get_attendance_analytics, name='get_attendance_analytics'),
+    # Attendance Log Management AJAX API Endpoints (now class-based)
+    path('api/fetch-attendance/', attendance_log_views.FetchAttendanceDataView.as_view(), name='fetch_attendance_data'),
+    path('api/import-attendance/', attendance_log_views.ImportAttendanceDataView.as_view(), name='import_attendance_data'),
     
     # ==================== HOURLY ATTENDANCE REPORT VIEWS ====================
     path('hourly-report/', hourly_attendance.hourly_attendance_report, name='hourly_attendance_report'),

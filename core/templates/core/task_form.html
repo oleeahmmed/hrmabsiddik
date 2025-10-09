@@ -1,0 +1,322 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if object %}Edit Task - {{ object.title }}{% else %}Create New Task{% endif %}
+{% endblock %}
+
+{% block page_title %}
+    {% if object %}Edit Task{% else %}Create New Task{% endif %}
+{% endblock %}
+
+{% block page_subtitle %}
+    {% if object %}Update task details{% else %}Add a new task to the system{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Main Form Card -->
+    <div class="card overflow-hidden border border-border/50">
+        <!-- Card Header with Very Light Gradient -->
+        <div class="p-4 border-b border-border/30 bg-gradient-to-r from-primary/5 to-primary/3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <h2 class="text-lg font-semibold text-foreground">Task Information</h2>
+                </div>
+                <a href="{% url 'core:task_list' %}" class="btn btn-outline btn-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Back to List
+                </a>
+            </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="p-6">
+            <form method="post" id="task-form" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Display non-field errors -->
+                {% if form.non_field_errors %}
+                <div class="bg-destructive-light border border-destructive/20 rounded-lg p-4">
+                    <div class="flex items-start space-x-2">
+                        <svg class="w-5 h-5 text-destructive mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            {% for error in form.non_field_errors %}
+                            <p class="text-sm text-destructive">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Left Column -->
+                    <div class="space-y-6">
+                        <!-- Title Field -->
+                        <div class="form-group">
+                            <label for="{{ form.title.id_for_label }}" class="form-label required">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Task Title
+                            </label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                            <p class="form-error">{{ form.title.errors.0 }}</p>
+                            {% else %}
+                            <p class="form-help">Enter a clear and descriptive title for the task</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Project Field -->
+                        <div class="form-group">
+                            <label for="{{ form.project.id_for_label }}" class="form-label required">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                </svg>
+                                Project
+                            </label>
+                            {{ form.project }}
+                            {% if form.project.errors %}
+                            <p class="form-error">{{ form.project.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Employee Field (Optional) -->
+                        <div class="form-group">
+                            <label for="{{ form.employee.id_for_label }}" class="form-label">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                                Assigned Employee
+                            </label>
+                            {{ form.employee }}
+                            {% if form.employee.errors %}
+                            <p class="form-error">{{ form.employee.errors.0 }}</p>
+                            {% else %}
+                            <p class="form-help">Leave empty to assign to yourself</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Status Field -->
+                        <div class="form-group">
+                            <label for="{{ form.status.id_for_label }}" class="form-label required">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Status
+                            </label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                            <p class="form-error">{{ form.status.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="space-y-6">
+                        <!-- Date Field -->
+                        <div class="form-group">
+                            <label for="{{ form.date.id_for_label }}" class="form-label required">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                Task Date
+                            </label>
+                            {{ form.date }}
+                            {% if form.date.errors %}
+                            <p class="form-error">{{ form.date.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Hours Spent Field -->
+                        <div class="form-group">
+                            <label for="{{ form.hours_spent.id_for_label }}" class="form-label required">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Hours Spent
+                            </label>
+                            {{ form.hours_spent }}
+                            {% if form.hours_spent.errors %}
+                            <p class="form-error">{{ form.hours_spent.errors.0 }}</p>
+                            {% else %}
+                            <p class="form-help">Enter the number of hours spent on this task</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Description Field -->
+                        <div class="form-group">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                Description
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <p class="form-error">{{ form.description.errors.0 }}</p>
+                            {% else %}
+                            <p class="form-help">Provide detailed information about the task requirements</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Card Footer with Very Light Gradient -->
+        <div class="p-4 border-t border-border/30 bg-gradient-to-r from-primary/5 to-primary/3">
+            <div class="flex items-center justify-between">
+                <div>
+                    {% if object %}
+                    <a href="{% url 'core:task_delete' object.pk %}" class="btn btn-outline btn-destructive">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        Delete Task
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="{% url 'core:task_list' %}" class="btn btn-outline">
+                        Cancel
+                    </a>
+                    <button type="submit" form="task-form" class="btn btn-primary">
+                        {% if object %}
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Update Task
+                        {% else %}
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        Create Task
+                        {% endif %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-group {
+        margin-bottom: 0;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: hsl(var(--foreground));
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-label.required::after {
+        content: ' *';
+        color: hsl(var(--destructive));
+    }
+    
+    .form-help {
+        font-size: 0.75rem;
+        color: hsl(var(--muted-foreground));
+        margin-top: 0.25rem;
+    }
+
+    .form-error {
+        font-size: 0.75rem;
+        color: hsl(var(--destructive));
+        margin-top: 0.25rem;
+        font-weight: 500;
+    }
+   
+    /* Input Field Styles */
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background-color: hsl(var(--background));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        color: hsl(var(--foreground));
+        font-size: 0.875rem;
+        line-height: 1.5;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        font-family: inherit;
+    }
+
+    /* Error state for inputs */
+    .form-group:has(.form-error) input,
+    .form-group:has(.form-error) select,
+    .form-group:has(.form-error) textarea {
+        border-color: hsl(var(--destructive));
+    }
+
+    .form-group:has(.form-error) input:focus,
+    .form-group:has(.form-error) select:focus,
+    .form-group:has(.form-error) textarea:focus {
+        box-shadow: 0 0 0 3px hsl(var(--destructive) / 0.1);
+    }
+
+    /* Focus States */
+    input:focus,
+    select:focus,
+    textarea:focus {
+        outline: none;
+        border-color: hsl(var(--primary));
+        box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    /* Select Dropdown */
+    select {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='hsl(var(--muted-foreground))' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.75rem center;
+        background-repeat: no-repeat;
+        background-size: 1.25rem 1.25rem;
+        padding-right: 2.5rem;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+
+    .btn-destructive {
+        color: hsl(var(--destructive));
+        border-color: hsl(var(--destructive));
+    }
+
+    .btn-destructive:hover {
+        background-color: hsl(var(--destructive-light));
+        border-color: hsl(var(--destructive));
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set today's date as default for date field if empty and creating new task
+        const dateInput = document.getElementById('{{ form.date.id_for_label }}');
+        if (dateInput && !dateInput.value && !{{ object|yesno:"true,false" }}) {
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+        }
+
+        // Show Django messages as toasts
+        showDjangoMessages();
+    });
+</script>
+{% endblock %}

@@ -272,7 +272,13 @@ class StaffHomeDashboardView(LoginRequiredMixin, PermissionRequiredMixin, Compan
         
         recent_logs = AttendanceLog.objects.filter(
             device__company=company
-        ).select_related('employee', 'device').order_by('-timestamp')[:10]
+        ).select_related(
+            'employee', 
+            'device'
+        ).prefetch_related(
+            'employee__department',
+            'employee__designation'
+        ).order_by('-timestamp')[:10]
         
         # System health
         system_health = round((active_devices / total_devices * 100) if total_devices > 0 else 100, 0)
@@ -479,7 +485,7 @@ class HomeView(LoginRequiredMixin, View):
 class DeviceListView(LoginRequiredMixin, PermissionRequiredMixin, CompanyAccessMixin, ListView):
     """Display list of ZKTeco devices"""
     model = ZkDevice
-    template_name = 'zkteco/device_list.html'
+    template_name = 'zkdevice/device_list.html'
     context_object_name = 'objects'
     paginate_by = 10
     permission_required = 'zkteco.view_zkdevice'
@@ -539,7 +545,7 @@ class DeviceCreateView(LoginRequiredMixin, PermissionRequiredMixin, CompanyAcces
     """Add new ZKTeco device"""
     model = ZkDevice
     form_class = ZkDeviceForm
-    template_name = 'zkteco/device_form.html'
+    template_name = 'zkdevice/device_form.html'
     success_url = reverse_lazy('zkteco:device_list')
     permission_required = 'zkteco.add_zkdevice'
     
@@ -585,7 +591,7 @@ class DeviceUpdateView(LoginRequiredMixin, PermissionRequiredMixin, CompanyAcces
     """Edit existing ZKTeco device"""
     model = ZkDevice
     form_class = ZkDeviceForm
-    template_name = 'zkteco/device_form.html'
+    template_name = 'zkdevice/device_form.html'
     success_url = reverse_lazy('zkteco:device_list')
     permission_required = 'zkteco.change_zkdevice'
     pk_url_kwarg = 'device_id'
@@ -642,7 +648,7 @@ class DeviceUpdateView(LoginRequiredMixin, PermissionRequiredMixin, CompanyAcces
 class DeviceDetailView(LoginRequiredMixin, PermissionRequiredMixin, CompanyAccessMixin, DetailView):
     """View device details and statistics"""
     model = ZkDevice
-    template_name = 'zkteco/device_detail.html'
+    template_name = 'zkdevice/device_detail.html'
     context_object_name = 'device'
     permission_required = 'zkteco.view_zkdevice'
     pk_url_kwarg = 'device_id'
@@ -680,7 +686,7 @@ class DeviceDetailView(LoginRequiredMixin, PermissionRequiredMixin, CompanyAcces
 class DeviceDeleteView(LoginRequiredMixin, PermissionRequiredMixin, CompanyAccessMixin, DeleteView):
     """Delete ZKTeco device"""
     model = ZkDevice
-    template_name = 'zkteco/device_confirm_delete.html'
+    template_name = 'zkdevice/device_confirm_delete.html'
     success_url = reverse_lazy('zkteco:device_list')
     permission_required = 'zkteco.delete_zkdevice'
     pk_url_kwarg = 'device_id'
@@ -688,24 +694,38 @@ class DeviceDeleteView(LoginRequiredMixin, PermissionRequiredMixin, CompanyAcces
     def get_queryset(self):
         return ZkDevice.objects.filter(company=self.company)
     
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        device = self.get_object()
+        
+        # Count related records for warning
+        context['attendance_logs_count'] = AttendanceLog.objects.filter(device=device).count()
+        
+        return context
+    
     def delete(self, request, *args, **kwargs):
         device = self.get_object()
+        device_name = device.name
         
         # Check if device has attendance logs
         log_count = AttendanceLog.objects.filter(device=device).count()
         
         if log_count > 0:
+            # Instead of preventing deletion, we'll set device to NULL for attendance logs
+            # Or we can show a warning but still allow deletion
+            AttendanceLog.objects.filter(device=device).update(device=None)
+        
+        device.delete()
+        messages.success(request, f'Device "{device_name}" deleted successfully!')
+        
+        if log_count > 0:
             messages.warning(
                 request, 
-                f'Cannot delete device "{device.name}" as it has {log_count} attendance logs. '
-                'Please delete or transfer the logs first.'
+                f'{log_count} attendance records have been preserved but are no longer associated with any device.'
             )
-            return redirect('zkteco:device_list')
-        else:
-            device_name = device.name
-            device.delete()
-            messages.success(request, f'Device "{device_name}" deleted successfully!')
-            return redirect(self.success_url)
+        
+        return redirect(self.success_url)
+
 
 
 class DeviceToggleStatusView(LoginRequiredMixin, PermissionRequiredMixin, CompanyAccessMixin, View):

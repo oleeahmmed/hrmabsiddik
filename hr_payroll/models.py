@@ -548,67 +548,440 @@ class Designation(models.Model):
         unique_together = ('company', 'code')
         ordering = ['name']
 
-# models.py - Employee model এর updated version
 
-# Add this field to your Employee model in models.py
 
 class Employee(models.Model):
-    """
-    Represents an employee in the organization.
-    Has ForeignKey relationships with Company, Department, Designation, and Shift.
-    """
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name=_("Company"))
-    department = models.ForeignKey(Department, on_delete=models.SET_NULL, verbose_name=_("Department"), blank=True, null=True)
-    designation = models.ForeignKey(Designation, on_delete=models.SET_NULL, verbose_name=_("Designation"), blank=True, null=True)
-    default_shift = models.ForeignKey('Shift', on_delete=models.SET_NULL, verbose_name=_("Default Shift"), blank=True, null=True)
-    employee_id = models.CharField(_("Employee ID"), max_length=50, unique=True)
-    zkteco_id = models.CharField(_("ZKTeco ID"), max_length=50, unique=True)
-    name = models.CharField(_("Name"), max_length=100)
-    first_name = models.CharField(_("First Name"), max_length=50, blank=True, null=True)
-    last_name = models.CharField(_("Last Name"), max_length=50, blank=True, null=True)
+    
+    # --- Choices ---
+    GENDER_CHOICES = [
+        ('M', _('Male')),
+        ('F', _('Female')),
+        ('O', _('Other')),
+    ]
+
+    MARITAL_CHOICES = [
+        ('S', _('Single')),
+        ('M', _('Married')),
+        ('D', _('Divorced')),
+        ('W', _('Widowed')),
+    ]
+    
+    JOB_TYPE_CHOICES = [
+        ('FT', _('Full-Time')),
+        ('PT', _('Part-Time')),
+        ('CT', _('Contract')),
+        ('IN', _('Internship')),
+        ('TP', _('Temporary')),
+    ]
+
+    BLOOD_GROUP_CHOICES = [
+        ('A+', 'A+'),
+        ('A-', 'A-'),
+        ('B+', 'B+'),
+        ('B-', 'B-'),
+        ('O+', 'O+'),
+        ('O-', 'O-'),
+        ('AB+', 'AB+'),
+        ('AB-', 'AB-'),
+    ]
+
+    EMPLOYMENT_STATUS_CHOICES = [
+        ('active', _('Active')),
+        ('probation', _('Probation')),
+        ('suspended', _('Suspended')),
+        ('terminated', _('Terminated')),
+        ('resigned', _('Resigned')),
+    ]
+
+    # --- 1. Core & Organizational Details ---
+    company = models.ForeignKey(
+        Company, 
+        on_delete=models.CASCADE, 
+        verbose_name=_("Company")
+    )
+    department = models.ForeignKey(
+        Department, 
+        on_delete=models.SET_NULL, 
+        verbose_name=_("Department"), 
+        blank=True, 
+        null=True
+    )
+    designation = models.ForeignKey(
+        Designation, 
+        on_delete=models.SET_NULL, 
+        verbose_name=_("Designation"), 
+        blank=True, 
+        null=True
+    )
+    
+    default_shift = models.ForeignKey(
+        'Shift', 
+        on_delete=models.SET_NULL, 
+        verbose_name=_("Default Shift"), 
+        blank=True, 
+        null=True
+    )
+
+    # --- 2. Identifiers ---
+    employee_id = models.CharField(
+        _("Employee ID"), 
+        max_length=50, 
+        unique=True
+    )
+    zkteco_id = models.CharField(
+        _("ZKTeco ID"), 
+        max_length=50, 
+        unique=True, 
+        blank=True, 
+        null=True,
+        help_text=_("Employee ID used in the ZKTeco attendance machine (optional)")
+    )
+
+    # --- 3. Name and User Linking ---
+    name = models.CharField(
+        _("Name"), 
+        max_length=100
+    )
+    first_name = models.CharField(
+        _("First Name"), 
+        max_length=50, 
+        blank=True, 
+        null=True
+    )
+    last_name = models.CharField(
+        _("Last Name"), 
+        max_length=50, 
+        blank=True, 
+        null=True
+    )
     user = models.ForeignKey(
         User, 
         on_delete=models.SET_NULL, 
         null=True, 
         blank=True,
         related_name='employee_user',
-        verbose_name=_("User"),
-        help_text=_("User who marked attendance (for mobile attendance)")
-    )    
-    # Salary and working hour configurations
-    basic_salary = models.DecimalField(_("Basic Salary"), max_digits=10, decimal_places=2, default=0.00)
-    overtime_rate = models.DecimalField(_("Overtime Rate (per hour)"), max_digits=8, decimal_places=2, default=0.00)
-    per_hour_rate = models.DecimalField(_("Per Hour Rate"), max_digits=8, decimal_places=2, default=30.00)  # NEW FIELD
-    expected_working_hours = models.FloatField(_("Expected Working Hours"), default=8.0)
-    # Contact / Personal
-    contact_number = models.CharField(_("Contact Number"), max_length=20, blank=True, null=True, default="")
-    date_of_birth = models.DateField(_("Date of Birth"), blank=True, null=True)
-    joining_date = models.DateField(_("Joining Date"), blank=True, null=True)
-    nid = models.CharField(_("National ID"), max_length=30, blank=True, null=True, default="")
-    marital_status = models.CharField(_("Marital Status"), max_length=20, blank=True, null=True, default="")
+        verbose_name=_("System User Account"),
+        help_text=_("Linked Django user account for login/mobile attendance (optional)")
+    )
+    
+    # --- 4. Personal Information ---
+    gender = models.CharField(
+        _("Gender"),
+        max_length=1,
+        choices=GENDER_CHOICES,
+        blank=True,
+        null=True
+    )
+    date_of_birth = models.DateField(
+        _("Date of Birth"), 
+        blank=True, 
+        null=True
+    )
+    blood_group = models.CharField(
+        _("Blood Group"),
+        max_length=3,
+        choices=BLOOD_GROUP_CHOICES,
+        blank=True,
+        null=True
+    )
+    marital_status = models.CharField(
+        _("Marital Status"), 
+        max_length=20, 
+        choices=MARITAL_CHOICES,
+        blank=True, 
+        null=True
+    )
+    nid = models.CharField(
+        _("National ID"), 
+        max_length=30, 
+        blank=True, 
+        null=True, 
+        default=""
+    )
+    passport_no = models.CharField(
+        _("Passport Number"),
+        max_length=50,
+        blank=True,
+        null=True
+    )
+    
+    # --- 5. Contact Information ---
+    contact_number = models.CharField(
+        _("Contact Number"), 
+        max_length=20, 
+        blank=True, 
+        null=True, 
+        default=""
+    )
+    email = models.EmailField(
+        _("Email Address"),
+        blank=True,
+        null=True
+    )
+    emergency_contact = models.CharField(
+        _("Emergency Contact"),
+        max_length=20,
+        blank=True,
+        null=True
+    )
+    emergency_contact_name = models.CharField(
+        _("Emergency Contact Name"),
+        max_length=100,
+        blank=True,
+        null=True
+    )
+    emergency_contact_relation = models.CharField(
+        _("Emergency Contact Relation"),
+        max_length=50,
+        blank=True,
+        null=True
+    )
+    
+    # --- 6. Simple Address Information ---
+    present_address = models.TextField(
+        _("Present Address"),
+        blank=True,
+        null=True
+    )
+    permanent_address = models.TextField(
+        _("Permanent Address"),
+        blank=True,
+        null=True
+    )
+    
+    # --- 7. Employment Details ---
+    joining_date = models.DateField(
+        _("Joining Date"), 
+        blank=True, 
+        null=True
+    )
+    confirmation_date = models.DateField(
+        _("Confirmation Date"),
+        blank=True,
+        null=True
+    )
+    job_type = models.CharField(
+        _("Job Type"),
+        max_length=2,
+        choices=JOB_TYPE_CHOICES,
+        default='FT'
+    )
+    employment_status = models.CharField(
+        _("Employment Status"),
+        max_length=20,
+        choices=EMPLOYMENT_STATUS_CHOICES,
+        default='active'
+    )
+    resignation_date = models.DateField(
+        _("Resignation Date"),
+        blank=True,
+        null=True
+    )
+    termination_date = models.DateField(
+        _("Termination Date"),
+        blank=True,
+        null=True
+    )
+    
+    # --- 8. Educational Information ---
+    highest_education = models.CharField(
+        _("Highest Education"),
+        max_length=100,
+        blank=True,
+        null=True
+    )
+    university = models.CharField(
+        _("University/Institution"),
+        max_length=200,
+        blank=True,
+        null=True
+    )
+    passing_year = models.IntegerField(
+        _("Passing Year"),
+        blank=True,
+        null=True
+    )
+    
+    # --- 9. Payroll & Financial Details ---
+    base_salary = models.DecimalField(
+        _("Basic Salary (Monthly)"), 
+        max_digits=10, 
+        decimal_places=2, 
+        default=Decimal('0.00'),
+        blank=True, 
+        null=True,
+        help_text=_("The employee's basic monthly gross salary.")
+    )
 
-    # Payroll Common Fields
-    house_rent_allowance = models.DecimalField(_("House Rent Allowance"), max_digits=10, decimal_places=2, default=0.00)
-    medical_allowance = models.DecimalField(_("Medical Allowance"), max_digits=10, decimal_places=2, default=0.00)
-    conveyance_allowance = models.DecimalField(_("Conveyance Allowance"), max_digits=10, decimal_places=2, default=0.00)
-    food_allowance = models.DecimalField(_("Food Allowance"), max_digits=10, decimal_places=2, default=0.00)
-    attendance_bonus = models.DecimalField(_("Attendance Bonus"), max_digits=10, decimal_places=2, default=0.00)
-    festival_bonus = models.DecimalField(_("Festival Bonus"), max_digits=10, decimal_places=2, default=0.00)
+    # Calculation fields
+    per_hour_rate = models.DecimalField(
+        _("Per Hour Rate"), 
+        max_digits=8, 
+        decimal_places=2, 
+        default=Decimal('30.00'), 
+        blank=True, 
+        null=True,
+        help_text=_("Explicitly set rate for hourly attendance/calculations.")
+    )  
+    expected_working_hours = models.FloatField(
+        _("Expected Working Hours (Daily)"), 
+        default=8.0, 
+        blank=True, 
+        null=True,
+        help_text=_("Daily contractual working hours (e.g., 8.0)")
+    )
+    overtime_rate = models.DecimalField(
+        _("Overtime Rate (per hour)"), 
+        max_digits=8, 
+        decimal_places=2, 
+        default=Decimal('0.00'),
+        blank=True, 
+        null=True,
+        help_text=_("Explicitly set fixed rate for overtime.")
+    )
+    overtime_grace_minutes = models.IntegerField(
+        _("Overtime Grace Minutes"), 
+        default=15, 
+        blank=True, 
+        null=True
+    )
+    
+    # Allowances (All Optional)
+    house_rent_allowance = models.DecimalField(
+        _("House Rent Allowance"), 
+        max_digits=10, 
+        decimal_places=2, 
+        default=Decimal('0.00'), 
+        blank=True, 
+        null=True
+    )
+    medical_allowance = models.DecimalField(
+        _("Medical Allowance"), 
+        max_digits=10, 
+        decimal_places=2, 
+        default=Decimal('0.00'), 
+        blank=True, 
+        null=True
+    )
+    conveyance_allowance = models.DecimalField(
+        _("Conveyance Allowance"), 
+        max_digits=10, 
+        decimal_places=2, 
+        default=Decimal('0.00'), 
+        blank=True, 
+        null=True
+    )
+    food_allowance = models.DecimalField(
+        _("Food Allowance"), 
+        max_digits=10, 
+        decimal_places=2, 
+        default=Decimal('0.00'), 
+        blank=True, 
+        null=True
+    )
+    attendance_bonus = models.DecimalField(
+        _("Attendance Bonus"), 
+        max_digits=10, 
+        decimal_places=2, 
+        default=Decimal('0.00'), 
+        blank=True, 
+        null=True
+    )
+    festival_bonus = models.DecimalField(
+        _("Festival Bonus"), 
+        max_digits=10, 
+        decimal_places=2, 
+        default=Decimal('0.00'), 
+        blank=True, 
+        null=True
+    )
 
-    # Deduction Common Fields
-    provident_fund = models.DecimalField(_("Provident Fund"), max_digits=10, decimal_places=2, default=0.00)
-    tax_deduction = models.DecimalField(_("Tax Deduction"), max_digits=10, decimal_places=2, default=0.00)
-    loan_deduction = models.DecimalField(_("Loan Deduction"), max_digits=10, decimal_places=2, default=0.00)
+    # Deductions (All Optional)
+    provident_fund = models.DecimalField(
+        _("Provident Fund"), 
+        max_digits=10, 
+        decimal_places=2, 
+        default=Decimal('0.00'), 
+        blank=True, 
+        null=True
+    )
+    tax_deduction = models.DecimalField(
+        _("Tax Deduction"), 
+        max_digits=10, 
+        decimal_places=2, 
+        default=Decimal('0.00'), 
+        blank=True, 
+        null=True
+    )
+    loan_deduction = models.DecimalField(
+        _("Loan Deduction"), 
+        max_digits=10, 
+        decimal_places=2, 
+        default=Decimal('0.00'), 
+        blank=True, 
+        null=True
+    )
 
-    # Extra Payroll Info
-    bank_account_no = models.CharField(_("Bank Account No"), max_length=50, blank=True, null=True, default="")
-    payment_method = models.CharField(_("Payment Method"), max_length=20, default="Cash")
-
-    overtime_grace_minutes = models.IntegerField(_("Overtime Grace Minutes"), default=15)
+    # Banking and Payment
+    bank_name = models.CharField(
+        _("Bank Name"),
+        max_length=100,
+        blank=True,
+        null=True
+    )
+    bank_account_no = models.CharField(
+        _("Bank Account No"), 
+        max_length=50, 
+        blank=True, 
+        null=True, 
+        default=""
+    )
+    bank_branch = models.CharField(
+        _("Bank Branch"),
+        max_length=100,
+        blank=True,
+        null=True
+    )
+    payment_method = models.CharField(
+        _("Payment Method"), 
+        max_length=20, 
+        default="Cash", 
+        blank=True, 
+        null=True
+    )
+    
+    # --- 10. Additional Information ---
+    bio = models.TextField(
+        _("Bio/Description"),
+        blank=True,
+        null=True
+    )
+    skills = models.TextField(
+        _("Skills"),
+        blank=True,
+        null=True,
+        help_text=_("Comma separated list of skills")
+    )
+    experience = models.TextField(
+        _("Previous Experience"),
+        blank=True,
+        null=True
+    )
+    
+    # --- 11. System Fields ---
     is_active = models.BooleanField(_("Active"), default=True)
     created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_employees',
+        verbose_name=_("Created By")
+    )
 
+    # --- Custom Methods ---
     def __str__(self):
         return f"{self.employee_id} - {self.name}"
 
@@ -617,20 +990,44 @@ class Employee(models.Model):
         full_name = f"{self.first_name or ''} {self.last_name or ''}".strip()
         return full_name or self.name
     
+    def get_age(self):
+        """Calculate age from date of birth"""
+        if self.date_of_birth:
+            today = timezone.now().date()
+            return today.year - self.date_of_birth.year - (
+                (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
+            )
+        return None
+    
+    def get_service_period(self):
+        """Calculate service period in years"""
+        if self.joining_date:
+            today = timezone.now().date()
+            return today.year - self.joining_date.year - (
+                (today.month, today.day) < (self.joining_date.month, self.joining_date.day)
+            )
+        return 0
+    
     def get_hourly_rate(self):
-        """Calculate hourly rate from basic salary"""
-        if self.basic_salary and self.expected_working_hours:
-            # Assuming monthly salary and 22 working days
-            return float(self.basic_salary) / (22 * self.expected_working_hours)
+        """Calculate hourly rate from basic salary (assuming 22 working days and expected_working_hours)"""
+        basic_salary = self.base_salary if self.base_salary is not None else Decimal('0.00')
+        expected_hours = self.expected_working_hours if self.expected_working_hours is not None else 8.0
+        
+        if basic_salary > Decimal('0.00') and expected_hours > 0:
+            try:
+                return float(basic_salary) / (22 * expected_hours)
+            except (ZeroDivisionError, TypeError):
+                return 0.0
         return 0.0
     
     def get_per_hour_rate(self):
-        """Get per hour rate for hourly attendance calculation"""
-        return float(self.per_hour_rate)
+        """Get per hour rate from the dedicated field for hourly attendance calculation"""
+        per_hour_rate = self.per_hour_rate if self.per_hour_rate is not None else Decimal('0.00')
+        return float(per_hour_rate)
     
     def get_overtime_rate(self):
-        """Get overtime rate, fallback to 1.5x hourly rate if not set"""
-        if self.overtime_rate:
+        """Get overtime rate, fallback to 1.5x hourly rate if not explicitly set"""
+        if self.overtime_rate and self.overtime_rate > Decimal('0.00'):
             return float(self.overtime_rate)
         else:
             return self.get_hourly_rate() * 1.5
@@ -638,9 +1035,9 @@ class Employee(models.Model):
     class Meta:
         verbose_name = _("Employee")
         verbose_name_plural = _("Employees")
-        unique_together = ('company', 'employee_id')
+        unique_together = ('company', 'employee_id') 
         ordering = ['employee_id']
-
+        
 class EmployeeSeparation(models.Model):
     """
     Represents an employee's separation from the organization.

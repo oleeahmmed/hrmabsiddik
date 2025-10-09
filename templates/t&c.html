@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ezydream - Business Management Software Solutions</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script>
+      tailwind.config = {
+          theme: {
+              extend: {
+                  colors: {
+                      primary: {
+                          50: '#faf5ff',
+                          100: '#f3e8ff',
+                          200: '#e9d5ff',
+                          300: '#d8b4fe',
+                          400: '#c084fc',
+                          500: '#a855f7',
+                          600: '#9333ea',
+                          700: '#7c3aed',
+                          800: '#6b21a8',
+                          900: '#581c87',
+                      },
+                      accent: {
+                          500: '#673ab7',
+                          600: '#5e35b1',
+                      }
+                  },
+                  fontFamily: {
+                      'sans': ['Inter', 'system-ui', 'sans-serif'],
+                  },
+                  animation: {
+                      'fade-in-up': 'fadeInUp 0.6s ease-out',
+                      'fade-in-down': 'fadeInDown 0.6s ease-out',
+                      'scale-in': 'scaleIn 0.5s ease-out',
+                      'slide-in-left': 'slideInLeft 0.6s ease-out',
+                      'slide-in-right': 'slideInRight 0.6s ease-out',
+                      'bounce-gentle': 'bounceGentle 2s infinite',
+                      'float': 'float 3s ease-in-out infinite',
+                      'glow': 'glow 2s ease-in-out infinite alternate',
+                      'pulse-slow': 'pulse 3s ease-in-out infinite',
+                      'slide-up': 'slideUp 0.3s ease-out',
+                      'slide-down': 'slideDown 0.3s ease-out',
+                      'ripple': 'ripple 0.6s linear forwards', /* Added ripple animation */
+                      'border-pulse': 'borderPulse 2s infinite alternate', /* Added border pulse for cards */
+                  },
+                  keyframes: {
+                      fadeInUp: {
+                          '0%': { opacity: '0', transform: 'translateY(30px)' },
+                          '100%': { opacity: '1', transform: 'translateY(0)' }
+                      },
+                      fadeInDown: {
+                          '0%': { opacity: '0', transform: 'translateY(-30px)' },
+                          '100%': { opacity: '1', transform: 'translateY(0)' }
+                      },
+                      scaleIn: {
+                          '0%': { opacity: '0', transform: 'scale(0.9)' },
+                          '100%': { opacity: '1', transform: 'scale(1)' }
+                      },
+                      slideInLeft: {
+                          '0%': { opacity: '0', transform: 'translateX(-30px)' },
+                          '100%': { opacity: '1', transform: 'translateX(0)' }
+                      },
+                      slideInRight: {
+                          '0%': { opacity: '0', transform: 'translateX(30px)' },
+                          '100%': { opacity: '1', transform: 'translateX(0)' }
+                      },
+                      bounceGentle: {
+                          '0%, 100%': { transform: 'translateY(0)' },
+                          '50%': { transform: 'translateY(-10px)' }
+                      },
+                      float: {
+                          '0%, 100%': { transform: 'translateY(0px)' },
+                          '50%': { transform: 'translateY(-20px)' }
+                      },
+                      glow: {
+                          '0%': { boxShadow: '0 0 20px rgba(168, 85, 247, 0.4)' },
+                          '100%': { boxShadow: '0 0 30px rgba(168, 85, 247, 0.6)' }
+                      },
+                      slideUp: {
+                          '0%': { transform: 'translateY(10px)', opacity: '0' },
+                          '100%': { transform: 'translateY(0)', opacity: '1' }
+                      },
+                      slideDown: {
+                          '0%': { transform: 'translateY(0)', opacity: '1' },
+                          '100%': { transform: 'translateY(10px)', opacity: '0' }
+                      },
+                      /* Keyframes for ripple effect */
+                      ripple: {
+                          '0%': { transform: 'scale(0)', opacity: '1' },
+                          '100%': 'transform: scale(2.5), opacity: 0'
+                      },
+                      /* Keyframes for border pulse effect */
+                      borderPulse: {
+                          '0%': { boxShadow: '0 0 0px rgba(103, 58, 183, 0.4)' },
+                          '50%': { boxShadow: '0 0 15px rgba(103, 58, 183, 0.7)' },
+                          '100%': { boxShadow: '0 0 0px rgba(103, 58, 183, 0.4)' }
+                      }
+                  }
+              }
+          }
+      }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+      /* Custom scroll animations */
+      .scroll-nav {
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      
+      .scroll-nav.scrolled {
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(229, 231, 235, 0.3);
+          border-radius: 16px;
+          margin: 12px auto;
+          max-width: 1200px;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+          transform: translateY(0);
+      }
+      
+      .scroll-nav.scrolled .nav-content {
+          padding: 12px 24px;
+      }
+      
+      /* Smooth reveal animations */
+      .reveal {
+          opacity: 0;
+          transform: translateY(50px);
+          transition: all 0.6s ease-out;
+      }
+      
+      .reveal.revealed {
+          opacity: 1;
+          transform: translateY(0);
+      }
+      
+      /* Gradient text animation */
+      .gradient-text {
+          background: linear-gradient(-45deg, #673ab7, #9333ea, #a855f7, #c084fc);
+          background-size: 400% 400%;
+          animation: gradientShift 4s ease infinite;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+      }
+      
+      @keyframes gradientShift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+      }
+      
+      /* Floating elements */
+      .floating-element {
+          animation: float 6s ease-in-out infinite;
+      }
+      
+      .floating-element:nth-child(2) {
+          animation-delay: -2s;
+      }
+      
+      .floating-element:nth-child(3) {
+          animation-delay: -4s;
+      }
+      
+      /* Interactive hover effects */
+      .interactive-card {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      
+      .interactive-card:hover {
+          transform: translateY(-8px) scale(1.02);
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+      }
+      
+      /* Glowing button effect */
+      .glow-button {
+          position: relative;
+          overflow: hidden;
+      }
+      
+      .glow-button::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+          transition: left 0.5s;
+      }
+      
+      .glow-button:hover::before {
+          left: 100%;
+      }
+      
+      /* Typing animation */
+      .typing-animation {
+          border-right: 2px solid #673ab7;
+          animation: blink 1s infinite;
+      }
+      
+      @keyframes blink {
+          0%, 50% { border-color: #673ab7; }
+          51%, 100% { border-color: transparent; }
+      }
+
+      /* Multi-button FAB System */
+      .fab-container {
+          position: fixed;
+          bottom: 30px;
+          right: 30px;
+          z-index: 1000;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+      }
+
+      .fab-main {
+          width: 60px;
+          height: 60px;
+          background: linear-gradient(135deg, #673ab7, #9333ea);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 8px 25px rgba(103, 58, 183, 0.4);
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          animation: pulse-slow 3s ease-in-out infinite;
+      }
+
+      .fab-main:hover {
+          transform: scale(1.1) translateY(-2px);
+          box-shadow: 0 12px 35px rgba(103, 58, 183, 0.6);
+      }
+
+      .fab-sub {
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+          opacity: 0;
+          visibility: hidden;
+          transform: translateY(20px) scale(0.8);
+      }
+
+      .fab-container.active .fab-sub {
+          opacity: 1;
+          visibility: visible;
+          transform: translateY(0) scale(1);
+      }
+
+      .fab-sub:nth-child(1) { transition-delay: 0.1s; }
+      .fab-sub:nth-child(2) { transition-delay: 0.15s; }
+      .fab-sub:nth-child(3) { transition-delay: 0.2s; }
+
+      .fab-whatsapp {
+          background: #25D366;
+      }
+
+      .fab-phone {
+          background: #007BFF;
+      }
+
+      .fab-email {
+          background: #EA4335;
+      }
+
+      .fab-sub:hover {
+          transform: scale(1.1) translateY(-2px);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+      }
+
+      .fab-tooltip {
+          position: absolute;
+          right: 60px;
+          top: 50%;
+          transform: translateY(-50%);
+          background: rgba(0, 0, 0, 0.8);
+          color: white;
+          padding: 8px 12px;
+          border-radius: 6px;
+          font-size: 14px;
+          white-space: nowrap;
+          opacity: 0;
+          visibility: hidden;
+          transition: all 0.3s ease;
+          pointer-events: none;
+      }
+
+      .fab-sub:hover .fab-tooltip,
+      .fab-main:hover .fab-tooltip {
+          opacity: 1;
+          visibility: visible;
+          right: 65px;
+      }
+
+      .fab-tooltip::after {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 100%;
+          transform: translateY(-50%);
+          border: 5px solid transparent;
+          border-left-color: rgba(0, 0, 0, 0.8);
+      }
+
+      /* Portfolio improvements */
+      .portfolio-card {
+          background: white;
+          border-radius: 16px;
+          padding: 24px;
+          border: 1px solid #e5e7eb;
+          transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
+      }
+
+      .portfolio-card:hover {
+          transform: translateY(-8px);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+          border-color: #d1d5db;
+      }
+
+      .portfolio-category {
+          display: inline-flex;
+          align-items: center;
+          padding: 6px 12px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 16px;
+      }
+
+      .category-erp { background: #dbeafe; color: #1e40af; }
+      .category-hrm { background: #dcfce7; color: #166534; }
+      .category-finance { background: #fef3c7; color: #92400e; }
+      .category-crm { background: #ede9fe; color: #6b21a8; }
+      .category-ecommerce { background: #fee2e2; color: #991b1b; }
+      .category-custom { background: #ddd6fe; color: #5b21b6; }
+
+      .portfolio-metrics {
+          display: flex;
+          justify-content: space-between;
+          margin-top: 16px;
+          padding-top: 16px;
+          border-top: 1px solid #f3f4f6;
+      }
+
+      .portfolio-metric {
+          display: flex;
+          align-items: center;
+          font-size: 14px;
+          color: #6b7280;
+      }
+
+      .portfolio-metric i {
+          margin-right: 6px;
+          width: 16px;
+          height: 16px;
+      }
+
+      /* Customer logos section */
+      .customer-logo {
+          height: 60px;
+          width: auto;
+          max-width: 120px;
+          object-fit: contain;
+          filter: grayscale(100%);
+          opacity: 0.6;
+          transition: all 0.3s ease;
+      }
+
+      .customer-logo:hover {
+          filter: grayscale(0%);
+          opacity: 1;
+          transform: scale(1.05);
+      }
+
+      .logo-scroll {
+          animation: scroll 30s linear infinite;
+      }
+
+      @keyframes scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+      }
+
+      /* Timeline styles */
+      .timeline-item {
+          position: relative;
+          padding-left: 40px;
+          margin-bottom: 32px;
+      }
+
+      .timeline-item::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 8px;
+          width: 16px;
+          height: 16px;
+          background: linear-gradient(135deg, #673ab7, #9333ea);
+          border-radius: 50%;
+          box-shadow: 0 0 0 4px rgba(103, 58, 183, 0.2);
+      }
+
+      .timeline-item::after {
+          content: '';
+          position: absolute;
+          left: 7px;
+          top: 24px;
+          width: 2px;
+          height: calc(100% + 8px);
+          background: linear-gradient(to bottom, #673ab7, transparent);
+      }
+
+      .timeline-item:last-child::after {
+          display: none;
+      }
+
+      /* About section specific styles */
+      .about-stat {
+          text-align: center;
+          padding: 24px;
+          background: white;
+          border-radius: 16px;
+          border: 1px solid #e5e7eb;
+          transition: all 0.3s ease;
+      }
+
+      .about-stat:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+          border-color: #673ab7;
+      }
+
+      .founder-quote {
+          position: relative;
+          background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+          border-left: 4px solid #673ab7;
+          padding: 32px;
+          border-radius: 16px;
+          margin: 32px 0;
+      }
+
+      .founder-quote::before {
+          content: '"';
+          position: absolute;
+          top: -10px;
+          left: 20px;
+          font-size: 60px;
+          color: #673ab7;
+          font-family: serif;
+          opacity: 0.3;
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+          width: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+          background: #f1f1f1;
+      }
+
+      ::-webkit-scrollbar-thumb {
+          background: linear-gradient(135deg, #673ab7, #9333ea);
+          border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(135deg, #5e35b1, #7c3aed);
+      }
+
+      /* Leadership Card Enhancements */
+      .leadership-card {
+          position: relative;
+          overflow: hidden;
+          border: 1px solid #e5e7eb; /* Base border */
+          transition: all 0.3s ease;
+      }
+
+      .leadership-card:hover {
+          border-color: transparent; /* Hide base border on hover to show animated border */
+          animation: borderPulse 2s infinite alternate; /* Border glow/pulse */
+      }
+
+      /* Corner Bracket Reveal */
+      .leadership-card::before,
+      .leadership-card::after {
+          content: '';
+          position: absolute;
+          width: 20px;
+          height: 20px;
+          border-color: #a855f7; /* Accent color for brackets */
+          border-style: solid;
+          opacity: 0;
+          transition: all 0.3s ease-out;
+      }
+
+      .leadership-card::before {
+          top: 0;
+          left: 0;
+          border-width: 2px 0 0 2px;
+          transform: translate(-10px, -10px);
+      }
+
+      .leadership-card::after {
+          bottom: 0;
+          right: 0;
+          border-width: 0 2px 2px 0;
+          transform: translate(10px, 10px);
+      }
+
+      .leadership-card:hover::before {
+          opacity: 1;
+          transform: translate(0, 0);
+      }
+
+      .leadership-card:hover::after {
+          opacity: 1;
+          transform: translate(0, 0);
+      }
+
+      /* Ripple Effect */
+      .ripple-effect {
+          position: absolute;
+          border-radius: 50%;
+          background-color: rgba(168, 85, 247, 0.4); /* Primary color with transparency */
+          transform: scale(0);
+          animation: ripple 0.6s linear forwards;
+          pointer-events: none; /* Ensure clicks pass through */
+      }
+
+      /* Logo specific styles */
+      .logo-container {
+          transition: all 0.3s ease-in-out;
+          display: flex;
+          align-items: center;
+      }
+
+      .logo-container img {
+          transition: all 0.3s ease-in-out;
+      }
+
+      .logo-container.initial-size img {
+          width: 150px; /* Large size initially */
+          height: auto;
+      }
+
+      .logo-container.scrolled-size img {
+          width: 80px; /* Smaller size on scroll */
+          height: auto;
+      }
+  </style>
+
+  <style>
+    .mouse-trail-element {
+    position: fixed;
+    pointer-events: none;
+    background-color: rgba(168, 85, 247, 0.6); /* Primary color with transparency */
+    border-radius: 50%;
+    opacity: 0;
+    transform: scale(0);
+    animation: fadeAndScale 0.8s forwards;
+    z-index: 9999; /* Ensure it's on top */
+}
+
+@keyframes fadeAndScale {
+    0% {
+        opacity: 1;
+        transform: scale(0);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.2);
+    }
+}
+  </style>
+  <script>
+    document.addEventListener('mousemove', function(e) {
+    // Create a new element for the trail
+    const trailElement = document.createElement('div');
+    trailElement.classList.add('mouse-trail-element');
+    document.body.appendChild(trailElement);
+
+    // Set its position
+    trailElement.style.left = `${e.clientX - 5}px`; /* Adjust -5 for centering */
+    trailElement.style.top = `${e.clientY - 5}px`;   /* Adjust -5 for centering */
+
+    // Set a random size for variety
+    const size = Math.random() * 10 + 5; // Between 5px and 15px
+    trailElement.style.width = `${size}px`;
+    trailElement.style.height = `${size}px`;
+
+    // Remove the element after its animation finishes
+    trailElement.addEventListener('animationend', () => {
+        trailElement.remove();
+    });
+});
+  </script>
+</head>
+<body class="bg-white font-sans overflow-x-hidden">
+  <!-- Multi-button FAB System -->
+  <div class="fab-container" id="fabContainer">
+      <div class="fab-sub fab-whatsapp" onclick="openWhatsApp()">
+          <i data-lucide="message-circle" class="w-5 h-5 text-white"></i>
+          <div class="fab-tooltip">WhatsApp Chat</div>
+      </div>
+      <div class="fab-sub fab-phone" onclick="makeCall()">
+          <i data-lucide="phone" class="w-5 h-5 text-white"></i>
+          <div class="fab-tooltip">Call Us</div>
+      </div>
+      <div class="fab-sub fab-email" onclick="sendEmail()">
+          <i data-lucide="mail" class="w-5 h-5 text-white"></i>
+          <div class="fab-tooltip">Send Email</div>
+      </div>
+      <div class="fab-main" onclick="toggleFab()">
+          <i data-lucide="message-square" class="w-6 h-6 text-white" id="fabIcon"></i>
+          <div class="fab-tooltip">Contact Us</div>
+      </div>
+  </div>
+
+   <nav class="scroll-nav fixed top-0 left-0 right-0 z-50 transition-all duration-500">
+        <div class="nav-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <div id="logo-area" class="logo-container initial-size flex-shrink-0 flex items-center">
+                       <img src="https://ezydream.com/assets/logo/logo.jpeg" alt="Ezydream Logo" class="h-auto" id="main-logo">
+                    </div>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="index.html" class="text-gray-600 hover:text-accent-600 transition-all duration-300 font-medium hover:scale-105">Home</a>
+                        <a href="solution.html" class="text-gray-600 hover:text-accent-600 transition-all duration-300 font-medium hover:scale-105">Solutions</a>
+                        <a href="about.html" class="text-gray-600 hover:text-accent-600 transition-all duration-300 font-medium hover:scale-105">About</a>
+                        <a href="project.html" class="text-gray-600 hover:text-accent-600 transition-all duration-300 font-medium hover:scale-105">Projects</a>
+                        <a href="clients.html" class="text-accent-600 font-semibold transition-all duration-300 font-medium hover:scale-105">Clients</a>
+                        <a href="faq.html" class="text-gray-600 hover:text-accent-600 transition-all duration-300 font-medium hover:scale-105">FAQ</a>
+                        <a href="contactus.html" class="text-gray-600 hover:text-accent-600 transition-all duration-300 font-medium hover:scale-105">Contact</a>
+                        <a href="t&c.html" class="text-gray-600 hover:text-accent-600 transition-all duration-300 font-medium hover:scale-105">Terms & Conditions</a>
+                    </div>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-4 flex items-center md:ml-6 space-x-3">
+                        <a href="#" class="glow-button bg-gradient-to-r from-accent-500 to-primary-600 text-white px-6 py-3 rounded-xl hover:from-accent-600 hover:to-primary-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                            Get Started
+                        </a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-600 hover:text-gray-900 transition-colors">
+                        <i data-lucide="menu" class="h-6 w-6"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="md:hidden hidden border-t border-gray-100 bg-white/95 backdrop-blur-lg rounded-b-2xl mx-4 shadow-lg">
+            <div class="px-6 pt-4 pb-6 space-y-3">
+                <a href="index.html" class="block text-gray-600 hover:text-gray-900 font-medium py-2 transition-colors">Home</a>
+                <a href="solution.html" class="block text-gray-600 hover:text-gray-900 font-medium py-2 transition-colors">Solutions</a>
+                <a href="about.html" class="block text-gray-600 hover:text-gray-900 font-medium py-2 transition-colors">About</a>
+                <a href="project.html" class="block text-gray-600 hover:text-gray-900 font-medium py-2 transition-colors">Projects</a>
+                <a href="clients.html" class="block text-gray-600 hover:text-gray-900 font-medium py-2 transition-colors">Clients</a>
+                <a href="faq.html" class="block text-gray-600 hover:text-gray-900 font-medium py-2 transition-colors">FAQ</a>
+                <a href="contactus.html" class="block text-accent-600 font-semibold py-2 transition-colors">Contact</a>
+                <a href="t&c.html" class="block text-gray-600 hover:text-gray-900 font-medium py-2 transition-colors">Terms & Conditions</a>
+                <div class="pt-4 border-t border-gray-100 space-y-3">
+                    <a href="#" class="block bg-gradient-to-r from-accent-500 to-primary-600 text-white px-4 py-3 rounded-xl text-center font-medium shadow-lg">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+<!-- Compact Terms with Quick Reference Section -->
+<section class="py-16 lg:py-20 bg-white relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="text-center mb-16">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">Terms & Conditions</h1>
+            <p class="text-xl text-gray-600 mb-8">Comprehensive legal framework for EZYDREAM ERP software usage</p>
+            
+            <!-- Quick Stats -->
+            <div class="flex flex-wrap justify-center gap-6 mb-8">
+                <div class="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-4 border border-purple-100">
+                    <div class="text-2xl font-bold text-purple-600">v2.1</div>
+                    <div class="text-sm text-gray-600">Current Version</div>
+                </div>
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-100">
+                    <div class="text-2xl font-bold text-blue-600">Jan 15, 2024</div>
+                    <div class="text-sm text-gray-600">Last Updated</div>
+                </div>
+                <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-4 border border-indigo-100">
+                    <div class="text-2xl font-bold text-indigo-600">4 Sections</div>
+                    <div class="text-sm text-gray-600">Main Categories</div>
+                </div>
+                <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-4 border border-green-100">
+                    <div class="text-2xl font-bold text-green-600">~15 min</div>
+                    <div class="text-sm text-gray-600">Reading Time</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Reference Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+            <div class="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-6 border border-purple-100 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center mb-4">
+                    <i data-lucide="file-check" class="w-6 h-6 text-white"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Usage Agreement</h3>
+                <p class="text-gray-600 text-sm mb-4">Software license, subscription terms, and renewal processes</p>
+                <ul class="space-y-1 text-gray-700 text-xs">
+                    <li>• Non-exclusive software license</li>
+                    <li>• Monthly/Annual billing cycles</li>
+                    <li>• Automatic renewal process</li>
+                    <li>• User responsibilities</li>
+                </ul>
+            </div>
+            
+            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mb-4">
+                    <i data-lucide="shield-alert" class="w-6 h-6 text-white"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Liability</h3>
+                <p class="text-gray-600 text-sm mb-4">Limitations, responsibilities, and service commitments</p>
+                <ul class="space-y-1 text-gray-700 text-xs">
+                    <li>• Liability cap: 12 months fees</li>
+                    <li>• 99.9% uptime guarantee</li>
+                    <li>• Excluded damages defined</li>
+                    <li>• Service level commitments</li>
+                </ul>
+            </div>
+            
+            <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mb-4">
+                    <i data-lucide="copyright" class="w-6 h-6 text-white"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Intellectual Property</h3>
+                <p class="text-gray-600 text-sm mb-4">Ownership rights for software and customer data</p>
+                <ul class="space-y-1 text-gray-700 text-xs">
+                    <li>• EZYDREAM owns software IP</li>
+                    <li>• Customer owns their data</li>
+                    <li>• Usage restrictions apply</li>
+                    <li>• Data export rights</li>
+                </ul>
+            </div>
+            
+            <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mb-4">
+                    <i data-lucide="user-minus" class="w-6 h-6 text-white"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Termination</h3>
+                <p class="text-gray-600 text-sm mb-4">Cancellation procedures and refund policies</p>
+                <ul class="space-y-1 text-gray-700 text-xs">
+                    <li>• Multiple cancellation methods</li>
+                    <li>• 30-day money back guarantee</li>
+                    <li>• Pro-rated refunds available</li>
+                    <li>• 90-day data retention</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Detailed Terms Sections -->
+        <div class="space-y-12">
+            <!-- Usage Agreement -->
+            <div class="bg-gradient-to-br from-purple-50 to-blue-50 rounded-3xl p-8 border border-purple-100">
+                <div class="flex items-center mb-8">
+                    <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center mr-6">
+                        <i data-lucide="file-check" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-3xl font-bold text-gray-900">Usage Agreement</h2>
+                        <p class="text-gray-600">Terms governing your use of EZYDREAM ERP software</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                                <i data-lucide="key" class="w-5 h-5 text-purple-500 mr-2"></i>
+                                Software License
+                            </h3>
+                            <p class="text-gray-700 text-sm mb-4">
+                                EZYDREAM grants you a limited, non-exclusive, non-transferable license to use our ERP software during your subscription period.
+                            </p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-2 text-sm">Includes:</h4>
+                                    <ul class="space-y-1 text-gray-700 text-xs">
+                                        <li>• Software access & updates</li>
+                                        <li>• Technical documentation</li>
+                                        <li>• Customer support</li>
+                                        <li>• Data backup services</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-2 text-sm">Restrictions:</h4>
+                                    <ul class="space-y-1 text-gray-700 text-xs">
+                                        <li>• No reverse engineering</li>
+                                        <li>• No redistribution</li>
+                                        <li>• No unauthorized access</li>
+                                        <li>• No exceeding user limits</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                                <i data-lucide="users" class="w-5 h-5 text-blue-500 mr-2"></i>
+                                User Responsibilities
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="flex items-start">
+                                    <i data-lucide="shield-check" class="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0"></i>
+                                    <div>
+                                        <h4 class="font-medium text-gray-900 text-sm">Security</h4>
+                                        <p class="text-gray-600 text-xs">Maintain credential confidentiality and implement access controls</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <i data-lucide="scale" class="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0"></i>
+                                    <div>
+                                        <h4 class="font-medium text-gray-900 text-sm">Compliance</h4>
+                                        <p class="text-gray-600 text-xs">Follow applicable laws and use software for lawful purposes only</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <i data-lucide="database" class="w-4 h-4 text-purple-500 mr-2 mt-0.5 flex-shrink-0"></i>
+                                    <div>
+                                        <h4 class="font-medium text-gray-900 text-sm">Data Management</h4>
+                                        <p class="text-gray-600 text-xs">Ensure data accuracy and maintain regular backups</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                                <i data-lucide="credit-card" class="w-5 h-5 text-indigo-500 mr-2"></i>
+                                Subscription & Billing
+                            </h3>
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-3 gap-4">
+                                    <div class="text-center p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+                                        <div class="text-lg font-bold text-blue-600">Monthly</div>
+                                        <div class="text-xs text-gray-600">Same date billing</div>
+                                    </div>
+                                    <div class="text-center p-3 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg border border-indigo-100">
+                                        <div class="text-lg font-bold text-indigo-600">Annual</div>
+                                        <div class="text-xs text-gray-600">15% discount</div>
+                                    </div>
+                                    <div class="text-center p-3 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-100">
+                                        <div class="text-lg font-bold text-purple-600">Enterprise</div>
+                                        <div class="text-xs text-gray-600">Custom terms</div>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-gray-900 mb-2 text-sm">Payment Terms</h4>
+                                    <ul class="space-y-1 text-gray-700 text-xs">
+                                        <li>• Due within 30 days of invoice</li>
+                                        <li>• Late fees: 1.5% per month</li>
+                                        <li>• 60 days notice for price changes</li>
+                                        <li>• All fees in USD unless specified</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                                <i data-lucide="refresh-cw" class="w-5 h-5 text-green-500 mr-2"></i>
+                                Renewal Process
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                        <span class="text-green-600 font-bold text-xs">30</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-gray-900 text-sm">Days Before</h4>
+                                        <p class="text-gray-600 text-xs">Renewal notification with pricing details</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
+                                        <span class="text-yellow-600 font-bold text-xs">7</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-gray-900 text-sm">Days Before</h4>
+                                        <p class="text-gray-600 text-xs">Final reminder with cancellation options</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                        <span class="text-blue-600 font-bold text-xs">0</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-gray-900 text-sm">Renewal Date</h4>
+                                        <p class="text-gray-600 text-xs">Automatic billing and service continuation</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Liability Section -->
+            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-8 border border-blue-100">
+                <div class="flex items-center mb-8">
+                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mr-6">
+                        <i data-lucide="shield-alert" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-3xl font-bold text-gray-900">Liability & Limitations</h2>
+                        <p class="text-gray-600">Understanding our responsibilities and liability limitations</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                            <i data-lucide="alert-triangle" class="w-5 h-5 text-red-500 mr-2"></i>
+                            Liability Cap
+                        </h3>
+                        <div class="text-center mb-4">
+                            <div class="text-3xl font-bold text-red-600 mb-2">$10,000</div>
+                            <div class="text-sm text-gray-600">or 12 months fees</div>
+                            <div class="text-xs text-gray-500">(whichever is greater)</div>
+                        </div>
+                        <div class="bg-red-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-900 mb-2 text-sm">Excluded Damages:</h4>
+                            <ul class="space-y-1 text-gray-700 text-xs">
+                                <li>• Indirect or consequential damages</li>
+                                <li>• Loss of profits or revenue</li>
+                                <li>• Data loss from user error</li>
+                                <li>• Third-party integration issues</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                            <i data-lucide="check-shield" class="w-5 h-5 text-green-500 mr-2"></i>
+                            Our Commitments
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                                <span class="font-medium text-gray-900 text-sm">Uptime</span>
+                                <span class="text-green-600 font-bold text-sm">99.9%</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                                <span class="font-medium text-gray-900 text-sm">Backups</span>
+                                <span class="text-green-600 font-bold text-sm">Daily</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                                <span class="font-medium text-gray-900 text-sm">Security</span>
+                                <span class="text-green-600 font-bold text-sm">SOC 2</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                                <span class="font-medium text-gray-900 text-sm">Support</span>
+                                <span class="text-green-600 font-bold text-sm">24/7</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                            <i data-lucide="info" class="w-5 h-5 text-gray-500 mr-2"></i>
+                            Important Notes
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h4 class="font-semibold text-gray-900 mb-2 text-sm">Warranty Disclaimer</h4>
+                                <p class="text-gray-700 text-xs">
+                                    Software provided "as is" without warranties of any kind. No guarantee of uninterrupted or error-free operation.
+                                </p>
+                            </div>
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <h4 class="font-semibold text-gray-900 mb-2 text-sm">Force Majeure</h4>
+                                <p class="text-gray-700 text-xs">
+                                    Not liable for delays due to circumstances beyond reasonable control (natural disasters, etc.).
+                                </p>
+                            </div>
+                            <div class="bg-yellow-50 rounded-lg p-4">
+                                <h4 class="font-semibold text-gray-900 mb-2 text-sm">Claim Process</h4>
+                                <p class="text-gray-700 text-xs">
+                                    Contact support within 30 days with detailed documentation for any liability claims.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Intellectual Property Section -->
+            <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl p-8 border border-indigo-100">
+                <div class="flex items-center mb-8">
+                    <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mr-6">
+                        <i data-lucide="copyright" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-3xl font-bold text-gray-900">Intellectual Property Rights</h2>
+                        <p class="text-gray-600">Ownership clarification for software and customer data</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                                <i data-lucide="shield-check" class="w-5 h-5 text-indigo-500 mr-2"></i>
+                                EZYDREAM Owns
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="text-center p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+                                    <i data-lucide="code" class="w-8 h-8 text-indigo-500 mx-auto mb-2"></i>
+                                    <h4 class="font-semibold text-gray-900 text-sm mb-1">Software</h4>
+                                    <p class="text-gray-600 text-xs">Source code, algorithms, architecture</p>
+                                </div>
+                                <div class="text-center p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+                                    <i data-lucide="image" class="w-8 h-8 text-indigo-500 mx-auto mb-2"></i>
+                                    <h4 class="font-semibold text-gray-900 text-sm mb-1">Branding</h4>
+                                    <p class="text-gray-600 text-xs">Trademarks, logos, marketing materials</p>
+                                </div>
+                                <div class="text-center p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+                                    <i data-lucide="book" class="w-8 h-8 text-indigo-500 mx-auto mb-2"></i>
+                                    <h4 class="font-semibold text-gray-900 text-sm mb-1">Content</h4>
+                                    <p class="text-gray-600 text-xs">Documentation, training materials</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                                <i data-lucide="x-circle" class="w-5 h-5 text-red-500 mr-2"></i>
+                                Prohibited Activities
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-2 text-sm">Technical:</h4>
+                                    <ul class="space-y-1 text-gray-700 text-xs">
+                                        <li>• Reverse engineering</li>
+                                        <li>• Creating derivative works</li>
+                                        <li>• Removing copyright notices</li>
+                                        <li>• Unauthorized system access</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-2 text-sm">Commercial:</h4>
+                                    <ul class="space-y-1 text-gray-700 text-xs">
+                                        <li>• Reselling or sublicensing</li>
+                                        <li>• Using trademarks</li>
+                                        <li>• Creating competing products</li>
+                                        <li>• Sharing credentials</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                                <i data-lucide="database" class="w-5 h-5 text-green-500 mr-2"></i>
+                                You Own Your Data
+                            </h3>
+                            <div class="space-y-4">
+                                <div class="bg-green-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-gray-900 mb-2 text-sm">Your Data Includes:</h4>
+                                    <ul class="space-y-1 text-gray-700 text-xs">
+                                        <li>• Customer and vendor information</li>
+                                        <li>• Financial records and transactions</li>
+                                        <li>• Employee and HR data</li>
+                                        <li>• Inventory and product information</li>
+                                        <li>• Reports and configurations</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-blue-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-gray-900 mb-2 text-sm">Your Rights:</h4>
+                                    <ul class="space-y-1 text-gray-700 text-xs">
+                                        <li>• Export data anytime (CSV, XML, JSON)</li>
+                                        <li>• No additional export fees</li>
+                                        <li>• 90-day grace period after cancellation</li>
+                                        <li>• Request immediate data deletion</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                                <i data-lucide="settings" class="w-5 h-5 text-purple-500 mr-2"></i>
+                                Custom Development
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="bg-purple-50 rounded-lg p-3">
+                                    <h4 class="font-medium text-gray-900 text-sm mb-1">Shared Ownership</h4>
+                                    <p class="text-gray-600 text-xs">Custom features may have joint IP rights as agreed</p>
+                                </div>
+                                <div class="bg-blue-50 rounded-lg p-3">
+                                    <h4 class="font-medium text-gray-900 text-sm mb-1">Usage Rights</h4>
+                                    <p class="text-gray-600 text-xs">Perpetual usage rights survive subscription termination</p>
+                                </div>
+                                <div class="bg-green-50 rounded-lg p-3">
+                                    <h4 class="font-medium text-gray-900 text-sm mb-1">Improvements</h4>
+                                    <p class="text-gray-600 text-xs">General improvements may be added to standard platform</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Termination Policy Section -->
+            <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-3xl p-8 border border-purple-100">
+                <div class="flex items-center mb-8">
+                    <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mr-6">
+                        <i data-lucide="user-minus" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-3xl font-bold text-gray-900">Termination Policy</h2>
+                        <p class="text-gray-600">Cancellation procedures and refund policies</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                            <i data-lucide="user-x" class="w-5 h-5 text-purple-500 mr-2"></i>
+                            How to Cancel
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center p-3 bg-purple-50 rounded-lg">
+                                <i data-lucide="monitor" class="w-5 h-5 text-purple-500 mr-3"></i>
+                                <div>
+                                    <h4 class="font-medium text-gray-900 text-sm">Dashboard</h4>
+                                    <p class="text-gray-600 text-xs">Self-service 24/7</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center p-3 bg-purple-50 rounded-lg">
+                                <i data-lucide="mail" class="w-5 h-5 text-purple-500 mr-3"></i>
+                                <div>
+                                    <h4 class="font-medium text-gray-900 text-sm">Email</h4>
+                                    <p class="text-gray-600 text-xs">support@ezydream.com</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center p-3 bg-purple-50 rounded-lg">
+                                <i data-lucide="phone" class="w-5 h-5 text-purple-500 mr-3"></i>
+                                <div>
+                                    <h4 class="font-medium text-gray-900 text-sm">Phone</h4>
+                                    <p class="text-gray-600 text-xs">Business hours</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center p-3 bg-purple-50 rounded-lg">
+                                <i data-lucide="message-circle" class="w-5 h-5 text-purple-500 mr-3"></i>
+                                <div>
+                                    <h4 class="font-medium text-gray-900 text-sm">Live Chat</h4>
+                                    <p class="text-gray-600 text-xs">Instant assistance</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-900 mb-2 text-sm">Notice Requirements:</h4>
+                            <ul class="space-y-1 text-gray-700 text-xs">
+                                <li>• Monthly: No notice required</li>
+                                <li>• Annual: 30 days notice</li>
+                                <li>• Enterprise: 60 days notice</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                            <i data-lucide="dollar-sign" class="w-5 h-5 text-green-500 mr-2"></i>
+                            Refund Policy
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="text-center p-4 bg-green-50 rounded-lg border border-green-100">
+                                <div class="text-2xl font-bold text-green-600 mb-1">30 Days</div>
+                                <div class="text-sm text-gray-600">Money Back Guarantee</div>
+                                <div class="text-xs text-gray-500">New customers only</div>
+                            </div>
+                            
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <h4 class="font-semibold text-gray-900 mb-2 text-sm">Pro-Rated Refunds:</h4>
+                                <ul class="space-y-1 text-gray-700 text-xs">
+                                    <li>• Annual plans cancelled mid-term</li>
+                                    <li>• Calculated from cancellation date</li>
+                                    <li>• Processed in 5-10 business days</li>
+                                    <li>• Returned to original payment method</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-red-50 rounded-lg p-4">
+                                <h4 class="font-semibold text-gray-900 mb-2 text-sm">Non-Refundable:</h4>
+                                <ul class="space-y-1 text-gray-700 text-xs">
+                                    <li>• Setup and implementation fees</li>
+                                    <li>• Custom development work</li>
+                                    <li>• Training and consulting</li>
+                                    <li>• Third-party integration costs</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                            <i data-lucide="database" class="w-5 h-5 text-blue-500 mr-2"></i>
+                            Data Handling
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <h4 class="font-semibold text-gray-900 mb-2 text-sm">Timeline After Cancellation:</h4>
+                                <div class="space-y-2">
+                                    <div class="flex items-center">
+                                        <div class="w-6 h-6 bg-green-200 rounded-full flex items-center justify-center mr-2">
+                                            <span class="text-green-800 font-bold text-xs">30</span>
+                                        </div>
+                                        <span class="text-gray-700 text-xs">Days: Read-only access</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <div class="w-6 h-6 bg-yellow-200 rounded-full flex items-center justify-center mr-2">
+                                            <span class="text-yellow-800 font-bold text-xs">90</span>
+                                        </div>
+                                        <span class="text-gray-700 text-xs">Days: Export only</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <div class="w-6 h-6 bg-red-200 rounded-full flex items-center justify-center mr-2">
+                                            <span class="text-red-800 font-bold text-xs">91+</span>
+                                        </div>
+                                        <span class="text-gray-700 text-xs">Days: Permanent deletion</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-green-50 rounded-lg p-4">
+                                <h4 class="font-semibold text-gray-900 mb-2 text-sm">Export Options:</h4>
+                                <ul class="space-y-1 text-gray-700 text-xs">
+                                    <li>• Multiple formats (CSV, XML, JSON)</li>
+                                    <li>• Complete data package available</li>
+                                    <li>• API access for automation</li>
+                                    <li>• Migration assistance provided</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-purple-50 rounded-lg p-4">
+                                <h4 class="font-semibold text-gray-900 mb-2 text-sm">Security:</h4>
+                                <ul class="space-y-1 text-gray-700 text-xs">
+                                    <li>• Data remains encrypted</li>
+                                    <li>• Secure deletion methods used</li>
+                                    <li>• Deletion certificates available</li>
+                                    <li>• GDPR compliance maintained</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contact Section -->
+        <div class="mt-16 text-center">
+            <div class="bg-gradient-to-r from-purple-500 to-blue-600 rounded-3xl p-8 text-white">
+                <h3 class="text-2xl font-bold mb-4">Questions About These Terms?</h3>
+                <p class="text-lg mb-6 opacity-90">Our legal and support teams are here to help clarify any aspects of our terms and conditions.</p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button class="bg-white text-purple-600 px-8 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg">
+                        <i data-lucide="mail" class="w-5 h-5 mr-2 inline"></i>
+                        Contact Legal Team
+                    </button>
+                    <button class="bg-white/20 text-white border border-white/30 px-8 py-3 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg">
+                        <i data-lucide="download" class="w-5 h-5 mr-2 inline"></i>
+                        Download PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    /* Terms Tab Styles */
+    .terms-tab {
+        color: #6b7280;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .terms-tab.active {
+        color: #7c3aed;
+        background: white;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .terms-tab:hover:not(.active) {
+        color: #4b5563;
+        background: rgba(255, 255, 255, 0.5);
+    }
+    
+    /* Tab Content */
+    .terms-tab-content {
+        display: none;
+    }
+    
+    .terms-tab-content.active {
+        display: block;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    /* Expandable Sections */
+    .terms-expandable-section .terms-header:hover .chevron-down {
+        transform: translateY(-2px);
+    }
+    
+    .terms-expandable-section.expanded .chevron-down {
+        transform: rotate(180deg);
+    }
+    
+    .terms-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+    }
+    
+    .terms-content.expanded {
+        max-height: 5000px;
+        transition: max-height 0.5s ease-in;
+    }
+    
+    /* Animations */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Progress Bar Animation */
+    .progress-bar {
+        transition: width 0.3s ease-out;
+    }
+    
+    /* Smooth Scrolling */
+    html {
+        scroll-behavior: smooth;
+    }
+    
+    /* Hover Effects */
+    .hover-lift {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .hover-lift:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer class="bg-gradient-to-br from-gray-900 via-slate-900 to-purple-900 text-white relative overflow-hidden">
+    <!-- Background Pattern -->
+    <div class="absolute inset-0 opacity-10">
+        <div class="absolute top-0 left-0 w-full h-full">
+            <div class="grid grid-cols-8 gap-4 h-full opacity-20">
+                <div class="bg-gradient-to-b from-purple-500 to-transparent"></div>
+                <div class="bg-gradient-to-b from-blue-500 to-transparent"></div>
+                <div class="bg-gradient-to-b from-purple-500 to-transparent"></div>
+                <div class="bg-gradient-to-b from-blue-500 to-transparent"></div>
+                <div class="bg-gradient-to-b from-purple-500 to-transparent"></div>
+                <div class="bg-gradient-to-b from-blue-500 to-transparent"></div>
+                <div class="bg-gradient-to-b from-purple-500 to-transparent"></div>
+                <div class="bg-gradient-to-b from-blue-500 to-transparent"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="relative">
+        <!-- Main Footer Content -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-12">
+                <!-- Company Info -->
+                <div class="lg:col-span-2">
+                    <div class="flex items-center mb-8">
+                        <div class="w-12 h-12 bg-gradient-to-br from-accent-500 to-primary-600 rounded-2xl flex items-center justify-center shadow-lg mr-4">
+                            <i data-lucide="layers" class="h-7 w-7 text-white"></i>
+                        </div>
+                        <div>
+                            <span class="text-2xl font-bold gradient-text">Ezydream</span>
+                            <p class="text-purple-300 text-sm">Business Management Solutions</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-300 mb-8 max-w-md leading-relaxed text-lg">
+                        Empowering businesses worldwide with comprehensive software solutions that drive efficiency, reduce costs, and accelerate growth.
+                    </p>
+                    
+                    <!-- Contact Info Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <!-- Location Card -->
+                        <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="map-pin" class="w-5 h-5 text-white"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-white mb-1">Our Location</h4>
+                                    <p class="text-gray-300 text-sm leading-relaxed">
+                                        FIZ Tower, (Ground Floor)<br>
+                                        Plot#12, Road#01, Section#7<br>
+                                        Mirpur I/A, Dhaka-1216
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Contact Card -->
+                        <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="phone" class="w-5 h-5 text-white"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-white mb-1">Phone</h4>
+                                    <p class="text-gray-300 text-sm">
+                                        <a href="tel:+8801711757385" class="hover:text-green-400 transition-colors">+ (880) 1711757385</a><br>
+                                        <a href="tel:+8801953664967" class="hover:text-green-400 transition-colors">+ (880) 1953664967</a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Email Info -->
+                    <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300 mb-8">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="mail" class="w-5 h-5 text-white"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-white mb-1">Email</h4>
+                                <p class="text-gray-300 text-sm">
+                                    <a href="mailto:info@ezydream.com" class="hover:text-blue-400 transition-colors">info@ezydream.com</a><br>
+                                    <a href="mailto:support@ezydream.com" class="hover:text-blue-400 transition-colors">support@ezydream.com</a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Links -->
+                <div>
+                    <h3 class="text-xl font-bold text-white mb-6">Solutions</h3>
+                    <ul class="space-y-4">
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors flex items-center group">
+                            <i data-lucide="chevron-right" class="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform"></i>
+                            ERP Systems
+                        </a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors flex items-center group">
+                            <i data-lucide="chevron-right" class="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform"></i>
+                            HRM Solutions
+                        </a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors flex items-center group">
+                            <i data-lucide="chevron-right" class="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform"></i>
+                            Finance Management
+                        </a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors flex items-center group">
+                            <i data-lucide="chevron-right" class="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform"></i>
+                            CRM Systems
+                        </a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors flex items-center group">
+                            <i data-lucide="chevron-right" class="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform"></i>
+                            Custom Development
+                        </a></li>
+                    </ul>
+                </div>
+                
+                <!-- Support & Social -->
+                <div>
+                    <h3 class="text-xl font-bold text-white mb-6">Connect With Us</h3>
+                    
+                    <!-- Social Media -->
+                    <div class="mb-8">
+                        <p class="text-gray-300 mb-4">Follow us on social media</p>
+                        <div class="flex space-x-4">
+                            <a href="#" class="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center hover:from-blue-500 hover:to-blue-600 transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 shadow-lg">
+                                <i data-lucide="facebook" class="w-5 h-5 text-white"></i>
+                            </a>
+                            <a href="#" class="w-12 h-12 bg-gradient-to-br from-sky-500 to-sky-600 rounded-xl flex items-center justify-center hover:from-sky-400 hover:to-sky-500 transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 shadow-lg">
+                                <i data-lucide="twitter" class="w-5 h-5 text-white"></i>
+                            </a>
+                            <a href="#" class="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 shadow-lg">
+                                <i data-lucide="linkedin" class="w-5 h-5 text-white"></i>
+                            </a>
+                            <a href="#" class="w-12 h-12 bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl flex items-center justify-center hover:from-pink-400 hover:to-rose-500 transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 shadow-lg">
+                                <i data-lucide="instagram" class="w-5 h-5 text-white"></i>
+                            </a>
+                            <a href="#" class="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center hover:from-red-500 hover:to-red-600 transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 shadow-lg">
+                                <i data-lucide="youtube" class="w-5 h-5 text-white"></i>
+                            </a>
+                            <a href="#" class="w-12 h-12 bg-gradient-to-br from-gray-700 to-gray-800 rounded-xl flex items-center justify-center hover:from-gray-600 hover:to-gray-700 transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 shadow-lg">
+                                <i data-lucide="github" class="w-5 h-5 text-white"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Support Links -->
+                    <div>
+                        <h4 class="font-semibold text-white mb-4">Support</h4>
+                        <ul class="space-y-3">
+                            <li><a href="#" class="text-gray-300 hover:text-white transition-colors text-sm">Help Center</a></li>
+                            <li><a href="#" class="text-gray-300 hover:text-white transition-colors text-sm">Documentation</a></li>
+                            <li><a href="#" class="text-gray-300 hover:text-white transition-colors text-sm">Contact Support</a></li>
+                            <li><a href="#" class="text-gray-300 hover:text-white transition-colors text-sm">System Status</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Newsletter Section -->
+        <div class="border-t border-white/10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div class="flex flex-col md:flex-row items-center justify-between">
+                    <div class="mb-6 md:mb-0">
+                        <h3 class="text-xl font-bold text-white mb-2">Stay Updated</h3>
+                        <p class="text-gray-300">Get the latest news and updates about our software solutions</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                        <input type="email" placeholder="Enter your email" 
+                               class="px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent backdrop-blur-sm min-w-[300px]">
+                        <button class="bg-gradient-to-r from-purple-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-purple-600 hover:to-blue-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg">
+                            Subscribe
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bottom Bar -->
+        <div class="border-t border-white/10 bg-black/20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <p class="text-gray-400 text-sm mb-4 md:mb-0">
+                        &copy; 2024 Ezydream. All rights reserved. | Empowering businesses with smart software solutions.
+                    </p>
+                    <div class="flex flex-wrap gap-6">
+                        <a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Privacy Policy</a>
+                        <a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Terms of Service</a>
+                        <a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Cookie Policy</a>
+                        <a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Sitemap</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+        
+        // Enhanced scroll navigation effect
+        const nav = document.querySelector('.scroll-nav');
+        const navContent = document.querySelector('.nav-content');
+        
+        let lastScrollY = window.scrollY;
+        let ticking = false;
+        
+        function updateNavigation() {
+            const scrollY = window.scrollY;
+            
+            if (scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+            
+            lastScrollY = scrollY;
+            ticking = false;
+        }
+        
+        function requestTick() {
+            if (!ticking) {
+                requestAnimationFrame(updateNavigation);
+                ticking = true;
+            }
+        }
+        
+        window.addEventListener('scroll', requestTick);
+        
+        // Mobile menu toggle with animation
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            // Add rotation animation to menu icon
+            const icon = mobileMenuButton.querySelector('i');
+            icon.style.transform = mobileMenu.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(90deg)';
+        });
+        
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                    // Close mobile menu if open
+                    mobileMenu.classList.add('hidden');
+                    const icon = mobileMenuButton.querySelector('i');
+                    icon.style.transform = 'rotate(0deg)';
+                }
+            });
+        });
+        
+        // Intersection Observer for reveal animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                }
+            });
+        }, observerOptions);
+        
+        // Observe all elements with reveal class
+        document.querySelectorAll('.reveal').forEach(el => {
+            observer.observe(el);
+        });
+        
+        // Parallax effect for floating elements
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const parallaxElements = document.querySelectorAll('.floating-element');
+            
+            parallaxElements.forEach((element, index) => {
+                const speed = 0.5 + (index * 0.1);
+                const yPos = -(scrolled * speed);
+                element.style.transform = `translateY(${yPos}px)`;
+            });
+        });
+        
+        // Add loading animation
+        window.addEventListener('load', () => {
+            document.body.classList.add('loaded');
+        });
+        
+        // Enhanced button interactions
+        document.querySelectorAll('.glow-button').forEach(button => {
+            button.addEventListener('mouseenter', () => {
+                button.style.transform = 'translateY(-2px) scale(1.05)';
+            });
+            
+            button.addEventListener('mouseleave', () => {
+                button.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+        
+        // Typing animation for hero text
+        const typingElement = document.querySelector('.typing-animation');
+        if (typingElement) {
+            setTimeout(() => {
+                typingElement.classList.remove('typing-animation');
+            }, 3000);
+        }
+        
+        // Add stagger animation to feature cards
+        const featureCards = document.querySelectorAll('#solutions .interactive-card');
+        featureCards.forEach((card, index) => {
+            card.style.animationDelay = `${index * 0.1}s`;
+        });
+        
+        // Enhanced pricing card interactions
+        const pricingCards = document.querySelectorAll('#pricing .interactive-card');
+        pricingCards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-10px) scale(1.02)';
+                card.style.boxShadow = '0 25px 50px rgba(0, 0, 0, 0.15)';
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                if (!card.classList.contains('scale-105')) {
+                    card.style.transform = 'translateY(0) scale(1)';
+                    card.style.boxShadow = '';
+                }
+            });
+        });
+
+        // Portfolio filter functionality
+        const portfolioFilters = document.querySelectorAll('.portfolio-filter');
+        const portfolioItems = document.querySelectorAll('.portfolio-card');
+
+        portfolioFilters.forEach(filter => {
+            filter.addEventListener('click', () => {
+                // Remove active class from all filters
+                portfolioFilters.forEach(f => {
+                    f.classList.remove('active');
+                    f.classList.remove('bg-gradient-to-r', 'from-accent-500', 'to-primary-600', 'text-white');
+                    f.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-200');
+                });
+
+                // Add active class to clicked filter
+                filter.classList.add('active');
+                filter.classList.remove('bg-white', 'text-gray-700', 'border', 'border-gray-200');
+                filter.classList.add('bg-gradient-to-r', 'from-accent-500', 'to-primary-600', 'text-white');
+
+                const filterValue = filter.getAttribute('data-filter');
+
+                portfolioItems.forEach(item => {
+                    if (filterValue === 'all' || item.getAttribute('data-category') === filterValue) {
+                        item.style.display = 'block';
+                        setTimeout(() => {
+                            item.style.opacity = '1';
+                            item.style.transform = 'translateY(0)';
+                        }, 100);
+                    } else {
+                        item.style.opacity = '0';
+                        item.style.transform = 'translateY(20px)';
+                        setTimeout(() => {
+                            item.style.display = 'none';
+                        }, 300);
+                    }
+                });
+            });
+        });
+
+        // Multi-button FAB functionality
+        let fabOpen = false;
+        const fabContainer = document.getElementById('fabContainer');
+        const fabIcon = document.getElementById('fabIcon');
+
+        function toggleFab() {
+            fabOpen = !fabOpen;
+            
+            if (fabOpen) {
+                fabContainer.classList.add('active');
+                fabIcon.setAttribute('data-lucide', 'x');
+            } else {
+                fabContainer.classList.remove('active');
+                fabIcon.setAttribute('data-lucide', 'message-square');
+            }
+            
+            // Reinitialize icons
+            lucide.createIcons();
+        }
+
+        function openWhatsApp() {
+            window.open('https://wa.me/1234567890?text=Hello! I\'m interested in Ezydream business software solutions.', '_blank');
+        }
+
+        function makeCall() {
+            window.open('tel:+1234567890', '_self');
+        }
+
+        function sendEmail() {
+            window.open('mailto:contact@ezydream.com?subject=Inquiry about Ezydream Solutions&body=Hello! I\'m interested in learning more about Ezydream business management software solutions.', '_self');
+        }
+
+        // Show/hide FAB based on scroll position
+        window.addEventListener('scroll', () => {
+            const fabContainer = document.querySelector('.fab-container');
+            if (window.scrollY > 300) {
+                fabContainer.style.opacity = '1';
+                fabContainer.style.visibility = 'visible';
+            } else {
+                fabContainer.style.opacity = '0';
+                fabContainer.style.visibility = 'hidden';
+            }
+        });
+
+        // Initialize FAB as hidden
+        document.addEventListener('DOMContentLoaded', () => {
+            const fabContainer = document.querySelector('.fab-container');
+            fabContainer.style.opacity = '0';
+            fabContainer.style.visibility = 'hidden';
+            fabContainer.style.transition = 'opacity 0.3s ease, visibility 0.3s ease';
+        });
+    </script>
+</body>
+</html>
