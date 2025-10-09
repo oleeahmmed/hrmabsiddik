@@ -24,7 +24,7 @@ class CompanyAdmin(ModelAdmin):
             'fields': ('tax_id', 'currency')
         }),
         ('Logo & Status', {
-            'fields': ('logo', 'is_active')
+            'fields': ('logo', 'is_active','location_restricted')
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),

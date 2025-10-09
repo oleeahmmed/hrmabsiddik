@@ -11,7 +11,7 @@ from math import radians, cos, sin, asin, sqrt
 from decimal import Decimal
 import logging
 from datetime import timedelta
-
+import requests
 from ..models import Location, UserLocation, AttendanceLog, Employee, ZkDevice
 from django.contrib.auth.models import User
 
@@ -29,28 +29,80 @@ def haversine(lat1, lon1, lat2, lon2):
     return c * 6371  # Earth radius in km
 
 
+
+# Add this function to get location name from coordinates
 def get_address_from_coords(latitude, longitude):
     """
     Get a formatted address string from coordinates
-    Uses a geocoding service if available, falls back to coordinates
+    Uses OpenWeatherMap Geocoding API
     """
     try:
         lat_float = float(latitude)
         lon_float = float(longitude)
         
-        # Try to get actual address from a geocoding service
-        address = reverse_geocode(lat_float, lon_float)  # You'd implement this
-        if address:
-            return address
+        # Use OpenWeatherMap Geocoding API
+        try:
+            import requests
+            api_key = "5b0498f50f16aa88a9c91fc3bb43a519"  # Your OpenWeatherMap API key
+            url = f"http://api.openweathermap.org/geo/1.0/reverse?lat={lat_float}&lon={lon_float}&limit=1&appid={api_key}"
+            
+            response = requests.get(url, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                if data and len(data) > 0:
+                    location_data = data[0]
+                    # Build address from available components
+                    address_parts = []
+                    
+                    if location_data.get('name'):
+                        address_parts.append(location_data['name'])
+                    if location_data.get('state'):
+                        address_parts.append(location_data['state'])
+                    if location_data.get('country'):
+                        address_parts.append(location_data['country'])
+                    
+                    if address_parts:
+                        address = ', '.join(address_parts)
+                        logger.info(f"OpenWeatherMap geocoding successful: {address}")
+                        return address
+                    else:
+                        logger.warning("OpenWeatherMap returned no address components")
+                else:
+                    logger.warning("OpenWeatherMap returned no location data")
+            else:
+                logger.warning(f"OpenWeatherMap API error: {response.status_code} - {response.text}")
+                
+        except requests.exceptions.Timeout:
+            logger.warning("OpenWeatherMap geocoding timeout")
+        except requests.exceptions.ConnectionError:
+            logger.warning("OpenWeatherMap geocoding connection error")
+        except Exception as e:
+            logger.warning(f"OpenWeatherMap geocoding failed: {e}")
         
-        # Fallback to coordinates if geocoding fails
-        return f"Location: {lat_float:.6f}, {lon_float:.6f}"
+        # Fallback: Try OpenStreetMap as backup
+        try:
+            import requests
+            url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat_float}&lon={lon_float}&zoom=16"
+            headers = {
+                'User-Agent': 'ezydreamhrm/1.0 (kreatechseo@gmail.com)'
+            }
+            
+            response = requests.get(url, headers=headers, timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                address = data.get('display_name', '')
+                if address:
+                    logger.info(f"OpenStreetMap fallback geocoding successful: {address}")
+                    return address
+        except Exception as e:
+            logger.warning(f"OpenStreetMap fallback also failed: {e}")
+        
+        # Final fallback: Return coordinates in a readable format
+        return f"Coordinates: {lat_float:.6f}, {lon_float:.6f}"
         
     except (ValueError, TypeError) as e:
         logger.warning(f"Geocoding error: {e}, lat={latitude}, lon={longitude}")
-        return f"Location: {latitude}, {longitude}"
-
-
+        return f"Coordinates: {latitude}, {longitude}"
 def reverse_geocode(lat, lon):
     """
     Reverse geocode coordinates to get address
@@ -273,27 +325,45 @@ class GetLocationsView(LoginRequiredMixin, View):
     
     def get(self, request):
         try:
-            # First check if user has any location assignments
-            user_locations = UserLocation.objects.filter(
-                user=request.user
-            ).select_related('location').filter(location__is_active=True)
+            # Get employee record to check company settings
+            try:
+                employee = Employee.objects.get(user=request.user)
+                company = employee.company
+                location_restricted = getattr(company, 'location_restricted', True)
+            except Employee.DoesNotExist:
+                try:
+                    employee = Employee.objects.get(employee_id=request.user.username)
+                    company = employee.company
+                    location_restricted = getattr(company, 'location_restricted', True)
+                except Employee.DoesNotExist:
+                    # If no employee record, default to restricted mode
+                    location_restricted = True
+                    employee = None
             
-            if user_locations.exists():
-                # User has assignments - return only assigned locations
-                locations = [{
-                    'id': ul.location.id,
-                    'name': ul.location.name,
-                    'address': ul.location.address,
-                    'latitude': float(ul.location.latitude),
-                    'longitude': float(ul.location.longitude),
-                    'radius': float(ul.location.radius),
-                    'is_primary': ul.is_primary,
-                    'is_assigned': True
-                } for ul in user_locations]
+            if location_restricted:
+                # Location restricted mode - return only assigned locations
+                user_locations = UserLocation.objects.filter(
+                    user=request.user
+                ).select_related('location').filter(location__is_active=True)
                 
-                logger.info(f"User {request.user.username} has {len(locations)} assigned locations")
+                if user_locations.exists():
+                    locations = [{
+                        'id': ul.location.id,
+                        'name': ul.location.name,
+                        'address': ul.location.address,
+                        'latitude': float(ul.location.latitude),
+                        'longitude': float(ul.location.longitude),
+                        'radius': float(ul.location.radius),
+                        'is_primary': ul.is_primary,
+                        'is_assigned': True
+                    } for ul in user_locations]
+                else:
+                    # No assignments in restricted mode - return empty
+                    locations = []
+                    
+                logger.info(f"User {request.user.username} has {len(locations)} assigned locations (restricted mode)")
             else:
-                # No assignments - return all active locations
+                # Location restriction disabled - return all active locations
                 all_locations = Location.objects.filter(is_active=True)
                 locations = [{
                     'id': loc.id,
@@ -306,12 +376,13 @@ class GetLocationsView(LoginRequiredMixin, View):
                     'is_assigned': False
                 } for loc in all_locations]
                 
-                logger.info(f"User {request.user.username} has no assignments, showing all {len(locations)} locations")
+                logger.info(f"User {request.user.username} showing all {len(locations)} locations (non-restricted mode)")
             
             return JsonResponse({
                 'status': 'success',
                 'data': locations,
-                'has_assignments': user_locations.exists()
+                'location_restricted': location_restricted,
+                'has_assignments': UserLocation.objects.filter(user=request.user).exists()
             })
         except Exception as e:
             logger.exception(f"Error getting locations: {str(e)}")
@@ -321,6 +392,7 @@ class GetLocationsView(LoginRequiredMixin, View):
             }, status=500)
 
 
+# Update the MarkAttendanceView to include location name
 class MarkAttendanceView(LoginRequiredMixin, View):
     """API to mark mobile attendance in AttendanceLog"""
     
@@ -356,26 +428,6 @@ class MarkAttendanceView(LoginRequiredMixin, View):
                     'message': _('Location not found')
                 }, status=404)
             
-            # Check if user has any location assignments
-            has_assignments = UserLocation.objects.filter(user=request.user).exists()
-            
-            if has_assignments:
-                # User has assignments - check if this location is assigned
-                user_location = UserLocation.objects.filter(
-                    user=request.user, 
-                    location=location
-                ).first()
-                
-                if not user_location:
-                    logger.warning(
-                        f"User {request.user.username} attempted to mark attendance at "
-                        f"unassigned location {location.name}"
-                    )
-                    return JsonResponse({
-                        'status': 'error',
-                        'message': _('You are not assigned to this location')
-                    }, status=403)
-            
             # Get employee record
             try:
                 employee = Employee.objects.get(user=request.user)
@@ -389,30 +441,60 @@ class MarkAttendanceView(LoginRequiredMixin, View):
                         'message': _('Employee record not found. Please contact administrator.')
                     }, status=404)
             
-            # Calculate distance
-            distance = haversine(
-                location.latitude,
-                location.longitude,
-                Decimal(latitude),
-                Decimal(longitude)
-            )
+            # Get company location restriction setting
+            company = employee.company
+            location_restricted = getattr(company, 'location_restricted', True)  # Default to True if not set
             
-            # Check if within radius
-            is_within_radius = distance <= float(location.radius)
-            
-            if not is_within_radius:
-                logger.warning(
-                    f"User {request.user.username} attempted attendance outside radius: "
-                    f"distance={distance:.2f}km, required={location.radius}km"
+            # Check location assignment and radius based on restriction mode
+            if location_restricted:
+                # Check if user has any location assignments
+                user_locations = UserLocation.objects.filter(user=request.user)
+                if not user_locations.exists():
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': _('You are not assigned to any location. Please contact administrator.')
+                    }, status=403)
+                
+                # Check if this specific location is assigned to user
+                user_location = user_locations.filter(location=location).first()
+                if not user_location:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': _('You are not assigned to this location')
+                    }, status=403)
+                
+                # Calculate distance and check radius
+                distance = haversine(
+                    location.latitude,
+                    location.longitude,
+                    Decimal(latitude),
+                    Decimal(longitude)
                 )
-                return JsonResponse({
-                    'status': 'error',
-                    'message': _('You are outside the location radius'),
-                    'data': {
-                        'distance': round(distance * 1000, 2),  # Convert to meters
-                        'required_radius': float(location.radius)
-                    }
-                }, status=400)
+                
+                is_within_radius = distance <= float(location.radius)
+                
+                if not is_within_radius:
+                    logger.warning(
+                        f"User {request.user.username} attempted attendance outside radius: "
+                        f"distance={distance:.2f}km, required={location.radius}km"
+                    )
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': _('You are outside the location radius'),
+                        'data': {
+                            'distance': round(distance * 1000, 2),  # Convert to meters
+                            'required_radius': float(location.radius)
+                        }
+                    }, status=400)
+            else:
+                # Location restriction disabled - calculate distance for logging but don't restrict
+                distance = haversine(
+                    location.latitude,
+                    location.longitude,
+                    Decimal(latitude),
+                    Decimal(longitude)
+                )
+                is_within_radius = distance <= float(location.radius)  # For logging purposes only
             
             # Get or create a virtual device for mobile attendance
             device, created = ZkDevice.objects.get_or_create(
@@ -461,7 +543,8 @@ class MarkAttendanceView(LoginRequiredMixin, View):
                 f"Mobile attendance marked successfully: "
                 f"user={request.user.username}, employee={employee.employee_id}, "
                 f"location={location.name}, type={attendance_type}, "
-                f"distance={distance:.2f}km, actual_location={actual_location_name}"
+                f"distance={distance:.2f}km, actual_location={actual_location_name}, "
+                f"location_restricted={location_restricted}"
             )
             
             return JsonResponse({
@@ -475,7 +558,7 @@ class MarkAttendanceView(LoginRequiredMixin, View):
                     'location': location.name,
                     'actual_location': actual_location_name,
                     'type': attendance_type,
-                    'has_assignment': has_assignments
+                    'location_restricted': location_restricted
                 }
             })
             
@@ -485,8 +568,6 @@ class MarkAttendanceView(LoginRequiredMixin, View):
                 'status': 'error',
                 'message': _('An error occurred while marking attendance')
             }, status=500)
-
-
 class GetUserAttendanceLogsView(LoginRequiredMixin, View):
     """API to get current user's attendance logs with filtering"""
     

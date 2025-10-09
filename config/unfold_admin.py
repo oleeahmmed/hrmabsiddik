@@ -101,6 +101,30 @@ def get_navigation_for_user(request):
                     "link": "/admin/hr_payroll/employee/",
                     "permission": lambda request: request.user.is_superuser,
                 },
+                        {
+            "title": _("Employee Documents"),
+            "icon": "folder_shared",
+            "link": admin_changelist("hr_payroll", "employeedocument"),
+            "permission": lambda request: request.user.has_perm("hr_payroll.view_employeedocument"),
+        },
+        {
+            "title": _("Overtime Requests"),
+            "icon": "access_time",
+            "link": admin_changelist("hr_payroll", "overtime"),
+            "permission": lambda request: request.user.has_perm("hr_payroll.view_overtime"),
+        },
+        {
+            "title": _("Resignations"),
+            "icon": "logout",
+            "link": admin_changelist("hr_payroll", "resignation"),
+            "permission": lambda request: request.user.has_perm("hr_payroll.view_resignation"),
+        },
+        {
+            "title": _("Clearances"),
+            "icon": "verified",
+            "link": admin_changelist("hr_payroll", "clearance"),
+            "permission": lambda request: request.user.has_perm("hr_payroll.view_clearance"),
+        },
                 {
                     "title": _("Employee Separations"),
                     "icon": "exit_to_app",
@@ -176,25 +200,7 @@ def get_navigation_for_user(request):
                 },
             ],
         },
-        {
-            "title": _("Location Management"),
-            "separator": True,
-            "collapsible": True,
-            "items": [
-                {
-                    "title": _("Locations"),
-                    "icon": "location_on",
-                    "link": "/admin/hr_payroll/location/",
-                    "permission": lambda request: request.user.is_superuser,
-                },
-                {
-                    "title": _("User Locations"),
-                    "icon": "person_pin_circle",
-                    "link": "/admin/hr_payroll/userlocation/",
-                    "permission": lambda request: request.user.is_superuser,
-                },
-            ],
-        },
+
 
 {
     "title": _("Mobile Attendance"),
@@ -227,7 +233,62 @@ def get_navigation_for_user(request):
         },
     ],
 },
+{
+    "title": _("Employee Management"),
+    "separator": True,
+    "collapsible": True,
+    "items": [
+        {
+            "title": _("Notices"),
+            "icon": "campaign",
+            "link": admin_changelist("hr_payroll", "notice"),
+            "permission": lambda request: request.user.has_perm("hr_payroll.view_notice"),
+        },
+        {
+            "title": _("Recruitments"),
+            "icon": "work_outline",
+            "link": admin_changelist("hr_payroll", "recruitment"),
+            "permission": lambda request: request.user.has_perm("hr_payroll.view_recruitment"),
+        },
+        {
+            "title": _("Job Applications"),
+            "icon": "description",
+            "link": admin_changelist("hr_payroll", "jobapplication"),
+            "permission": lambda request: request.user.has_perm("hr_payroll.view_jobapplication"),
+        },
+        {
+            "title": _("Trainings"),
+            "icon": "school",
+            "link": admin_changelist("hr_payroll", "training"),
+            "permission": lambda request: request.user.has_perm("hr_payroll.view_training"),
+        },
+        {
+            "title": _("Training Enrollments"),
+            "icon": "how_to_reg",
+            "link": admin_changelist("hr_payroll", "trainingenrollment"),
+            "permission": lambda request: request.user.has_perm("hr_payroll.view_trainingenrollment"),
+        },
+        {
+            "title": _("Performance Reviews"),
+            "icon": "assessment",
+            "link": admin_changelist("hr_payroll", "performance"),
+            "permission": lambda request: request.user.has_perm("hr_payroll.view_performance"),
+        },
+        {
+            "title": _("Performance Goals"),
+            "icon": "track_changes",
+            "link": admin_changelist("hr_payroll", "performancegoal"),
+            "permission": lambda request: request.user.has_perm("hr_payroll.view_performancegoal"),
+        },
 
+        {
+            "title": _("Complaints"),
+            "icon": "report_problem",
+            "link": admin_changelist("hr_payroll", "complaint"),
+            "permission": lambda request: request.user.has_perm("hr_payroll.view_complaint"),
+        },
+    ],
+},
 # ---- Add this block inside the returned list from get_navigation_for_user ----
 {
     "title": _("Payroll"),

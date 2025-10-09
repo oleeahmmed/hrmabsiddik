@@ -1,0 +1,232 @@
+<!-- employee_document_form.html -->
+
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if object %}Edit Document - {{ object.title }}{% else %}Upload New Document{% endif %}
+{% endblock %}
+
+{% block page_title %}
+    {% if object %}Edit Document{% else %}Upload New Document{% endif %}
+{% endblock %}
+
+{% block page_subtitle %}
+    {% if object %}Update employee document details{% else %}Upload a new document for an employee{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Main Form Card -->
+    <div class="card overflow-hidden border border-border/50">
+        <!-- Card Header -->
+        <div class="p-4 border-b border-border/30 bg-gradient-to-r from-primary/5 to-primary/3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <h2 class="text-lg font-semibold text-foreground">Document Information</h2>
+                </div>
+                <a href="{% url 'zkteco:employee_document_list' %}" class="btn btn-outline btn-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Back to List
+                </a>
+            </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="p-6">
+            <form method="post" id="document-form" class="space-y-6" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <!-- Display non-field errors -->
+                {% if form.non_field_errors %}
+                <div class="bg-destructive-light border border-destructive/20 rounded-lg p-4">
+                    <div class="flex items-start space-x-2">
+                        <svg class="w-5 h-5 text-destructive mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            {% for error in form.non_field_errors %}
+                            <p class="text-sm text-destructive">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Left Column -->
+                    <div class="space-y-6">
+                        <!-- Employee Field -->
+                        <div class="form-group">
+                            <label for="{{ form.employee.id_for_label }}" class="form-label required">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                                Employee
+                            </label>
+                            {{ form.employee }}
+                            {% if form.employee.errors %}
+                            <p class="form-error">{{ form.employee.errors.0 }}</p>
+                            {% else %}
+                            <p class="form-help">Select the employee this document belongs to</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Document Type Field -->
+                        <div class="form-group">
+                            <label for="{{ form.document_type.id_for_label }}" class="form-label required">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+                                </svg>
+                                Document Type
+                            </label>
+                            {{ form.document_type }}
+                            {% if form.document_type.errors %}
+                            <p class="form-error">{{ form.document_type.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Title Field -->
+                        <div class="form-group">
+                            <label for="{{ form.title.id_for_label }}" class="form-label required">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Document Title
+                            </label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                            <p class="form-error">{{ form.title.errors.0 }}</p>
+                            {% else %}
+                            <p class="form-help">Enter a clear title for the document</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Verification Field -->
+                        <div class="form-group">
+                            <label class="flex items-center space-x-3">
+                                <label class="switch">
+                                    {{ form.is_verified }}
+                                    <span class="switch-slider"></span>
+                                </label>
+                                <span class="text-sm font-medium text-foreground">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    Document Verified
+                                </span>
+                            </label>
+                            {% if form.is_verified.errors %}
+                            <p class="form-error">{{ form.is_verified.errors.0 }}</p>
+                            {% else %}
+                            <p class="form-help">Mark this document as verified</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="space-y-6">
+                        <!-- File Upload Field -->
+                        <div class="form-group">
+                            <label for="{{ form.file.id_for_label }}" class="form-label {% if not object %}required{% endif %}">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+                                Document File
+                            </label>
+                            {{ form.file }}
+                            {% if form.file.errors %}
+                            <p class="form-error">{{ form.file.errors.0 }}</p>
+                            {% else %}
+                            <p class="form-help">Upload document file (PDF, DOC, DOCX, JPG, PNG) - Max 10MB</p>
+                            {% endif %}
+                            
+                            <!-- Current file preview -->
+                            {% if object and object.file %}
+                            <div class="mt-3 p-3 bg-muted/30 rounded-lg border border-border">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                        <div>
+                                            <p class="text-sm font-medium text-foreground">{{ object.filename }}</p>
+                                            <p class="text-xs text-muted-foreground">{{ object.file_size }}</p>
+                                        </div>
+                                    </div>
+                                    <a href="{{ object.file.url }}" target="_blank" class="btn-ghost p-1 rounded" title="Download">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Description Field -->
+                        <div class="form-group">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
+                                </svg>
+                                Description
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <p class="form-error">{{ form.description.errors.0 }}</p>
+                            {% else %}
+                            <p class="form-help">Provide additional details about this document</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Card Footer -->
+        <div class="p-4 border-t border-border/30 bg-gradient-to-r from-primary/5 to-primary/3">
+            <div class="flex items-center justify-between">
+                <div>
+                    {% if object %}
+                    <a href="{% url 'zkteco:employee_document_delete' object.pk %}" class="btn btn-outline btn-destructive">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        Delete Document
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="{% url 'zkteco:employee_document_list' %}" class="btn btn-outline">
+                        Cancel
+                    </a>
+                    <button type="submit" form="document-form" class="btn btn-primary">
+                        {% if object %}
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Update Document
+                        {% else %}
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
+                        Upload Document
+                        {% endif %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        showDjangoMessages();
+    });
+</script>
+{% endblock %}

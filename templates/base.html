@@ -1079,6 +1079,12 @@
         </svg>
         <span>Attendance Log</span>
     </a>
+        <a href="{% url 'zkteco:simple_attendance_generation' %}" class="nav-item {% if 'attendance' in request.resolver_match.url_name and 'simple_attendance_generation' not in request.resolver_match.url_name %}active{% endif %}">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span>Attendance Generation </span>
+    </a>
     
     <!-- Attendance Menu -->
     <a href="{% url 'zkteco:attendance_list' %}" class="nav-item {% if 'attendance' in request.resolver_match.url_name and 'attendance_log' not in request.resolver_match.url_name %}active{% endif %}">
@@ -1087,6 +1093,7 @@
         </svg>
         <span>Attendance</span>
     </a>
+
     
     <!-- Payroll Menu -->
     <a href="{% url 'zkteco:payroll_dashboard' %}" class="nav-item {% if 'payroll' in request.resolver_match.url_name %}active{% endif %}">

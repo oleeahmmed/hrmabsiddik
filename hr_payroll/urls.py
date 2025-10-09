@@ -4,6 +4,9 @@ from . import attendance_log_views
 from . import simple_attendance_generation_views
 from .views import location_views
 from .views import employee_views
+
+from .views import employee_document_views
+
 from .views import leave_views
 from .views import attendance_config_views
 from .views import attendance_reports
@@ -142,13 +145,22 @@ urlpatterns = [
     path('employees/<int:pk>/', employee_views.EmployeeDetailView.as_view(), name='employee_detail'),
     path('employees/<int:pk>/update/', employee_views.EmployeeUpdateView.as_view(), name='employee_update'),
     path('employees/<int:pk>/delete/', employee_views.EmployeeDeleteView.as_view(), name='employee_delete'),
-    
+
+    # Employee Document URLs
+    path('employee-documents/', employee_document_views.EmployeeDocumentListView.as_view(), name='employee_document_list'),
+    path('employee-documents/create/', employee_document_views.EmployeeDocumentCreateView.as_view(), name='employee_document_create'),
+    path('employee-documents/<int:pk>/', employee_document_views.EmployeeDocumentDetailView.as_view(), name='employee_document_detail'),
+    path('employee-documents/<int:pk>/edit/', employee_document_views.EmployeeDocumentUpdateView.as_view(), name='employee_document_update'),
+    path('employee-documents/<int:pk>/delete/', employee_document_views.EmployeeDocumentDeleteView.as_view(), name='employee_document_delete'),
+
     # ==================== LEAVE MANAGEMENT ====================
+    # Leave Management URLs
     path('leaves/', leave_views.LeaveListView.as_view(), name='leave_list'),
     path('leaves/create/', leave_views.LeaveCreateView.as_view(), name='leave_create'),
     path('leaves/<int:pk>/', leave_views.LeaveDetailView.as_view(), name='leave_detail'),
     path('leaves/<int:pk>/update/', leave_views.LeaveUpdateView.as_view(), name='leave_update'),
     path('leaves/<int:pk>/delete/', leave_views.LeaveDeleteView.as_view(), name='leave_delete'),
+    path('leaves/<int:pk>/status/', leave_views.LeaveStatusChangeView.as_view(), name='leave_status_change'),
     
     # Leave Status Change API
     path('api/leaves/<int:pk>/change-status/', leave_views.LeaveStatusChangeView.as_view(), name='leave_change_status'),

@@ -18,7 +18,9 @@ from .models import (
     Department, Designation, Shift, Employee,
     EmployeeSeparation, Roster, RosterAssignment, RosterDay,
     Holiday, LeaveType, LeaveBalance, LeaveApplication,
-    ZkDevice, AttendanceLog, Attendance
+    ZkDevice, AttendanceLog, Attendance,    Notice, Recruitment, JobApplication, Training, TrainingEnrollment,
+    Performance, PerformanceGoal, EmployeeDocument, Overtime,
+    Resignation, Clearance, Complaint
 )
 
 
@@ -1421,3 +1423,411 @@ class PayrollTemplateAdmin(ModelAdmin):
         updated = queryset.update(is_active=False)
         self.message_user(request, f'{updated} টি টেমপ্লেট নিষ্ক্রিয় করা হয়েছে।')
     deactivate_template.short_description = 'নিষ্ক্রিয় করুন'
+
+
+
+# ==================== NOTICE & ANNOUNCEMENTS ====================
+
+@admin.register(Notice)
+class NoticeAdmin(ModelAdmin):
+    list_display = ('title', 'company', 'priority', 'published_date', 'expiry_date', 'is_active', 'created_at')
+    list_filter = ('company', 'priority', 'is_active', 'published_date')
+    search_fields = ('title', 'description', 'company__name')
+    ordering = ('-published_date',)
+    list_select_related = ('company', 'created_by')
+    
+    fieldsets = (
+        (None, {
+            'fields': ('company', 'title', 'priority', 'is_active')
+        }),
+        (_("Content"), {
+            'fields': ('description',)
+        }),
+        (_("Dates"), {
+            'fields': ('published_date', 'expiry_date')
+        }),
+        (_("Metadata"), {
+            'fields': ('created_by',),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+# ==================== RECRUITMENT ====================
+
+class JobApplicationInline(TabularInline):
+    model = JobApplication
+    extra = 0
+    fields = ('applicant_name', 'email', 'phone', 'status', 'applied_date')
+    readonly_fields = ('applied_date',)
+    can_delete = False
+
+
+@admin.register(Recruitment)
+class RecruitmentAdmin(ModelAdmin):
+    list_display = ('job_title', 'company', 'department', 'designation', 'vacancies', 'status', 'posted_date', 'closing_date')
+    list_filter = ('company', 'department', 'designation', 'status', 'posted_date')
+    search_fields = ('job_title', 'company__name', 'department__name')
+    ordering = ('-posted_date',)
+    list_select_related = ('company', 'department', 'designation', 'created_by')
+    inlines = [JobApplicationInline]
+    
+    fieldsets = (
+        (_("Basic Information"), {
+            'fields': ('company', 'department', 'designation', 'job_title', 'vacancies')
+        }),
+        (_("Job Details"), {
+            'fields': ('job_description', 'requirements')
+        }),
+        (_("Status & Dates"), {
+            'fields': ('status', 'posted_date', 'closing_date')
+        }),
+        (_("Metadata"), {
+            'fields': ('created_by',),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(JobApplication)
+class JobApplicationAdmin(ModelAdmin):
+    list_display = ('applicant_name', 'recruitment_title', 'email', 'phone', 'status', 'applied_date')
+    list_filter = ('status', 'applied_date', 'recruitment__company')
+    search_fields = ('applicant_name', 'email', 'phone', 'recruitment__job_title')
+    ordering = ('-applied_date',)
+    list_select_related = ('recruitment',)
+    
+    fieldsets = (
+        (_("Recruitment"), {
+            'fields': ('recruitment', 'status')
+        }),
+        (_("Applicant Information"), {
+            'fields': ('applicant_name', 'email', 'phone')
+        }),
+        (_("Application Details"), {
+            'fields': ('resume', 'cover_letter')
+        }),
+        (_("Notes"), {
+            'fields': ('notes',),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def recruitment_title(self, obj):
+        return obj.recruitment.job_title
+    recruitment_title.short_description = _("Job Title")
+    recruitment_title.admin_order_field = 'recruitment__job_title'
+
+
+# ==================== TRAINING ====================
+
+class TrainingEnrollmentInline(TabularInline):
+    model = TrainingEnrollment
+    extra = 1
+    fields = ('employee', 'status', 'enrollment_date', 'completion_date', 'score')
+    readonly_fields = ('enrollment_date',)
+
+
+@admin.register(Training)
+class TrainingAdmin(ModelAdmin):
+    list_display = ('title', 'company', 'trainer', 'start_date', 'end_date', 'duration_hours', 'status', 'enrollment_count')
+    list_filter = ('company', 'status', 'start_date')
+    search_fields = ('title', 'trainer', 'company__name')
+    ordering = ('-start_date',)
+    list_select_related = ('company', 'created_by')
+    inlines = [TrainingEnrollmentInline]
+    
+    fieldsets = (
+        (_("Basic Information"), {
+            'fields': ('company', 'title', 'trainer', 'status')
+        }),
+        (_("Training Details"), {
+            'fields': ('description', 'duration_hours')
+        }),
+        (_("Schedule"), {
+            'fields': ('start_date', 'end_date')
+        }),
+        (_("Metadata"), {
+            'fields': ('created_by',),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def enrollment_count(self, obj):
+        return obj.enrollments.count()
+    enrollment_count.short_description = _("Enrollments")
+
+
+@admin.register(TrainingEnrollment)
+class TrainingEnrollmentAdmin(ModelAdmin):
+    list_display = ('employee', 'training', 'status', 'enrollment_date', 'completion_date', 'score')
+    list_filter = ('status', 'enrollment_date', 'training__company')
+    search_fields = ('employee__name', 'employee__employee_id', 'training__title')
+    ordering = ('-enrollment_date',)
+    list_select_related = ('employee', 'training')
+    
+    fieldsets = (
+        (_("Enrollment Information"), {
+            'fields': ('training', 'employee', 'status')
+        }),
+        (_("Progress"), {
+            'fields': ('enrollment_date', 'completion_date', 'score')
+        }),
+        (_("Feedback"), {
+            'fields': ('feedback',),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+# ==================== PERFORMANCE ====================
+
+class PerformanceGoalInline(TabularInline):
+    model = PerformanceGoal
+    extra = 1
+    fields = ('goal_title', 'target_date', 'status', 'completion_date')
+
+
+@admin.register(Performance)
+class PerformanceAdmin(ModelAdmin):
+    list_display = ('employee', 'review_period_display', 'overall_rating', 'status', 'reviewer', 'review_date')
+    list_filter = ('status', 'overall_rating', 'review_period_start', 'review_period_end')
+    search_fields = ('employee__name', 'employee__employee_id', 'reviewer__username')
+    ordering = ('-review_period_end',)
+    list_select_related = ('employee', 'reviewer')
+    inlines = [PerformanceGoalInline]
+    
+    fieldsets = (
+        (_("Review Information"), {
+            'fields': ('employee', 'reviewer', 'status')
+        }),
+        (_("Review Period"), {
+            'fields': ('review_period_start', 'review_period_end', 'review_date')
+        }),
+        (_("Rating & Feedback"), {
+            'fields': ('overall_rating', 'strengths', 'weaknesses', 'comments')
+        }),
+    )
+    
+    def review_period_display(self, obj):
+        return f"{obj.review_period_start} to {obj.review_period_end}"
+    review_period_display.short_description = _("Review Period")
+
+
+@admin.register(PerformanceGoal)
+class PerformanceGoalAdmin(ModelAdmin):
+    list_display = ('employee', 'goal_title', 'target_date', 'status', 'completion_date')
+    list_filter = ('status', 'target_date', 'performance__employee__company')
+    search_fields = ('employee__name', 'employee__employee_id', 'goal_title')
+    ordering = ('-target_date',)
+    list_select_related = ('employee', 'performance')
+    
+    fieldsets = (
+        (_("Goal Information"), {
+            'fields': ('performance', 'employee', 'goal_title', 'status')
+        }),
+        (_("Description"), {
+            'fields': ('description',)
+        }),
+        (_("Timeline"), {
+            'fields': ('target_date', 'completion_date')
+        }),
+        (_("Achievement"), {
+            'fields': ('achievement',),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+# ==================== DOCUMENTS ====================
+
+@admin.register(EmployeeDocument)
+class EmployeeDocumentAdmin(ModelAdmin):
+    list_display = ['title', 'employee', 'document_type', 'is_verified', 'uploaded_at', 'file_preview']
+    list_filter = ['document_type', 'is_verified', 'uploaded_at']
+    search_fields = ['title', 'employee__name', 'employee__employee_id']
+    readonly_fields = ['uploaded_at', 'created_at', 'updated_at', 'file_preview']
+    
+    def file_preview(self, obj):
+        if obj.file:
+            return f'<a href="{obj.file.url}" target="_blank">View File</a>'
+        return "No file"
+    file_preview.allow_tags = True
+    file_preview.short_description = "File Preview"
+    
+
+
+
+# ==================== OVERTIME ====================
+
+@admin.register(Overtime)
+class OvertimeAdmin(ModelAdmin):
+    list_display = ('employee', 'date', 'start_time', 'end_time', 'hours', 'status', 'approved_by')
+    list_filter = ('status', 'date', 'employee__company')
+    search_fields = ('employee__name', 'employee__employee_id', 'reason')
+    ordering = ('-date',)
+    list_select_related = ('employee', 'approved_by')
+    
+    fieldsets = (
+        (_("Overtime Request"), {
+            'fields': ('employee', 'date', 'status')
+        }),
+        (_("Time Details"), {
+            'fields': ('start_time', 'end_time', 'hours')
+        }),
+        (_("Reason"), {
+            'fields': ('reason',)
+        }),
+        (_("Approval"), {
+            'fields': ('approved_by', 'approved_at', 'remarks'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    actions = ['approve_overtime', 'reject_overtime']
+    
+    def approve_overtime(self, request, queryset):
+        from django.utils import timezone
+        updated = queryset.update(status='approved', approved_by=request.user, approved_at=timezone.now())
+        self.message_user(request, f'{updated} overtime requests approved.')
+    approve_overtime.short_description = _("Approve selected overtime requests")
+    
+    def reject_overtime(self, request, queryset):
+        updated = queryset.update(status='rejected', approved_by=request.user)
+        self.message_user(request, f'{updated} overtime requests rejected.')
+    reject_overtime.short_description = _("Reject selected overtime requests")
+
+
+# ==================== RESIGNATION ====================
+
+@admin.register(Resignation)
+class ResignationAdmin(ModelAdmin):
+    list_display = ('employee', 'resignation_date', 'last_working_date', 'status', 'approved_by')
+    list_filter = ('status', 'resignation_date', 'employee__company')
+    search_fields = ('employee__name', 'employee__employee_id', 'reason')
+    ordering = ('-resignation_date',)
+    list_select_related = ('employee', 'approved_by')
+    
+    fieldsets = (
+        (_("Resignation Information"), {
+            'fields': ('employee', 'status')
+        }),
+        (_("Dates"), {
+            'fields': ('resignation_date', 'last_working_date')
+        }),
+        (_("Reason"), {
+            'fields': ('reason',)
+        }),
+        (_("Approval"), {
+            'fields': ('approved_by', 'approved_at', 'remarks'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    actions = ['accept_resignation', 'reject_resignation']
+    
+    def accept_resignation(self, request, queryset):
+        from django.utils import timezone
+        updated = queryset.update(status='accepted', approved_by=request.user, approved_at=timezone.now())
+        self.message_user(request, f'{updated} resignations accepted.')
+    accept_resignation.short_description = _("Accept selected resignations")
+    
+    def reject_resignation(self, request, queryset):
+        updated = queryset.update(status='rejected', approved_by=request.user)
+        self.message_user(request, f'{updated} resignations rejected.')
+    reject_resignation.short_description = _("Reject selected resignations")
+
+
+# ==================== CLEARANCE ====================
+
+@admin.register(Clearance)
+class ClearanceAdmin(ModelAdmin):
+    list_display = (
+        'employee', 'clearance_date', 'status', 'hr_status', 'finance_status', 
+        'it_status', 'admin_status', 'final_settlement_amount'
+    )
+    list_filter = ('status', 'hr_clearance', 'finance_clearance', 'it_clearance', 'admin_clearance', 'clearance_date')
+    search_fields = ('employee__name', 'employee__employee_id')
+    ordering = ('-clearance_date',)
+    list_select_related = ('employee', 'resignation', 'cleared_by')
+    
+    fieldsets = (
+        (_("Clearance Information"), {
+            'fields': ('employee', 'resignation', 'clearance_date', 'status')
+        }),
+        (_("Department Clearances"), {
+            'fields': ('hr_clearance', 'finance_clearance', 'it_clearance', 'admin_clearance')
+        }),
+        (_("Settlement"), {
+            'fields': ('final_settlement_amount',)
+        }),
+        (_("Additional Information"), {
+            'fields': ('remarks', 'cleared_by'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def hr_status(self, obj):
+        return self._status_icon(obj.hr_clearance)
+    hr_status.short_description = _("HR")
+    
+    def finance_status(self, obj):
+        return self._status_icon(obj.finance_clearance)
+    finance_status.short_description = _("Finance")
+    
+    def it_status(self, obj):
+        return self._status_icon(obj.it_clearance)
+    it_status.short_description = _("IT")
+    
+    def admin_status(self, obj):
+        return self._status_icon(obj.admin_clearance)
+    admin_status.short_description = _("Admin")
+    
+    def _status_icon(self, status):
+        if status:
+            return format_html('<span style="color: green;">✓</span>')
+        return format_html('<span style="color: red;">✗</span>')
+
+
+# ==================== COMPLAINT ====================
+
+@admin.register(Complaint)
+class ComplaintAdmin(ModelAdmin):
+    list_display = ('employee', 'title', 'priority', 'status', 'submitted_date', 'assigned_to', 'resolved_date')
+    list_filter = ('status', 'priority', 'submitted_date', 'employee__company')
+    search_fields = ('employee__name', 'employee__employee_id', 'title', 'description')
+    ordering = ('-submitted_date',)
+    list_select_related = ('employee', 'assigned_to')
+    
+    fieldsets = (
+        (_("Complaint Information"), {
+            'fields': ('employee', 'title', 'priority', 'status')
+        }),
+        (_("Description"), {
+            'fields': ('description',)
+        }),
+        (_("Assignment"), {
+            'fields': ('assigned_to',)
+        }),
+        (_("Resolution"), {
+            'fields': ('resolution', 'resolved_date'),
+            'classes': ('collapse',)
+        }),
+        (_("Additional Notes"), {
+            'fields': ('remarks',),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    actions = ['mark_as_under_review', 'mark_as_resolved']
+    
+    def mark_as_under_review(self, request, queryset):
+        updated = queryset.update(status='under_review')
+        self.message_user(request, f'{updated} complaints marked as under review.')
+    mark_as_under_review.short_description = _("Mark as under review")
+    
+    def mark_as_resolved(self, request, queryset):
+        from django.utils import timezone
+        updated = queryset.update(status='resolved', resolved_date=timezone.now().date())
+        self.message_user(request, f'{updated} complaints marked as resolved.')
+    mark_as_resolved.short_description = _("Mark as resolved")   

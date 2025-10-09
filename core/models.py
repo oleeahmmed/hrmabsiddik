@@ -19,6 +19,11 @@ class Company(models.Model):
     tax_id = models.CharField(max_length=50, blank=True, null=True, help_text="e.g., VAT, EIN, GST")
     currency = models.CharField(max_length=10, default='USD', help_text="e.g., USD, EUR, GBP")
     logo = models.ImageField(upload_to='company_logos/', blank=True, null=True)
+    location_restricted = models.BooleanField(
+        _("Location Restricted"),
+        default=True,
+        help_text=_("If enabled, employees must be within location radius to mark attendance")
+    )
     is_active = models.BooleanField(_("Is Active"), default=True)
     created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Updated At"), auto_now=True)

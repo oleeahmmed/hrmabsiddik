@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
+import os
 import logging
 from django.utils.dateparse import parse_datetime
 from django.contrib.auth import get_user_model
@@ -1511,7 +1512,462 @@ class RosterDay(models.Model):
         unique_together = ('roster_assignment', 'date')
         ordering = ['date']
 
+# ==================== NOTICE & ANNOUNCEMENTS ====================
 
+class Notice(models.Model):
+    """
+    কোম্পানির নোটিস এবং ঘোষণা পরিচালনা করে।
+    """
+    PRIORITY_CHOICES = [
+        ('low', _('Low')),
+        ('medium', _('Medium')),
+        ('high', _('High')),
+        ('urgent', _('Urgent')),
+    ]
+    
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name=_("Company"))
+    title = models.CharField(_("Title"), max_length=200)
+    description = models.TextField(_("Description"))
+    priority = models.CharField(_("Priority"), max_length=20, choices=PRIORITY_CHOICES, default='medium')
+    published_date = models.DateField(_("Published Date"))
+    expiry_date = models.DateField(_("Expiry Date"), null=True, blank=True)
+    is_active = models.BooleanField(_("Active"), default=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name=_("Created By"))
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+
+    def __str__(self):
+        return f"{self.title} - {self.company.name}"
+
+    class Meta:
+        verbose_name = _("Notice")
+        verbose_name_plural = _("Notices")
+        ordering = ['-published_date']
+
+
+# ==================== RECRUITMENT ====================
+
+class Recruitment(models.Model):
+    """
+    চাকরির পোস্ট এবং নিয়োগ প্রক্রিয়া পরিচালনা করে।
+    """
+    STATUS_CHOICES = [
+        ('draft', _('Draft')),
+        ('open', _('Open')),
+        ('closed', _('Closed')),
+        ('on_hold', _('On Hold')),
+    ]
+    
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name=_("Company"))
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_("Department"))
+    designation = models.ForeignKey(Designation, on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_("Designation"))
+    job_title = models.CharField(_("Job Title"), max_length=200)
+    job_description = models.TextField(_("Job Description"))
+    requirements = models.TextField(_("Requirements"), blank=True, null=True)
+    vacancies = models.PositiveIntegerField(_("Number of Vacancies"), default=1)
+    status = models.CharField(_("Status"), max_length=20, choices=STATUS_CHOICES, default='draft')
+    posted_date = models.DateField(_("Posted Date"))
+    closing_date = models.DateField(_("Closing Date"))
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name=_("Created By"))
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+
+    def __str__(self):
+        return f"{self.job_title} - {self.company.name}"
+
+    class Meta:
+        verbose_name = _("Recruitment")
+        verbose_name_plural = _("Recruitments")
+        ordering = ['-posted_date']
+
+
+class JobApplication(models.Model):
+    """
+    চাকরির আবেদন এবং প্রার্থী তথ্য সংরক্ষণ করে।
+    """
+    STATUS_CHOICES = [
+        ('applied', _('Applied')),
+        ('shortlisted', _('Shortlisted')),
+        ('interview', _('Interview Scheduled')),
+        ('selected', _('Selected')),
+        ('rejected', _('Rejected')),
+    ]
+    
+    recruitment = models.ForeignKey(Recruitment, on_delete=models.CASCADE, related_name='applications', verbose_name=_("Recruitment"))
+    applicant_name = models.CharField(_("Applicant Name"), max_length=100)
+    email = models.EmailField(_("Email"))
+    phone = models.CharField(_("Phone"), max_length=20)
+    resume = models.TextField(_("Resume/CV"), blank=True, null=True)
+    cover_letter = models.TextField(_("Cover Letter"), blank=True, null=True)
+    status = models.CharField(_("Status"), max_length=20, choices=STATUS_CHOICES, default='applied')
+    applied_date = models.DateField(_("Applied Date"), auto_now_add=True)
+    notes = models.TextField(_("Notes"), blank=True, null=True)
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+
+    def __str__(self):
+        return f"{self.applicant_name} - {self.recruitment.job_title}"
+
+    class Meta:
+        verbose_name = _("Job Application")
+        verbose_name_plural = _("Job Applications")
+        ordering = ['-applied_date']
+
+
+# ==================== TRAINING ====================
+
+class Training(models.Model):
+    """
+    প্রশিক্ষণ প্রোগ্রাম পরিচালনা করে।
+    """
+    STATUS_CHOICES = [
+        ('scheduled', _('Scheduled')),
+        ('ongoing', _('Ongoing')),
+        ('completed', _('Completed')),
+        ('cancelled', _('Cancelled')),
+    ]
+    
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name=_("Company"))
+    title = models.CharField(_("Training Title"), max_length=200)
+    description = models.TextField(_("Description"))
+    trainer = models.CharField(_("Trainer Name"), max_length=100)
+    start_date = models.DateField(_("Start Date"))
+    end_date = models.DateField(_("End Date"))
+    duration_hours = models.PositiveIntegerField(_("Duration (Hours)"), default=0)
+    status = models.CharField(_("Status"), max_length=20, choices=STATUS_CHOICES, default='scheduled')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name=_("Created By"))
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+
+    def __str__(self):
+        return f"{self.title} - {self.company.name}"
+
+    class Meta:
+        verbose_name = _("Training")
+        verbose_name_plural = _("Trainings")
+        ordering = ['-start_date']
+
+
+class TrainingEnrollment(models.Model):
+    """
+    কর্মচারীদের প্রশিক্ষণে নথিভুক্তি পরিচালনা করে।
+    """
+    STATUS_CHOICES = [
+        ('enrolled', _('Enrolled')),
+        ('completed', _('Completed')),
+        ('failed', _('Failed')),
+        ('withdrawn', _('Withdrawn')),
+    ]
+    
+    training = models.ForeignKey(Training, on_delete=models.CASCADE, related_name='enrollments', verbose_name=_("Training"))
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='training_enrollments', verbose_name=_("Employee"))
+    enrollment_date = models.DateField(_("Enrollment Date"), auto_now_add=True)
+    status = models.CharField(_("Status"), max_length=20, choices=STATUS_CHOICES, default='enrolled')
+    completion_date = models.DateField(_("Completion Date"), null=True, blank=True)
+    score = models.DecimalField(_("Score"), max_digits=5, decimal_places=2, null=True, blank=True)
+    feedback = models.TextField(_("Feedback"), blank=True, null=True)
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+
+    def __str__(self):
+        return f"{self.employee.name} - {self.training.title}"
+
+    class Meta:
+        verbose_name = _("Training Enrollment")
+        verbose_name_plural = _("Training Enrollments")
+        unique_together = ('training', 'employee')
+        ordering = ['-enrollment_date']
+
+
+# ==================== PERFORMANCE ====================
+
+class Performance(models.Model):
+    """
+    কর্মচারীর কর্মক্ষমতা মূল্যায়ন পরিচালনা করে।
+    """
+    STATUS_CHOICES = [
+        ('draft', _('Draft')),
+        ('submitted', _('Submitted')),
+        ('reviewed', _('Reviewed')),
+        ('approved', _('Approved')),
+    ]
+    
+    RATING_CHOICES = [
+        (1, _('Poor')),
+        (2, _('Below Average')),
+        (3, _('Average')),
+        (4, _('Good')),
+        (5, _('Excellent')),
+    ]
+    
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='performances', verbose_name=_("Employee"))
+    review_period_start = models.DateField(_("Review Period Start"))
+    review_period_end = models.DateField(_("Review Period End"))
+    reviewer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name=_("Reviewer"))
+    overall_rating = models.IntegerField(_("Overall Rating"), choices=RATING_CHOICES, null=True, blank=True)
+    strengths = models.TextField(_("Strengths"), blank=True, null=True)
+    weaknesses = models.TextField(_("Areas for Improvement"), blank=True, null=True)
+    comments = models.TextField(_("Comments"), blank=True, null=True)
+    status = models.CharField(_("Status"), max_length=20, choices=STATUS_CHOICES, default='draft')
+    review_date = models.DateField(_("Review Date"), null=True, blank=True)
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+
+    def __str__(self):
+        return f"{self.employee.name} - {self.review_period_start} to {self.review_period_end}"
+
+    class Meta:
+        verbose_name = _("Performance Review")
+        verbose_name_plural = _("Performance Reviews")
+        ordering = ['-review_period_end']
+
+
+class PerformanceGoal(models.Model):
+    """
+    কর্মচারীর কর্মক্ষমতা লক্ষ্য এবং উদ্দেশ্য পরিচালনা করে।
+    """
+    STATUS_CHOICES = [
+        ('pending', _('Pending')),
+        ('in_progress', _('In Progress')),
+        ('completed', _('Completed')),
+        ('cancelled', _('Cancelled')),
+    ]
+    
+    performance = models.ForeignKey(Performance, on_delete=models.CASCADE, related_name='goals', verbose_name=_("Performance Review"))
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='performance_goals', verbose_name=_("Employee"))
+    goal_title = models.CharField(_("Goal Title"), max_length=200)
+    description = models.TextField(_("Description"))
+    target_date = models.DateField(_("Target Date"))
+    status = models.CharField(_("Status"), max_length=20, choices=STATUS_CHOICES, default='pending')
+    achievement = models.TextField(_("Achievement"), blank=True, null=True)
+    completion_date = models.DateField(_("Completion Date"), null=True, blank=True)
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+
+    def __str__(self):
+        return f"{self.employee.name} - {self.goal_title}"
+
+    class Meta:
+        verbose_name = _("Performance Goal")
+        verbose_name_plural = _("Performance Goals")
+        ordering = ['-target_date']
+
+
+# ==================== DOCUMENTS ====================
+
+
+# models.py - Update EmployeeDocument model
+
+class EmployeeDocument(models.Model):
+    """
+    কর্মচারী সম্পর্কিত ডকুমেন্ট সংরক্ষণ করে।
+    """
+    DOCUMENT_TYPE_CHOICES = [
+        ('resume', _('Resume/CV')),
+        ('certificate', _('Certificate')),
+        ('contract', _('Contract')),
+        ('nid', _('National ID')),
+        ('passport', _('Passport')),
+        ('other', _('Other')),
+    ]
+    
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='documents', verbose_name=_("Employee"))
+    document_type = models.CharField(_("Document Type"), max_length=50, choices=DOCUMENT_TYPE_CHOICES)
+    title = models.CharField(_("Title"), max_length=200)
+    description = models.TextField(_("Description"), blank=True, null=True)
+    file = models.FileField(
+        _("Document File"), 
+        upload_to='employee_documents/%Y/%m/%d/',
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text=_("Upload document file (PDF, DOC, DOCX, JPG, PNG)")
+    )
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name=_("Uploaded By"))
+    uploaded_at = models.DateTimeField(_("Uploaded At"), auto_now_add=True)
+    is_verified = models.BooleanField(_("Verified"), default=False)
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+
+    def __str__(self):
+        return f"{self.employee.name} - {self.title}"
+
+    @property
+    def filename(self):
+        """Get the filename from the file path"""
+        if self.file:
+            return os.path.basename(self.file.name)
+        return None
+
+    @property
+    def file_extension(self):
+        """Get file extension"""
+        if self.file and self.file.name:
+            return os.path.splitext(self.file.name)[1].lower()
+        return None
+
+    @property
+    def file_size(self):
+        """Get file size in human readable format"""
+        if self.file and self.file.size:
+            size = self.file.size
+            if size < 1024:
+                return f"{size} B"
+            elif size < 1024 * 1024:
+                return f"{size / 1024:.1f} KB"
+            else:
+                return f"{size / (1024 * 1024):.1f} MB"
+        return "0 B"
+
+    class Meta:
+        verbose_name = _("Employee Document")
+        verbose_name_plural = _("Employee Documents")
+        ordering = ['-uploaded_at']
+
+
+# ==================== OVERTIME ====================
+
+class Overtime(models.Model):
+    """
+    কর্মচারীর অতিরিক্ত সময়ের অনুরোধ এবং অনুমোদন পরিচালনা করে।
+    """
+    STATUS_CHOICES = [
+        ('pending', _('Pending')),
+        ('approved', _('Approved')),
+        ('rejected', _('Rejected')),
+        ('cancelled', _('Cancelled')),
+    ]
+    
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='overtime_requests', verbose_name=_("Employee"))
+    date = models.DateField(_("Overtime Date"))
+    start_time = models.TimeField(_("Start Time"))
+    end_time = models.TimeField(_("End Time"))
+    hours = models.DecimalField(_("Overtime Hours"), max_digits=5, decimal_places=2)
+    reason = models.TextField(_("Reason"))
+    status = models.CharField(_("Status"), max_length=20, choices=STATUS_CHOICES, default='pending')
+    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_("Approved By"))
+    approved_at = models.DateTimeField(_("Approved At"), null=True, blank=True)
+    remarks = models.TextField(_("Remarks"), blank=True, null=True)
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+
+    def __str__(self):
+        return f"{self.employee.name} - {self.date} ({self.hours}h)"
+
+    class Meta:
+        verbose_name = _("Overtime Request")
+        verbose_name_plural = _("Overtime Requests")
+        ordering = ['-date']
+
+
+# ==================== RESIGNATION ====================
+
+class Resignation(models.Model):
+    """
+    কর্মচারীর পদত্যাগ প্রক্রিয়া পরিচালনা করে।
+    """
+    STATUS_CHOICES = [
+        ('submitted', _('Submitted')),
+        ('accepted', _('Accepted')),
+        ('rejected', _('Rejected')),
+        ('withdrawn', _('Withdrawn')),
+    ]
+    
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='resignations', verbose_name=_("Employee"))
+    resignation_date = models.DateField(_("Resignation Date"))
+    last_working_date = models.DateField(_("Last Working Date"))
+    reason = models.TextField(_("Reason"))
+    status = models.CharField(_("Status"), max_length=20, choices=STATUS_CHOICES, default='submitted')
+    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_("Approved By"))
+    approved_at = models.DateTimeField(_("Approved At"), null=True, blank=True)
+    remarks = models.TextField(_("Remarks"), blank=True, null=True)
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+
+    def __str__(self):
+        return f"{self.employee.name} - {self.resignation_date}"
+
+    class Meta:
+        verbose_name = _("Resignation")
+        verbose_name_plural = _("Resignations")
+        ordering = ['-resignation_date']
+
+
+# ==================== CLEARANCE ====================
+
+class Clearance(models.Model):
+    """
+    কর্মচারী ছাড়ার সময় ক্লিয়ারেন্স প্রক্রিয়া পরিচালনা করে।
+    """
+    STATUS_CHOICES = [
+        ('pending', _('Pending')),
+        ('in_progress', _('In Progress')),
+        ('completed', _('Completed')),
+        ('on_hold', _('On Hold')),
+    ]
+    
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='clearances', verbose_name=_("Employee"))
+    resignation = models.ForeignKey(Resignation, on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_("Resignation"))
+    clearance_date = models.DateField(_("Clearance Date"))
+    status = models.CharField(_("Status"), max_length=20, choices=STATUS_CHOICES, default='pending')
+    hr_clearance = models.BooleanField(_("HR Clearance"), default=False)
+    finance_clearance = models.BooleanField(_("Finance Clearance"), default=False)
+    it_clearance = models.BooleanField(_("IT Clearance"), default=False)
+    admin_clearance = models.BooleanField(_("Admin Clearance"), default=False)
+    final_settlement_amount = models.DecimalField(_("Final Settlement Amount"), max_digits=10, decimal_places=2, default=0.00)
+    remarks = models.TextField(_("Remarks"), blank=True, null=True)
+    cleared_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_("Cleared By"))
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+
+    def __str__(self):
+        return f"{self.employee.name} - Clearance"
+
+    class Meta:
+        verbose_name = _("Clearance")
+        verbose_name_plural = _("Clearances")
+        ordering = ['-clearance_date']
+
+
+# ==================== COMPLAINT ====================
+
+class Complaint(models.Model):
+    """
+    কর্মচারীর অভিযোগ এবং সমাধান প্রক্রিয়া পরিচালনা করে।
+    """
+    STATUS_CHOICES = [
+        ('submitted', _('Submitted')),
+        ('under_review', _('Under Review')),
+        ('resolved', _('Resolved')),
+        ('closed', _('Closed')),
+    ]
+    
+    PRIORITY_CHOICES = [
+        ('low', _('Low')),
+        ('medium', _('Medium')),
+        ('high', _('High')),
+    ]
+    
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='complaints', verbose_name=_("Employee"))
+    title = models.CharField(_("Complaint Title"), max_length=200)
+    description = models.TextField(_("Description"))
+    priority = models.CharField(_("Priority"), max_length=20, choices=PRIORITY_CHOICES, default='medium')
+    status = models.CharField(_("Status"), max_length=20, choices=STATUS_CHOICES, default='submitted')
+    submitted_date = models.DateField(_("Submitted Date"), auto_now_add=True)
+    assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_complaints', verbose_name=_("Assigned To"))
+    resolution = models.TextField(_("Resolution"), blank=True, null=True)
+    resolved_date = models.DateField(_("Resolved Date"), null=True, blank=True)
+    remarks = models.TextField(_("Remarks"), blank=True, null=True)
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+
+    def __str__(self):
+        return f"{self.employee.name} - {self.title}"
+
+    class Meta:
+        verbose_name = _("Complaint")
+        verbose_name_plural = _("Complaints")
+        ordering = ['-submitted_date']
 # models.py এ এই মডেলগুলো যোগ করুন
 
 class PayrollCycle(models.Model):
