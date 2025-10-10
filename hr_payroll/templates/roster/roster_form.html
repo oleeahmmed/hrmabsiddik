@@ -1,0 +1,785 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if is_update %}Edit Roster{% else %}Create Roster{% endif %}
+{% endblock %}
+
+{% block page_title %}
+    {% if is_update %}Edit Roster{% else %}Create Roster{% endif %}
+{% endblock %}
+
+{% block page_subtitle %}
+    {% if is_update %}Update roster and employee assignments{% else %}Create a new roster with employee assignments{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    <!-- Django Messages Display -->
+    {% if messages %}
+    <div class="space-y-2">
+        {% for message in messages %}
+        <div class="alert {% if message.tags == 'error' or message.tags == 'danger' %}alert-error{% elif message.tags == 'warning' %}alert-warning{% elif message.tags == 'success' %}alert-success{% else %}alert-info{% endif %}">
+            <div class="flex items-start space-x-3">
+                {% if message.tags == 'error' or message.tags == 'danger' %}
+                <svg class="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                {% elif message.tags == 'success' %}
+                <svg class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                {% else %}
+                <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                {% endif %}
+                <div class="flex-1">
+                    <p class="font-medium">{{ message }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Form Card -->
+    <div class="card overflow-hidden border border-border/50">
+        <!-- Card Header -->
+        <div class="p-4 border-b border-border/30 bg-gradient-to-r from-primary/5 to-primary/3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <h2 class="text-lg font-semibold text-foreground">Roster Details</h2>
+                </div>
+                <a href="{% url 'zkteco:roster_list' %}" class="btn btn-outline btn-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Back to List
+                </a>
+            </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="p-6">
+            <form method="post" id="roster-form" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- ALL FORM ERRORS DISPLAY -->
+                {% if form.non_field_errors or assignment_formset.non_form_errors %}
+                <div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-700 rounded-lg p-4">
+                    <div class="flex items-start space-x-3">
+                        <svg class="w-6 h-6 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div class="flex-1">
+                            <h3 class="font-bold text-red-800 dark:text-red-200 mb-2">Please correct the following errors:</h3>
+                            <ul class="list-disc list-inside space-y-1 text-red-700 dark:text-red-300">
+                                {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                                {% for error in assignment_formset.non_form_errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Roster Basic Information -->
+                <div class="space-y-4">
+                    <h3 class="text-lg font-semibold text-foreground flex items-center gap-2 pb-2 border-b border-border/30">
+                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Roster Information
+                    </h3>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Roster Name -->
+                        <div class="form-group lg:col-span-2">
+                            <label for="{{ form.name.id_for_label }}" class="form-label required">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                </svg>
+                                Roster Name
+                            </label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <div class="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-lg">
+                                <p class="text-sm text-red-700 dark:text-red-300 font-medium">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    {{ form.name.errors.0 }}
+                                </p>
+                            </div>
+                            {% endif %}
+                            {% if form.name.help_text %}
+                            <p class="form-help">{{ form.name.help_text }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Start Date -->
+                        <div class="form-group">
+                            <label for="{{ form.start_date.id_for_label }}" class="form-label required">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                Start Date
+                            </label>
+                            {{ form.start_date }}
+                            {% if form.start_date.errors %}
+                            <div class="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-lg">
+                                <p class="text-sm text-red-700 dark:text-red-300 font-medium">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    {{ form.start_date.errors.0 }}
+                                </p>
+                            </div>
+                            {% endif %}
+                            {% if form.start_date.help_text %}
+                            <p class="form-help">{{ form.start_date.help_text }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- End Date -->
+                        <div class="form-group">
+                            <label for="{{ form.end_date.id_for_label }}" class="form-label required">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                End Date
+                            </label>
+                            {{ form.end_date }}
+                            {% if form.end_date.errors %}
+                            <div class="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-lg">
+                                <p class="text-sm text-red-700 dark:text-red-300 font-medium">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    {{ form.end_date.errors.0 }}
+                                </p>
+                            </div>
+                            {% endif %}
+                            {% if form.end_date.help_text %}
+                            <p class="form-help">{{ form.end_date.help_text }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Description -->
+                        <div class="form-group lg:col-span-2">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
+                                </svg>
+                                Description (Optional)
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <div class="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-lg">
+                                <p class="text-sm text-red-700 dark:text-red-300 font-medium">{{ form.description.errors.0 }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employee Assignments Formset -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-foreground flex items-center gap-2">
+                            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                            </svg>
+                            Employee Assignments <span class="text-sm text-red-500">*</span>
+                        </h3>
+                        <button type="button" id="add-assignment" class="btn btn-outline btn-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            Add Employee
+                        </button>
+                    </div>
+
+                    <!-- Formset Management Fields -->
+                    {{ assignment_formset.management_form }}
+
+                    <!-- Formset Errors Display -->
+                    {% if assignment_formset.errors %}
+                    <div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-700 rounded-lg p-4">
+                        <div class="flex items-start space-x-3">
+                            <svg class="w-6 h-6 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-red-800 dark:text-red-200 mb-2">Employee Assignment Errors:</h4>
+                                <ul class="list-disc list-inside space-y-1 text-red-700 dark:text-red-300">
+                                    {% for form_errors in assignment_formset.errors %}
+                                        {% for field, errors in form_errors.items %}
+                                            {% for error in errors %}
+                                            <li><strong>{{ field }}:</strong> {{ error }}</li>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Assignments Table -->
+                    <div class="card overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full" id="assignments-table">
+                                <thead>
+                                    <tr class="border-b border-border bg-muted/30">
+                                        <th class="text-left p-3 text-sm font-semibold text-muted-foreground w-12">#</th>
+                                        <th class="text-left p-3 text-sm font-semibold text-muted-foreground">Employee <span class="text-red-500">*</span></th>
+                                        <th class="text-left p-3 text-sm font-semibold text-muted-foreground">Default Shift <span class="text-red-500">*</span></th>
+                                        <th class="text-center p-3 text-sm font-semibold text-muted-foreground w-24">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="assignments-tbody">
+                                    {% for form in assignment_formset %}
+                                    <tr class="assignment-row border-b border-border hover:bg-accent/50 transition-colors" data-form-index="{{ forloop.counter0 }}">
+                                        <td class="p-3 text-sm text-muted-foreground row-number">
+                                            {{ forloop.counter }}
+                                        </td>
+                                        <td class="p-3">
+                                            {{ form.id }}
+                                            {{ form.employee }}
+                                            {% if form.employee.errors %}
+                                            <div class="mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded">
+                                                <p class="text-xs text-red-700 dark:text-red-300 font-medium">
+                                                    <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01"/>
+                                                    </svg>
+                                                    {{ form.employee.errors.0 }}
+                                                </p>
+                                            </div>
+                                            {% endif %}
+                                        </td>
+                                        <td class="p-3">
+                                            {{ form.shift }}
+                                            {% if form.shift.errors %}
+                                            <div class="mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded">
+                                                <p class="text-xs text-red-700 dark:text-red-300 font-medium">
+                                                    <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01"/>
+                                                    </svg>
+                                                    {{ form.shift.errors.0 }}
+                                                </p>
+                                            </div>
+                                            {% endif %}
+                                        </td>
+                                        <td class="p-3 text-center">
+                                            <div class="flex items-center justify-center gap-2">
+                                                {{ form.DELETE }}
+                                                <button type="button" class="delete-row btn-ghost p-2 rounded hover:bg-destructive-light hover:text-destructive" title="Delete">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="empty-state" class="p-8 text-center hidden">
+                            <div class="flex flex-col items-center justify-center space-y-3">
+                                <div class="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                                    </svg>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-foreground font-medium">No employees assigned</p>
+                                    <p class="text-sm text-muted-foreground mt-1">Click "Add Employee" to assign employees to this roster</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex items-center justify-between pt-6 border-t border-border/30">
+                    <div>
+                        {% if is_update and object %}
+                        <p class="text-sm text-muted-foreground">
+                            Last updated: {{ object.updated_at|date:"M d, Y H:i" }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <a href="{% url 'zkteco:roster_list' %}" class="btn btn-outline">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="submit-btn">
+                            {% if is_update %}
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Update Roster
+                            {% else %}
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            Create Roster
+                            {% endif %}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+<!-- Information Card -->
+<div class="card border border-primary/20 bg-gradient-to-r from-primary/5 to-primary/3">
+    <div class="flex items-start space-x-3">
+        <svg class="w-5 h-5 text-primary mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <div class="space-y-2">
+            <h3 class="font-medium text-primary">Roster Creation Guidelines</h3>
+            <ul class="text-sm text-muted-foreground space-y-1">
+                <li>• Enter a unique roster name (at least 3 characters)</li>
+                <li>• Select start and end dates (end date must be after start date)</li>
+                <li>• Add at least one employee with their default shift</li>
+                <li>• Each employee can only be assigned once</li>
+                <li>• Roster days will be automatically created for the entire period</li>
+                <li>• Maximum roster duration is 365 days</li>
+            </ul>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Hidden Template for New Assignment Row -->
+<table style="display: none;">
+    <tbody id="assignment-template">
+        <tr class="assignment-row border-b border-border hover:bg-accent/50 transition-colors">
+            <td class="p-3 text-sm text-muted-foreground row-number">
+                __INDEX__
+            </td>
+            <td class="p-3">
+                <select name="roster_assignments-__prefix__-employee" class="input" id="id_roster_assignments-__prefix__-employee" required>
+                    <option value="">---------</option>
+                    {% if assignment_formset.forms.0.employee.field.queryset %}
+                    {% for employee in assignment_formset.forms.0.employee.field.queryset %}
+                    <option value="{{ employee.pk }}">{{ employee.get_full_name }}</option>
+                    {% endfor %}
+                    {% endif %}
+                </select>
+            </td>
+            <td class="p-3">
+                <select name="roster_assignments-__prefix__-shift" class="input" id="id_roster_assignments-__prefix__-shift" required>
+                    <option value="">---------</option>
+                    {% if assignment_formset.forms.0.shift.field.queryset %}
+                    {% for shift in assignment_formset.forms.0.shift.field.queryset %}
+                    <option value="{{ shift.pk }}">{{ shift.name }} ({{ shift.start_time|time:"H:i" }} - {{ shift.end_time|time:"H:i" }})</option>
+                    {% endfor %}
+                    {% endif %}
+                </select>
+            </td>
+            <td class="p-3 text-center">
+                <div class="flex items-center justify-center gap-2">
+                    <input type="checkbox" name="roster_assignments-__prefix__-DELETE" class="hidden" id="id_roster_assignments-__prefix__-DELETE">
+                    <button type="button" class="delete-row btn-ghost p-2 rounded hover:bg-destructive-light hover:text-destructive" title="Delete">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<script>
+console.log('='.repeat(60));
+console.log('=== ROSTER FORM JAVASCRIPT LOADED ===');
+console.log('='.repeat(60));
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded');
+    
+    const form = document.getElementById('roster-form');
+    const tbody = document.getElementById('assignments-tbody');
+    const addButton = document.getElementById('add-assignment');
+    const emptyState = document.getElementById('empty-state');
+    const totalFormsInput = document.querySelector('input[name="roster_assignments-TOTAL_FORMS"]');
+    const submitBtn = document.getElementById('submit-btn');
+    
+    console.log('Form elements:', {
+        form: form ? 'Found' : 'NOT FOUND',
+        tbody: tbody ? 'Found' : 'NOT FOUND',
+        addButton: addButton ? 'Found' : 'NOT FOUND',
+        totalFormsInput: totalFormsInput ? 'Found' : 'NOT FOUND',
+        initialTotalForms: totalFormsInput ? totalFormsInput.value : 'N/A'
+    });
+    
+    // Get the template
+    const template = document.getElementById('assignment-template').querySelector('tr');
+    console.log('Template:', template ? 'Found' : 'NOT FOUND');
+    
+    // Initialize row numbers
+    function updateRowNumbers() {
+        const rows = tbody.querySelectorAll('.assignment-row:not([style*="display: none"])');
+        console.log(`Updating row numbers for ${rows.length} visible rows`);
+        
+        rows.forEach((row, index) => {
+            const numberCell = row.querySelector('.row-number');
+            if (numberCell) {
+                numberCell.textContent = index + 1;
+            }
+        });
+        
+        // Show/hide empty state
+        if (rows.length === 0) {
+            console.log('No rows - showing empty state');
+            emptyState.classList.remove('hidden');
+        } else {
+            console.log('Rows exist - hiding empty state');
+            emptyState.classList.add('hidden');
+        }
+    }
+    
+    // Add new row
+    addButton.addEventListener('click', function() {
+        console.log('--- ADD BUTTON CLICKED ---');
+        const currentFormCount = parseInt(totalFormsInput.value);
+        console.log('Current form count:', currentFormCount);
+        
+        const newRow = template.cloneNode(true);
+        
+        // Replace __prefix__ with actual form count
+        newRow.innerHTML = newRow.innerHTML.replace(/__prefix__/g, currentFormCount);
+        newRow.innerHTML = newRow.innerHTML.replace(/__INDEX__/g, currentFormCount + 1);
+        
+        // Append to tbody
+        tbody.appendChild(newRow);
+        console.log('New row added to tbody');
+        
+        // Update total forms count
+        totalFormsInput.value = currentFormCount + 1;
+        console.log('New total forms count:', totalFormsInput.value);
+        
+        // Update row numbers
+        updateRowNumbers();
+        
+        // Scroll to the new row
+        newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    
+    // Delete row
+    tbody.addEventListener('click', function(e) {
+        const deleteButton = e.target.closest('.delete-row');
+        if (!deleteButton) return;
+        
+        console.log('--- DELETE BUTTON CLICKED ---');
+        
+        const row = deleteButton.closest('.assignment-row');
+        const deleteCheckbox = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+        
+        if (deleteCheckbox) {
+            // If the form already exists in the database, mark for deletion
+            const idInput = row.querySelector('input[name$="-id"]');
+            if (idInput && idInput.value) {
+                console.log('Marking existing row for deletion');
+                deleteCheckbox.checked = true;
+                row.style.display = 'none';
+            } else {
+                // If it's a new form, just remove it
+                console.log('Removing new row');
+                row.remove();
+                
+                // Update total forms count
+                const currentFormCount = parseInt(totalFormsInput.value);
+                totalFormsInput.value = currentFormCount - 1;
+                console.log('Updated total forms count:', totalFormsInput.value);
+                
+                // Renumber remaining forms
+                renumberForms();
+            }
+        } else {
+            // For new rows without formset structure, just remove
+            console.log('Removing row without DELETE checkbox');
+            row.remove();
+            
+            // Update total forms count
+            const currentFormCount = parseInt(totalFormsInput.value);
+            totalFormsInput.value = currentFormCount - 1;
+            console.log('Updated total forms count:', totalFormsInput.value);
+        }
+        
+        updateRowNumbers();
+    });
+    
+    // Renumber forms after deletion
+    function renumberForms() {
+        console.log('Renumbering forms...');
+        const visibleRows = tbody.querySelectorAll('.assignment-row:not([style*="display: none"])');
+        visibleRows.forEach((row, index) => {
+            // Update all form field names and ids
+            const inputs = row.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                const name = input.getAttribute('name');
+                const id = input.getAttribute('id');
+                
+                if (name) {
+                    const newName = name.replace(/roster_assignments-\d+-/, `roster_assignments-${index}-`);
+                    input.setAttribute('name', newName);
+                }
+                
+                if (id) {
+                    const newId = id.replace(/id_roster_assignments-\d+-/, `id_roster_assignments-${index}-`);
+                    input.setAttribute('id', newId);
+                }
+            });
+        });
+        console.log('Forms renumbered');
+    }
+    
+    // Initial row numbers update
+    updateRowNumbers();
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        console.log('='.repeat(60));
+        console.log('=== FORM SUBMIT EVENT ===');
+        console.log('='.repeat(60));
+        
+        const visibleRows = tbody.querySelectorAll('.assignment-row:not([style*="display: none"])');
+        console.log(`Total visible rows: ${visibleRows.length}`);
+        
+        if (visibleRows.length === 0) {
+            e.preventDefault();
+            console.error('ERROR: No employee assignments');
+            alert('Please add at least one employee assignment.');
+            return false;
+        }
+        
+        // Validate each visible row
+        let hasErrors = false;
+        const employeeIds = [];
+        
+        visibleRows.forEach((row, index) => {
+            const employeeSelect = row.querySelector('select[name$="-employee"]');
+            const shiftSelect = row.querySelector('select[name$="-shift"]');
+            
+            console.log(`Row ${index + 1}:`, {
+                employee: employeeSelect ? employeeSelect.value : 'NOT FOUND',
+                shift: shiftSelect ? shiftSelect.value : 'NOT FOUND'
+            });
+            
+            if (!employeeSelect.value) {
+                hasErrors = true;
+                employeeSelect.classList.add('border-red-500', 'border-2');
+                console.error(`Row ${index + 1}: Employee not selected`);
+            } else {
+                employeeSelect.classList.remove('border-red-500', 'border-2');
+                employeeIds.push(employeeSelect.value);
+            }
+            
+            if (!shiftSelect.value) {
+                hasErrors = true;
+                shiftSelect.classList.add('border-red-500', 'border-2');
+                console.error(`Row ${index + 1}: Shift not selected`);
+            } else {
+                shiftSelect.classList.remove('border-red-500', 'border-2');
+            }
+        });
+        
+        if (hasErrors) {
+            e.preventDefault();
+            console.error('ERROR: Validation failed - missing required fields');
+            alert('Please fill in all required fields (Employee and Shift) for each assignment.');
+            return false;
+        }
+        
+        // Check for duplicate employees
+        const uniqueEmployeeIds = new Set(employeeIds);
+        console.log('Employee IDs:', employeeIds);
+        console.log('Unique Employee IDs:', Array.from(uniqueEmployeeIds));
+        
+        if (employeeIds.length !== uniqueEmployeeIds.size) {
+            e.preventDefault();
+            console.error('ERROR: Duplicate employees found');
+            alert('Each employee can only be assigned once. Please remove duplicate employees.');
+            return false;
+        }
+        
+        console.log('✓ All validations passed');
+        console.log('Form data being submitted:');
+        console.log('Total forms:', totalFormsInput.value);
+        
+        // Log all form data
+        const formData = new FormData(form);
+        for (let [key, value] of formData.entries()) {
+            console.log(`  ${key}: ${value}`);
+        }
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Submitting...';
+        
+        console.log('='.repeat(60));
+        console.log('=== FORM SUBMITTED ===');
+        console.log('='.repeat(60));
+    });
+    
+    // Date validation
+    const startDateInput = document.querySelector('input[name="start_date"]');
+    const endDateInput = document.querySelector('input[name="end_date"]');
+    
+    if (startDateInput && endDateInput) {
+        console.log('Date inputs found - setting up validation');
+        
+        function validateDates() {
+            if (startDateInput.value && endDateInput.value) {
+                const startDate = new Date(startDateInput.value);
+                const endDate = new Date(endDateInput.value);
+                
+                console.log('Date validation:', {
+                    startDate: startDateInput.value,
+                    endDate: endDateInput.value,
+                    valid: endDate >= startDate
+                });
+                
+                if (endDate < startDate) {
+                    endDateInput.setCustomValidity('End date must be after or equal to start date.');
+                    endDateInput.classList.add('border-red-500', 'border-2');
+                    console.error('Date validation failed: End date before start date');
+                } else {
+                    endDateInput.setCustomValidity('');
+                    endDateInput.classList.remove('border-red-500', 'border-2');
+                    
+                    // Calculate duration
+                    const duration = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+                    console.log(`Duration: ${duration} days`);
+                    
+                    if (duration > 365) {
+                        console.warn(`WARNING: Duration exceeds 365 days (${duration} days)`);
+                    }
+                }
+            }
+        }
+        
+        startDateInput.addEventListener('change', validateDates);
+        endDateInput.addEventListener('change', validateDates);
+        
+        // Initial validation
+        validateDates();
+    }
+    
+    // Real-time employee/shift selection logging
+    tbody.addEventListener('change', function(e) {
+        if (e.target.matches('select[name$="-employee"]') || e.target.matches('select[name$="-shift"]')) {
+            const row = e.target.closest('.assignment-row');
+            const rowIndex = Array.from(tbody.querySelectorAll('.assignment-row')).indexOf(row);
+            const employeeSelect = row.querySelector('select[name$="-employee"]');
+            const shiftSelect = row.querySelector('select[name$="-shift"]');
+            
+            console.log(`Row ${rowIndex + 1} changed:`, {
+                employee: employeeSelect.options[employeeSelect.selectedIndex]?.text || 'Not selected',
+                shift: shiftSelect.options[shiftSelect.selectedIndex]?.text || 'Not selected'
+            });
+        }
+    });
+    
+    console.log('='.repeat(60));
+    console.log('=== INITIALIZATION COMPLETE ===');
+    console.log('='.repeat(60));
+});
+</script>
+
+<style>
+/* Enhanced error styling */
+.border-red-500 {
+    border-color: rgb(239 68 68) !important;
+}
+
+.border-2 {
+    border-width: 2px !important;
+}
+
+/* Alert styles */
+.alert {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.alert-error {
+    background-color: #fee;
+    border: 1px solid #fcc;
+    color: #c33;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffd43b;
+    color: #856404;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .alert-error {
+        background-color: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: #fca5a5;
+    }
+    
+    .alert-warning {
+        background-color: rgba(251, 191, 36, 0.1);
+        border-color: rgba(251, 191, 36, 0.3);
+        color: #fcd34d;
+    }
+    
+    .alert-success {
+        background-color: rgba(34, 197, 94, 0.1);
+        border-color: rgba(34, 197, 94, 0.3);
+        color: #86efac;
+    }
+    
+    .alert-info {
+        background-color: rgba(59, 130, 246, 0.1);
+        border-color: rgba(59, 130, 246, 0.3);
+        color: #93c5fd;
+    }
+}
+
+/* Loading animation */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+</style>
+{% endblock %}

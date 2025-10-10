@@ -165,6 +165,18 @@
         /* ===============================================
            THEME COLOR VARIATIONS
         =============================================== */
+
+        /* Mate Black Theme */
+        .theme-mate-black {
+            --primary: 0 0% 20%;
+            --primary-hover: 0 0% 15%;
+            --primary-light: 0 0% 95%;
+        }
+        .dark.theme-mate-black {
+            --primary: 0 0% 25%;
+            --primary-hover: 0 0% 30%;
+            --primary-light: 0 0% 15%;
+        }
         
         /* Blue Theme */
         .theme-blue {
@@ -285,7 +297,125 @@
             --primary-hover: 347 77% 55%;
             --primary-light: 347 77% 15%;
         }
-        
+        /* Emerald Theme */
+        .theme-emerald {
+            --primary: 162 86% 41%;
+            --primary-hover: 162 86% 36%;
+            --primary-light: 162 86% 95%;
+        }
+        .dark.theme-emerald {
+            --primary: 162 86% 41%;
+            --primary-hover: 162 86% 46%;
+            --primary-light: 162 86% 15%;
+        }
+
+        /* Amber Theme */
+        .theme-amber {
+            --primary: 43 96% 54%;
+            --primary-hover: 43 96% 49%;
+            --primary-light: 43 96% 95%;
+        }
+        .dark.theme-amber {
+            --primary: 43 96% 54%;
+            --primary-hover: 43 96% 59%;
+            --primary-light: 43 96% 15%;
+        }
+
+        /* Violet Theme */
+        .theme-violet {
+            --primary: 258 90% 66%;
+            --primary-hover: 258 90% 61%;
+            --primary-light: 258 90% 95%;
+        }
+        .dark.theme-violet {
+            --primary: 258 90% 66%;
+            --primary-hover: 258 90% 71%;
+            --primary-light: 258 90% 15%;
+        }
+
+        /* Sky Theme */
+        .theme-sky {
+            --primary: 199 89% 48%;
+            --primary-hover: 199 89% 43%;
+            --primary-light: 199 89% 95%;
+        }
+        .dark.theme-sky {
+            --primary: 199 89% 48%;
+            --primary-hover: 199 89% 53%;
+            --primary-light: 199 89% 15%;
+        }
+
+        /* Fuchsia Theme */
+        .theme-fuchsia {
+            --primary: 292 84% 61%;
+            --primary-hover: 292 84% 56%;
+            --primary-light: 292 84% 95%;
+        }
+        .dark.theme-fuchsia {
+            --primary: 292 84% 61%;
+            --primary-hover: 292 84% 66%;
+            --primary-light: 292 84% 15%;
+        }
+
+        /* Lime Theme */
+        .theme-lime {
+            --primary: 84 81% 44%;
+            --primary-hover: 84 81% 39%;
+            --primary-light: 84 81% 95%;
+        }
+        .dark.theme-lime {
+            --primary: 84 81% 44%;
+            --primary-hover: 84 81% 49%;
+            --primary-light: 84 81% 15%;
+        }
+
+        /* Stone Theme */
+        .theme-stone {
+            --primary: 25 5% 45%;
+            --primary-hover: 25 5% 40%;
+            --primary-light: 25 5% 95%;
+        }
+        .dark.theme-stone {
+            --primary: 25 5% 45%;
+            --primary-hover: 25 5% 50%;
+            --primary-light: 25 5% 15%;
+        }
+
+        /* Ruby Theme */
+        .theme-ruby {
+            --primary: 336 80% 58%;
+            --primary-hover: 336 80% 53%;
+            --primary-light: 336 80% 95%;
+        }
+        .dark.theme-ruby {
+            --primary: 336 80% 58%;
+            --primary-hover: 336 80% 63%;
+            --primary-light: 336 80% 15%;
+        }
+
+        /* Ocean Theme */
+        .theme-ocean {
+            --primary: 201 96% 32%;
+            --primary-hover: 201 96% 27%;
+            --primary-light: 201 96% 95%;
+        }
+        .dark.theme-ocean {
+            --primary: 201 96% 32%;
+            --primary-hover: 201 96% 37%;
+            --primary-light: 201 96% 15%;
+        }
+
+        /* Sunset Theme */
+        .theme-sunset {
+            --primary: 18 85% 57%;
+            --primary-hover: 18 85% 52%;
+            --primary-light: 18 85% 95%;
+        }
+        .dark.theme-sunset {
+            --primary: 18 85% 57%;
+            --primary-hover: 18 85% 62%;
+            --primary-light: 18 85% 15%;
+        }
         /* ===============================================
            BASE STYLES
         =============================================== */
@@ -332,34 +462,289 @@
         .card-lg:hover {
             box-shadow: var(--shadow-lg);
         }
+/* Card Header - Theme Matched Gradient */
+.card-header {
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.1) 0%, hsl(var(--primary) / 0.05) 50%, hsl(var(--primary) / 0.02) 100%);
+    border-bottom: 1px solid hsl(var(--border));
+    padding: 1.5rem 1.5rem;
+    border-radius: var(--radius) var(--radius) 0 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
 
-        /* Card Header Gradient - NEW */
-        .card-header {
-            background: linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(var(--muted) / 0.8) 100%);
-            border-bottom: 1px solid hsl(var(--border));
-            padding: 1rem 1.5rem;
-            border-radius: var(--radius) var(--radius) 0 0;
-        }
+/* Dark mode card header */
+.dark .card-header {
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.15) 0%, hsl(var(--primary) / 0.08) 50%, hsl(var(--primary) / 0.03) 100%);
+    border-bottom: 1px solid hsl(var(--border));
+    box-shadow: inset 0 1px 0 hsl(var(--primary) / 0.1);
+}
 
+        /* Card header for large cards */
         .card-lg .card-header {
             border-radius: var(--radius-lg) var(--radius-lg) 0 0;
         }
 
-        /* Card Footer Gradient - NEW */
-        .card-footer {
-            background: linear-gradient(135deg, hsl(var(--muted) / 0.8) 0%, hsl(var(--muted) / 0.6) 100%);
-            border-top: 1px solid hsl(var(--border));
-            padding: 1rem 1.5rem;
-            border-radius: 0 0 var(--radius) var(--radius);
+        /* Enhanced card header with subtle pattern overlay */
+        .card-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, hsl(var(--primary) / 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, hsl(var(--primary) / 0.03) 0%, transparent 50%);
+            border-radius: inherit;
+            pointer-events: none;
         }
 
+        /* Dark mode pattern overlay */
+        .dark .card-header::before {
+            background: 
+                radial-gradient(circle at 20% 80%, hsl(var(--primary) / 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, hsl(var(--primary) / 0.05) 0%, transparent 50%);
+        }
+
+        /* Card header title styling */
+        .card-header h3 {
+            color: hsl(var(--foreground));
+            font-weight: 600;
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-header p {
+            color: hsl(var(--muted-foreground));
+            font-size: 0.875rem;
+        }
+
+        /* Special card header for stats/important cards */
+        .card-header.stat-header {
+            background: linear-gradient(135deg, hsl(var(--primary) / 0.2) 0%, hsl(var(--primary) / 0.1) 100%);
+            border-bottom: 2px solid hsl(var(--primary) / 0.3);
+        }
+
+        .dark .card-header.stat-header {
+            background: linear-gradient(135deg, hsl(var(--primary) / 0.25) 0%, hsl(var(--primary) / 0.15) 100%);
+            border-bottom: 2px solid hsl(var(--primary) / 0.4);
+        }
+
+        /* Success variant */
+        .card-header.success-header {
+            background: linear-gradient(135deg, hsl(var(--success) / 0.1) 0%, hsl(var(--success) / 0.05) 100%);
+            border-bottom: 2px solid hsl(var(--success) / 0.3);
+        }
+
+        /* Warning variant */
+        .card-header.warning-header {
+            background: linear-gradient(135deg, hsl(var(--warning) / 0.1) 0%, hsl(var(--warning) / 0.05) 100%);
+            border-bottom: 2px solid hsl(var(--warning) / 0.3);
+        }
+
+        /* Info variant */
+        .card-header.info-header {
+            background: linear-gradient(135deg, hsl(var(--info) / 0.1) 0%, hsl(var(--info) / 0.05) 100%);
+            border-bottom: 2px solid hsl(var(--info) / 0.3);
+        }
+
+        /* Destructive variant */
+        .card-header.destructive-header {
+            background: linear-gradient(135deg, hsl(var(--destructive) / 0.1) 0%, hsl(var(--destructive) / 0.05) 100%);
+            border-bottom: 2px solid hsl(var(--destructive) / 0.3);
+        }
+
+        /* Card Footer - Enhanced Gradient Design */
+        .card-footer {
+            background: linear-gradient(135deg, hsl(var(--muted) / 0.6) 0%, hsl(var(--muted) / 0.4) 50%, hsl(var(--muted) / 0.2) 100%);
+            border-top: 1px solid hsl(var(--border) / 0.5);
+            padding: 1.25rem 1.5rem;
+            border-radius: 0 0 var(--radius) var(--radius);
+            position: relative;
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid hsl(var(--background) / 0.3);
+        }
+
+        /* Dark mode card footer */
+        .dark .card-footer {
+            background: linear-gradient(135deg, hsl(var(--muted) / 0.8) 0%, hsl(var(--muted) / 0.5) 50%, hsl(var(--muted) / 0.3) 100%);
+            border-top: 1px solid hsl(var(--border) / 0.3);
+            border-bottom: 1px solid hsl(var(--background) / 0.5);
+        }
+
+        /* Card footer for large cards */
         .card-lg .card-footer {
             border-radius: 0 0 var(--radius-lg) var(--radius-lg);
         }
 
-        /* Card Body - NEW */
+        /* Enhanced card footer with subtle pattern */
+        .card-footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.2), transparent);
+            pointer-events: none;
+        }
+
+        /* Card footer action buttons layout */
+        .card-footer .btn {
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-footer .btn:last-child {
+            margin-right: 0;
+        }
+
+        /* Footer variants */
+        .card-footer.primary-footer {
+            background: linear-gradient(135deg, hsl(var(--primary) / 0.1) 0%, hsl(var(--primary) / 0.05) 100%);
+            border-top: 1px solid hsl(var(--primary) / 0.3);
+        }
+
+        .card-footer.success-footer {
+            background: linear-gradient(135deg, hsl(var(--success) / 0.1) 0%, hsl(var(--success) / 0.05) 100%);
+            border-top: 1px solid hsl(var(--success) / 0.3);
+        }
+
+        .card-footer.warning-footer {
+            background: linear-gradient(135deg, hsl(var(--warning) / 0.1) 0%, hsl(var(--warning) / 0.05) 100%);
+            border-top: 1px solid hsl(var(--warning) / 0.3);
+        }
+
+        .card-footer.info-footer {
+            background: linear-gradient(135deg, hsl(var(--info) / 0.1) 0%, hsl(var(--info) / 0.05) 100%);
+            border-top: 1px solid hsl(var(--info) / 0.3);
+        }
+
+        /* Transparent footer variant */
+        .card-footer.transparent-footer {
+            background: transparent;
+            border-top: 1px solid hsl(var(--border) / 0.3);
+            backdrop-filter: none;
+        }
+
+        /* Card Body - Enhanced Design */
         .card-body {
-            padding: 1.5rem;
+            padding: 1.75rem;
+            background: hsl(var(--card));
+            position: relative;
+        }
+
+        /* Card body with subtle background pattern */
+        .card-body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 10% 20%, hsl(var(--primary) / 0.02) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, hsl(var(--primary) / 0.02) 0%, transparent 40%);
+            pointer-events: none;
+            border-radius: inherit;
+        }
+
+        /* Dark mode card body pattern */
+        .dark .card-body::before {
+            background: 
+                radial-gradient(circle at 10% 20%, hsl(var(--primary) / 0.03) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, hsl(var(--primary) / 0.03) 0%, transparent 40%);
+        }
+
+        /* Card body spacing utilities */
+        .card-body.space-compact {
+            padding: 1.25rem;
+        }
+
+        .card-body.space-comfortable {
+            padding: 2rem;
+        }
+
+        .card-body.space-none {
+            padding: 0;
+        }
+
+        /* Card body with no background (for transparent cards) */
+        .card-body.transparent {
+            background: transparent;
+        }
+
+        .card-body.transparent::before {
+            display: none;
+        }
+
+        /* Card body with accent border */
+        .card-body.accent-border {
+            border-left: 4px solid hsl(var(--primary));
+        }
+
+        .card-body.success-border {
+            border-left: 4px solid hsl(var(--success));
+        }
+
+        .card-body.warning-border {
+            border-left: 4px solid hsl(var(--warning));
+        }
+
+        .card-body.info-border {
+            border-left: 4px solid hsl(var(--info));
+        }
+
+        /* Card body with subtle shadow */
+        .card-body.shadow-inner {
+            box-shadow: inset 0 2px 4px hsl(var(--foreground) / 0.05);
+        }
+
+        .dark .card-body.shadow-inner {
+            box-shadow: inset 0 2px 4px hsl(var(--foreground) / 0.1);
+        }
+
+        /* Card body gradient variants */
+        .card-body.gradient-primary {
+            background: linear-gradient(135deg, hsl(var(--primary) / 0.03) 0%, hsl(var(--card)) 100%);
+        }
+
+        .card-body.gradient-success {
+            background: linear-gradient(135deg, hsl(var(--success) / 0.03) 0%, hsl(var(--card)) 100%);
+        }
+
+        .card-body.gradient-muted {
+            background: linear-gradient(135deg, hsl(var(--muted) / 0.1) 0%, hsl(var(--card)) 100%);
+        }
+
+        /* Responsive card body padding */
+        @media (max-width: 768px) {
+            .card-body {
+                padding: 1.25rem;
+            }
+            
+            .card-body.space-comfortable {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Smooth transitions for card elements */
+        .card-footer,
+        .card-body {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Hover effects for interactive cards */
+        .card:hover .card-footer {
+            background: linear-gradient(135deg, hsl(var(--muted) / 0.7) 0%, hsl(var(--muted) / 0.5) 50%, hsl(var(--muted) / 0.3) 100%);
+        }
+
+        .card:hover .card-body::before {
+            background: 
+                radial-gradient(circle at 10% 20%, hsl(var(--primary) / 0.04) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, hsl(var(--primary) / 0.04) 0%, transparent 40%);
         }
         
         /* Buttons - Enhanced States */
@@ -423,6 +808,37 @@
         .btn-ghost:hover {
             background-color: hsl(var(--accent));
         }
+
+        /* Danger Button */
+        .btn-danger {
+            background: linear-gradient(135deg, hsl(var(--destructive)) 0%, hsl(var(--destructive-hover)) 100%);
+            color: hsl(var(--destructive-foreground));
+            box-shadow: 0 2px 8px hsl(var(--destructive) / 0.3);
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, hsl(var(--destructive-hover)) 0%, hsl(var(--destructive)) 100%);
+            box-shadow: 0 4px 12px hsl(var(--destructive) / 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 4px hsl(var(--destructive) / 0.3);
+        }
+
+        .btn-danger:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-danger:disabled:hover {
+            background: linear-gradient(135deg, hsl(var(--destructive)) 0%, hsl(var(--destructive-hover)) 100%);
+            transform: none;
+            box-shadow: 0 2px 8px hsl(var(--destructive) / 0.3);
+        }
         
         /* Input Fields - Enhanced Focus States */
         .input {
@@ -447,6 +863,8 @@
         }
         
         /* Tables - Enhanced Design */
+
+        
         .table {
             width: 100%;
             border-collapse: separate;
@@ -565,6 +983,8 @@
 
         
         /* Sidebar - Enhanced Design */
+
+
         .sidebar {
             background: hsl(var(--card));
             border-right: 1px solid hsl(var(--border));
@@ -596,6 +1016,200 @@
             box-shadow: 0 2px 8px hsl(var(--primary) / 0.3);
         }
         
+
+        /* ===============================================
+        SIDEBAR GRADIENT BACKGROUNDS FOR ALL THEMES
+        =============================================== */
+
+        /* Mate Black Theme Sidebar */
+        .theme-mate-black .sidebar {
+            background: linear-gradient(135deg, hsl(0 0% 15%) 0%, hsl(0 0% 10%) 50%, hsl(0 0% 8%) 100%);
+        }
+
+        /* Blue Theme Sidebar */
+        .theme-blue .sidebar {
+            background: linear-gradient(135deg, hsl(221 83% 15%) 0%, hsl(221 83% 10%) 50%, hsl(221 83% 8%) 100%);
+        }
+
+        /* Purple Theme Sidebar */
+        .theme-purple .sidebar {
+            background: linear-gradient(135deg, hsl(262 83% 15%) 0%, hsl(262 83% 10%) 50%, hsl(262 83% 8%) 100%);
+        }
+
+        /* Green Theme Sidebar */
+        .theme-green .sidebar {
+            background: linear-gradient(135deg, hsl(142 76% 15%) 0%, hsl(142 76% 10%) 50%, hsl(142 76% 8%) 100%);
+        }
+
+        /* Orange Theme Sidebar */
+        .theme-orange .sidebar {
+            background: linear-gradient(135deg, hsl(25 95% 15%) 0%, hsl(25 95% 10%) 50%, hsl(25 95% 8%) 100%);
+        }
+
+        /* Red Theme Sidebar */
+        .theme-red .sidebar {
+            background: linear-gradient(135deg, hsl(0 72% 15%) 0%, hsl(0 72% 10%) 50%, hsl(0 72% 8%) 100%);
+        }
+
+        /* Pink Theme Sidebar */
+        .theme-pink .sidebar {
+            background: linear-gradient(135deg, hsl(330 81% 15%) 0%, hsl(330 81% 10%) 50%, hsl(330 81% 8%) 100%);
+        }
+
+        /* Cyan Theme Sidebar */
+        .theme-cyan .sidebar {
+            background: linear-gradient(135deg, hsl(189 94% 15%) 0%, hsl(189 94% 10%) 50%, hsl(189 94% 8%) 100%);
+        }
+
+        /* Teal Theme Sidebar */
+        .theme-teal .sidebar {
+            background: linear-gradient(135deg, hsl(173 80% 15%) 0%, hsl(173 80% 10%) 50%, hsl(173 80% 8%) 100%);
+        }
+
+        /* Indigo Theme Sidebar */
+        .theme-indigo .sidebar {
+            background: linear-gradient(135deg, hsl(239 84% 15%) 0%, hsl(239 84% 10%) 50%, hsl(239 84% 8%) 100%);
+        }
+
+        /* Rose Theme Sidebar */
+        .theme-rose .sidebar {
+            background: linear-gradient(135deg, hsl(347 77% 15%) 0%, hsl(347 77% 10%) 50%, hsl(347 77% 8%) 100%);
+        }
+
+        /* Emerald Theme Sidebar */
+        .theme-emerald .sidebar {
+            background: linear-gradient(135deg, hsl(162 86% 15%) 0%, hsl(162 86% 10%) 50%, hsl(162 86% 8%) 100%);
+        }
+
+        /* Amber Theme Sidebar */
+        .theme-amber .sidebar {
+            background: linear-gradient(135deg, hsl(43 96% 15%) 0%, hsl(43 96% 10%) 50%, hsl(43 96% 8%) 100%);
+        }
+
+        /* Violet Theme Sidebar */
+        .theme-violet .sidebar {
+            background: linear-gradient(135deg, hsl(258 90% 15%) 0%, hsl(258 90% 10%) 50%, hsl(258 90% 8%) 100%);
+        }
+
+        /* Sky Theme Sidebar */
+        .theme-sky .sidebar {
+            background: linear-gradient(135deg, hsl(199 89% 15%) 0%, hsl(199 89% 10%) 50%, hsl(199 89% 8%) 100%);
+        }
+
+        /* Fuchsia Theme Sidebar */
+        .theme-fuchsia .sidebar {
+            background: linear-gradient(135deg, hsl(292 84% 15%) 0%, hsl(292 84% 10%) 50%, hsl(292 84% 8%) 100%);
+        }
+
+        /* Lime Theme Sidebar */
+        .theme-lime .sidebar {
+            background: linear-gradient(135deg, hsl(84 81% 15%) 0%, hsl(84 81% 10%) 50%, hsl(84 81% 8%) 100%);
+        }
+
+        /* Stone Theme Sidebar */
+        .theme-stone .sidebar {
+            background: linear-gradient(135deg, hsl(25 5% 15%) 0%, hsl(25 5% 10%) 50%, hsl(25 5% 8%) 100%);
+        }
+
+        /* Ruby Theme Sidebar */
+        .theme-ruby .sidebar {
+            background: linear-gradient(135deg, hsl(336 80% 15%) 0%, hsl(336 80% 10%) 50%, hsl(336 80% 8%) 100%);
+        }
+
+        /* Ocean Theme Sidebar */
+        .theme-ocean .sidebar {
+            background: linear-gradient(135deg, hsl(201 96% 15%) 0%, hsl(201 96% 10%) 50%, hsl(201 96% 8%) 100%);
+        }
+
+        /* Sunset Theme Sidebar */
+        .theme-sunset .sidebar {
+            background: linear-gradient(135deg, hsl(18 85% 15%) 0%, hsl(18 85% 10%) 50%, hsl(18 85% 8%) 100%);
+        }
+
+        /* Light Mode Sidebar Overrides */
+        :root:not(.dark) .sidebar {
+            background: linear-gradient(135deg, hsl(var(--primary-light)) 0%, hsl(var(--primary) / 0.1) 50%, hsl(var(--card)) 100%) !important;
+        }
+
+        /* Enhanced Sidebar Header for Light Mode */
+        :root:not(.dark) .sidebar .p-4.border-b {
+            background: linear-gradient(135deg, hsl(var(--primary) / 0.8) 0%, hsl(var(--primary) / 0.6) 100%);
+            border-bottom: 1px solid hsl(var(--primary) / 0.3);
+        }
+
+        :root:not(.dark) .sidebar .p-4.border-b h1 {
+            color: white;
+        }
+
+        :root:not(.dark) .sidebar .p-4.border-b p {
+            color: hsl(0 0% 100% / 0.8);
+        }
+
+        /* Enhanced Navigation Items for Gradient Sidebar */
+        .sidebar .nav-item {
+            backdrop-filter: blur(10px);
+            margin: 0.25rem 0;
+            border: 1px solid transparent;
+        }
+
+        .sidebar .nav-item:hover {
+            background: hsl(var(--primary) / 0.15);
+            border-color: hsl(var(--primary) / 0.3);
+            transform: translateX(4px);
+        }
+
+        .sidebar .nav-item.active {
+            background: linear-gradient(135deg, hsl(var(--primary) / 0.9) 0%, hsl(var(--primary-hover) / 0.8) 100%);
+            border-color: hsl(var(--primary) / 0.5);
+            box-shadow: 0 4px 12px hsl(var(--primary) / 0.3);
+            transform: translateX(4px);
+        }
+
+        /* Profile Section Enhancement */
+        .sidebar .p-3.border-t {
+            background: hsl(var(--card) / 0.8);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid hsl(var(--border) / 0.5);
+        }
+
+        /* Dark mode specific sidebar enhancements */
+        .dark .sidebar {
+            border-right: 1px solid hsl(var(--border) / 0.3);
+            box-shadow: 
+                2px 0 20px hsl(var(--primary) / 0.1),
+                inset -1px 0 0 hsl(var(--border) / 0.2);
+        }
+
+        /* Light mode specific sidebar enhancements */
+        :root:not(.dark) .sidebar {
+            border-right: 1px solid hsl(var(--border));
+            box-shadow: 
+                2px 0 20px hsl(var(--primary) / 0.05),
+                inset -1px 0 0 hsl(var(--border));
+        }
+
+        /* Smooth transitions for sidebar elements */
+        .sidebar * {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Scrollbar styling for sidebar */
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: hsl(var(--primary) / 0.3);
+            border-radius: 2px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: hsl(var(--primary) / 0.5);
+        }
         /* Toast - Enhanced Animations */
         .toast-container {
             position: fixed;
@@ -1243,6 +1857,11 @@
                             <div class="p-4">
                                 <h3 class="text-sm font-semibold mb-3">Choose Theme Color</h3>
                                 <div class="grid grid-cols-5 gap-3">
+                                    <button class="color-theme-btn group" data-theme="mate-black" title="Mate Black">
+                                        <div class="w-10 h-10 rounded-full bg-gray-800 group-hover:scale-110 transition-transform ring-2 ring-transparent group-hover:ring-gray-800/30"></div>
+                                        <span class="text-xs mt-1">Mate Black</span>
+                                    </button>
+
                                     <button class="color-theme-btn group" data-theme="blue" title="Blue">
                                         <div class="w-10 h-10 rounded-full bg-blue-500 group-hover:scale-110 transition-transform ring-2 ring-transparent group-hover:ring-blue-500/30"></div>
                                         <span class="text-xs mt-1">Blue</span>
@@ -1283,6 +1902,56 @@
                                         <div class="w-10 h-10 rounded-full bg-rose-500 group-hover:scale-110 transition-transform ring-2 ring-transparent group-hover:ring-rose-500/30"></div>
                                         <span class="text-xs mt-1">Rose</span>
                                     </button>
+
+                                    <button class="color-theme-btn group" data-theme="emerald" title="Emerald">
+                                        <div class="w-10 h-10 rounded-full bg-emerald-500 group-hover:scale-110 transition-transform ring-2 ring-transparent group-hover:ring-emerald-500/30"></div>
+                                        <span class="text-xs mt-1">Emerald</span>
+                                    </button>
+
+                                    <button class="color-theme-btn group" data-theme="amber" title="Amber">
+                                        <div class="w-10 h-10 rounded-full bg-amber-500 group-hover:scale-110 transition-transform ring-2 ring-transparent group-hover:ring-amber-500/30"></div>
+                                        <span class="text-xs mt-1">Amber</span>
+                                    </button>
+
+                                    <button class="color-theme-btn group" data-theme="violet" title="Violet">
+                                        <div class="w-10 h-10 rounded-full bg-violet-500 group-hover:scale-110 transition-transform ring-2 ring-transparent group-hover:ring-violet-500/30"></div>
+                                        <span class="text-xs mt-1">Violet</span>
+                                    </button>
+
+                                    <button class="color-theme-btn group" data-theme="sky" title="Sky">
+                                        <div class="w-10 h-10 rounded-full bg-sky-500 group-hover:scale-110 transition-transform ring-2 ring-transparent group-hover:ring-sky-500/30"></div>
+                                        <span class="text-xs mt-1">Sky</span>
+                                    </button>
+
+                                    <button class="color-theme-btn group" data-theme="fuchsia" title="Fuchsia">
+                                        <div class="w-10 h-10 rounded-full bg-fuchsia-500 group-hover:scale-110 transition-transform ring-2 ring-transparent group-hover:ring-fuchsia-500/30"></div>
+                                        <span class="text-xs mt-1">Fuchsia</span>
+                                    </button>
+
+                                    <button class="color-theme-btn group" data-theme="lime" title="Lime">
+                                        <div class="w-10 h-10 rounded-full bg-lime-500 group-hover:scale-110 transition-transform ring-2 ring-transparent group-hover:ring-lime-500/30"></div>
+                                        <span class="text-xs mt-1">Lime</span>
+                                    </button>
+
+                                    <button class="color-theme-btn group" data-theme="stone" title="Stone">
+                                        <div class="w-10 h-10 rounded-full bg-stone-500 group-hover:scale-110 transition-transform ring-2 ring-transparent group-hover:ring-stone-500/30"></div>
+                                        <span class="text-xs mt-1">Stone</span>
+                                    </button>
+
+                                    <button class="color-theme-btn group" data-theme="ruby" title="Ruby">
+                                        <div class="w-10 h-10 rounded-full bg-rose-600 group-hover:scale-110 transition-transform ring-2 ring-transparent group-hover:ring-rose-600/30"></div>
+                                        <span class="text-xs mt-1">Ruby</span>
+                                    </button>
+
+                                    <button class="color-theme-btn group" data-theme="ocean" title="Ocean">
+                                        <div class="w-10 h-10 rounded-full bg-blue-700 group-hover:scale-110 transition-transform ring-2 ring-transparent group-hover:ring-blue-700/30"></div>
+                                        <span class="text-xs mt-1">Ocean</span>
+                                    </button>
+
+                                    <button class="color-theme-btn group" data-theme="sunset" title="Sunset">
+                                        <div class="w-10 h-10 rounded-full bg-orange-500 group-hover:scale-110 transition-transform ring-2 ring-transparent group-hover:ring-orange-500/30"></div>
+                                        <span class="text-xs mt-1">Sunset</span>
+                                    </button>                                   
                                 </div>
                             </div>
                         </div>

@@ -1,0 +1,353 @@
+{% extends 'base.html' %}
+
+{% block title %}Rosters - {{ block.super }}{% endblock %}
+{% block page_title %}Roster Management{% endblock %}
+{% block page_subtitle %}Manage and track all employee rosters{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Roster Statistics -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- Total Rosters Card -->
+        <div class="relative overflow-hidden rounded-2xl border border-blue-200 dark:border-blue-900 bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-900 dark:to-blue-950 p-4 md:p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Total Rosters</p>
+                    <p class="text-xl md:text-3xl font-bold">{{ total_rosters }}</p>
+                </div>
+                <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
+                    <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Periods Card -->
+        <div class="relative overflow-hidden rounded-2xl border border-green-200 dark:border-green-900 bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-900 dark:to-emerald-950 p-4 md:p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Active Periods</p>
+                    <p class="text-xl md:text-3xl font-bold">
+                        {% now "Y-m-d" as today %}
+                        {% with rosters=rosters %}{% for roster in rosters %}{% if roster.end_date|date:"Y-m-d" >= today %}1{% endif %}{% endfor %}{% endwith %}
+                    </p>
+                </div>
+                <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
+                    <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Average Duration Card -->
+        <div class="relative overflow-hidden rounded-2xl border border-purple-200 dark:border-purple-900 bg-gradient-to-br from-purple-500 to-violet-600 dark:from-purple-900 dark:to-violet-950 p-4 md:p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Avg Duration</p>
+                    <p class="text-xl md:text-3xl font-bold">
+                        {% if rosters %}
+                            {% with roster=rosters.0 %}
+                                {{ roster.end_date|timeuntil:roster.start_date }}
+                            {% endwith %}
+                        {% else %}
+                            0 days
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
+                    <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Employees Card -->
+        <div class="relative overflow-hidden rounded-2xl border border-orange-200 dark:border-orange-900 bg-gradient-to-br from-orange-500 to-amber-600 dark:from-orange-900 dark:to-amber-950 p-4 md:p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Total Employees</p>
+                    <p class="text-xl md:text-3xl font-bold">
+                        {% if rosters %}
+                            {% with roster=rosters.0 %}
+                                {{ roster.assignment_count }}
+                            {% endwith %}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
+                    <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rest of your content remains the same -->
+<!-- Rosters Table Card -->
+<div class="card-lg border-2 border-transparent bg-gradient-to-r from-primary/5 to-primary/3 dark:from-primary/10 dark:to-primary/5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 animate-pulse-border">
+    <!-- Table Header with Actions -->
+    <div class="card-header border-b-0 bg-transparent">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <!-- Left Side: Title -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-foreground">All Rosters</h3>
+                    <p class="text-sm text-muted-foreground">Manage and organize employee schedules</p>
+                </div>
+            </div>
+
+            <!-- Right Side: Action Buttons -->
+            <div class="flex items-center gap-3">
+                <!-- Filter Button -->
+                <button id="filter-toggle" class="btn btn-outline btn-sm flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"/>
+                    </svg>
+                    Filter
+                </button>
+
+                <!-- Create Roster Button -->
+                {% if perms.hr_payroll.add_roster %}
+                <a href="{% url 'zkteco:roster_create' %}" class="btn btn-primary btn-sm flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                    Create Roster
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+        <!-- Filter Section (Hidden by Default) -->
+        <div id="filter-section" class="hidden border-t border-border/30 bg-gradient-to-r from-muted/5 to-muted/10">
+            <div class="p-6">
+                <form method="get" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Search -->
+                        <div class="md:col-span-2">
+                            <label class="form-label">Search Rosters</label>
+                            <div class="relative">
+                                <input type="text" name="search" value="{{ request.GET.search|default:'' }}" 
+                                       placeholder="Search by roster name..." class="input pr-10 w-full">
+                                <svg class="absolute right-3 top-2.5 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- Status Filter -->
+                        <div>
+                            <label class="form-label">Status</label>
+                            <select name="status" class="input">
+                                <option value="">All Status</option>
+                                <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                                <option value="upcoming" {% if request.GET.status == 'upcoming' %}selected{% endif %}>Upcoming</option>
+                                <option value="expired" {% if request.GET.status == 'expired' %}selected{% endif %}>Expired</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3">
+                        <button type="reset" class="btn btn-outline btn-sm">
+                            Reset
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            Apply Filters
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Table Content -->
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="bg-gradient-to-r from-primary to-primary-hover border-b border-primary/30" style="background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-hover)) 100%);">
+                        <th class="text-left p-4 text-sm font-semibold text-white">Roster Name</th>
+                        <th class="text-left p-4 text-sm font-semibold text-white">Period</th>
+                        <th class="text-left p-4 text-sm font-semibold text-white">Duration</th>
+                        <th class="text-left p-4 text-sm font-semibold text-white">Employees</th>
+                        <th class="text-left p-4 text-sm font-semibold text-white">Status</th>
+                        <th class="text-center p-4 text-sm font-semibold text-white">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for roster in rosters %}
+                    <tr class="border-b border-border hover:bg-accent/50 transition-colors group">
+                        <!-- Roster Name -->
+                        <td class="p-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-foreground group-hover:text-primary transition-colors">{{ roster.name }}</div>
+                                    <div class="text-xs text-muted-foreground">{{ roster.company.name }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <!-- Period -->
+                        <td class="p-4">
+                            <div class="text-sm text-foreground">
+                                {{ roster.start_date|date:"M d, Y" }} - {{ roster.end_date|date:"M d, Y" }}
+                            </div>
+                        </td>
+                        
+                        <!-- Duration -->
+                        <td class="p-4 text-sm text-foreground">
+                            {{ roster.end_date|timeuntil:roster.start_date }}
+                        </td>
+                        
+                        <!-- Employees -->
+                        <td class="p-4 text-sm text-foreground">
+                            {{ roster.assignment_count }} employees
+                        </td>
+                        
+                        <!-- Status -->
+                        <td class="p-4">
+                            {% now "Y-m-d" as today %}
+                            {% if roster.end_date|date:"Y-m-d" < today %}
+                                <span class="badge badge-error">Expired</span>
+                            {% elif roster.start_date|date:"Y-m-d" > today %}
+                                <span class="badge badge-info">Upcoming</span>
+                            {% else %}
+                                <span class="badge badge-success">Active</span>
+                            {% endif %}
+                        </td>
+                        
+                        <!-- Actions -->
+                        <td class="p-4">
+                            <div class="flex items-center justify-center gap-1">
+                                <a href="{% url 'zkteco:roster_detail' roster.pk %}" class="btn-ghost p-2 rounded hover:bg-accent transition-colors" title="View">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                </a>
+                                {% if perms.hr_payroll.change_roster %}
+                                <a href="{% url 'zkteco:roster_update' roster.pk %}" class="btn-ghost p-2 rounded hover:bg-accent transition-colors" title="Edit">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </a>
+                                {% endif %}
+                                {% if perms.hr_payroll.delete_roster %}
+                                <a href="{% url 'zkteco:roster_delete' roster.pk %}" class="btn-ghost p-2 rounded hover:bg-destructive-light hover:text-destructive transition-colors" title="Delete">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="p-8 text-center">
+                            <div class="flex flex-col items-center justify-center space-y-3">
+                                <div class="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-foreground font-medium">No rosters found</p>
+                                    <p class="text-sm text-muted-foreground mt-1">Get started by creating your first roster</p>
+                                </div>
+                                {% if perms.hr_payroll.add_roster %}
+                                <a href="{% url 'zkteco:roster_create' %}" class="btn btn-primary mt-2">
+                                    Create Roster
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Footer -->
+        {% if is_paginated %}
+        <div class="card-footer">
+            <div class="flex items-center justify-between">
+                <div class="text-sm text-muted-foreground">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </div>
+                <div class="flex items-center gap-2">
+                    {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn btn-outline btn-sm">
+                        Previous
+                    </a>
+                    {% endif %}
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn btn-outline btn-sm">
+                        Next
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.animate-pulse-border {
+    position: relative;
+    overflow: hidden;
+}
+
+.animate-pulse-border::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, hsl(var(--primary)), transparent);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        left: -100%;
+    }
+    50% {
+        left: 100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterToggle = document.getElementById('filter-toggle');
+    const filterSection = document.getElementById('filter-section');
+    
+    if (filterToggle && filterSection) {
+        filterToggle.addEventListener('click', function() {
+            filterSection.classList.toggle('hidden');
+        });
+    }
+});
+</script>
+{% endblock %}

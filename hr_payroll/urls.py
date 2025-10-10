@@ -18,6 +18,8 @@ from .views import attendance_views
 from .views import payroll_views
 from .views import payroll_advanced_views
 from .views import payroll_generation_views
+from .views import shift_views
+from .views import roster_views
 
 app_name = 'zkteco'
 
@@ -115,7 +117,21 @@ urlpatterns = [
     path('log-reports/export/', 
         attendance_log_reports.ExportAttendanceReportView.as_view(), 
         name='export_attendance_report'),
+    # Shift Management URLs
+    path('shifts/', shift_views.ShiftListView.as_view(), name='shift_list'),
+    path('shifts/create/', shift_views.ShiftCreateView.as_view(), name='shift_create'),
+    path('shifts/<int:pk>/', shift_views.ShiftDetailView.as_view(), name='shift_detail'),
+    path('shifts/<int:pk>/update/', shift_views.ShiftUpdateView.as_view(), name='shift_update'),
+    path('shifts/<int:pk>/delete/', shift_views.ShiftDeleteView.as_view(), name='shift_delete'),
+    # Roster URLs
+    path('rosters/', roster_views.RosterListView.as_view(), name='roster_list'),
+    path('roster/create/', roster_views.RosterCreateView.as_view(), name='roster_create'),
+    path('roster/<int:pk>/', roster_views.RosterDetailView.as_view(), name='roster_detail'),
+    path('roster/<int:pk>/update/', roster_views.RosterUpdateView.as_view(), name='roster_update'),
+    path('roster/<int:pk>/delete/', roster_views.RosterDeleteView.as_view(), name='roster_delete'),
 
+    
+    
     # ==================== LOCATION URLS ====================
     path('locations/', location_views.LocationListView.as_view(), name='location_list'),
     path('locations/create/', location_views.LocationCreateView.as_view(), name='location_create'),
