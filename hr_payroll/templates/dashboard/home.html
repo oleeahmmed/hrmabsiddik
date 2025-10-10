@@ -1,0 +1,1027 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - HRM System{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Welcome back! Here's what's happening today.{% endblock %}
+
+{% block content %}
+<!-- Section 1: Top Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+    <!-- Total Active Employees -->
+    <div class="card stat-card">
+        <div class="card-body p-4">
+            <div class="flex items-center justify-between mb-2">
+                <div class="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                    {% if stats.employee_trend >= 0 %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400{% else %}bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400{% endif %}">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        {% if stats.employee_trend >= 0 %}
+                        <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"/>
+                        {% else %}
+                        <path fill-rule="evenodd" d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z"/>
+                        {% endif %}
+                    </svg>
+                    {{ stats.employee_trend|floatformat:1 }}%
+                </span>
+            </div>
+            <h3 class="text-2xl font-bold text-foreground mb-1">{{ stats.total_employees }}</h3>
+            <p class="text-sm text-muted-foreground">Active Employees</p>
+        </div>
+    </div>
+
+    <!-- Today's Attendance Rate -->
+    <div class="card stat-card">
+        <div class="card-body p-4">
+            <div class="flex items-center justify-between mb-2">
+                <div class="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                    {% if stats.attendance_trend >= 0 %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400{% else %}bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400{% endif %}">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        {% if stats.attendance_trend >= 0 %}
+                        <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"/>
+                        {% else %}
+                        <path fill-rule="evenodd" d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z"/>
+                        {% endif %}
+                    </svg>
+                    {{ stats.attendance_trend|floatformat:1 }}%
+                </span>
+            </div>
+            <h3 class="text-2xl font-bold text-foreground mb-1">{{ stats.attendance_rate }}%</h3>
+            <p class="text-sm text-muted-foreground">Attendance Rate</p>
+        </div>
+    </div>
+
+    <!-- Pending Leave Requests -->
+    <div class="card stat-card">
+        <div class="card-body p-4">
+            <div class="flex items-center justify-between mb-2">
+                <div class="w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">
+                    Pending
+                </span>
+            </div>
+            <h3 class="text-2xl font-bold text-foreground mb-1">{{ stats.pending_leaves }}</h3>
+            <p class="text-sm text-muted-foreground">Leave Requests</p>
+        </div>
+    </div>
+
+    <!-- This Month's Overtime -->
+    <div class="card stat-card">
+        <div class="card-body p-4">
+            <div class="flex items-center justify-between mb-2">
+                <div class="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                    {% if stats.overtime_trend >= 0 %}bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400{% else %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400{% endif %}">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        {% if stats.overtime_trend >= 0 %}
+                        <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"/>
+                        {% else %}
+                        <path fill-rule="evenodd" d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z"/>
+                        {% endif %}
+                    </svg>
+                    {{ stats.overtime_trend|floatformat:1 }}%
+                </span>
+            </div>
+            <h3 class="text-2xl font-bold text-foreground mb-1">{{ stats.month_overtime_hours|floatformat:0 }}h</h3>
+            <p class="text-sm text-muted-foreground">Overtime Hours</p>
+        </div>
+    </div>
+
+    <!-- Open Positions -->
+    <div class="card stat-card">
+        <div class="card-body p-4">
+            <div class="flex items-center justify-between mb-2">
+                <div class="w-12 h-12 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400">
+                    Active
+                </span>
+            </div>
+            <h3 class="text-2xl font-bold text-foreground mb-1">{{ stats.open_positions }}</h3>
+            <p class="text-sm text-muted-foreground">Open Positions</p>
+        </div>
+    </div>
+
+    <!-- Pending Payroll -->
+    <div class="card stat-card">
+        <div class="card-body p-4">
+            <div class="flex items-center justify-between mb-2">
+                <div class="w-12 h-12 rounded-lg bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400">
+                    Pending
+                </span>
+            </div>
+            <h3 class="text-2xl font-bold text-foreground mb-1">{{ stats.pending_payroll_employees }}</h3>
+            <p class="text-sm text-muted-foreground">Pending Payroll</p>
+        </div>
+    </div>
+</div>
+
+<!-- Section 2: Two Column Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+    <!-- Left Column (60% width) -->
+    <div class="lg:col-span-2 space-y-6">
+        <!-- Attendance Trend Chart -->
+        <div class="card card-lg">
+            <div class="card-header">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-foreground">Attendance Trend</h3>
+                        <p class="text-sm text-muted-foreground mt-1">Last 30 days attendance overview</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="btn btn-ghost btn-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-6">
+                <canvas id="attendanceTrendChart" height="80"></canvas>
+            </div>
+        </div>
+
+        <!-- Department Headcount Chart -->
+        <div class="card card-lg">
+            <div class="card-header">
+                <h3 class="text-lg font-semibold text-foreground">Department Headcount</h3>
+                <p class="text-sm text-muted-foreground mt-1">Active employees by department</p>
+            </div>
+            <div class="card-body p-6">
+                <canvas id="departmentHeadcountChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column (40% width) -->
+    <div class="space-y-6">
+        <!-- Today's Attendance Status -->
+        <div class="card card-lg">
+            <div class="card-header">
+                <h3 class="text-lg font-semibold text-foreground">Today's Status</h3>
+                <p class="text-sm text-muted-foreground mt-1">Current attendance breakdown</p>
+            </div>
+            <div class="card-body p-6">
+                <div class="flex justify-center mb-6">
+                    <canvas id="attendanceStatusChart" width="200" height="200"></canvas>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 rounded-full bg-green-500 mr-3"></div>
+                            <span class="text-sm font-medium text-foreground">Present</span>
+                        </div>
+                        <span class="text-sm font-bold text-foreground">{{ attendance_status.present }}</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 rounded-full bg-red-500 mr-3"></div>
+                            <span class="text-sm font-medium text-foreground">Absent</span>
+                        </div>
+                        <span class="text-sm font-bold text-foreground">{{ attendance_status.absent }}</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 rounded-full bg-orange-500 mr-3"></div>
+                            <span class="text-sm font-medium text-foreground">Leave</span>
+                        </div>
+                        <span class="text-sm font-bold text-foreground">{{ attendance_status.leave }}</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 rounded-full bg-blue-500 mr-3"></div>
+                            <span class="text-sm font-medium text-foreground">Holiday</span>
+                        </div>
+                        <span class="text-sm font-bold text-foreground">{{ attendance_status.holiday }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activities -->
+        <div class="card card-lg">
+            <div class="card-header">
+                <h3 class="text-lg font-semibold text-foreground">Recent Activities</h3>
+                <p class="text-sm text-muted-foreground mt-1">Latest updates and changes</p>
+            </div>
+            <div class="card-body p-0">
+                <div class="divide-y divide-border">
+                    {% for activity in recent_activities %}
+                    <div class="p-4 hover:bg-accent transition-colors">
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 rounded-lg bg-{{ activity.color }}-100 dark:bg-{{ activity.color }}-900/30 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-5 h-5 text-{{ activity.color }}-600 dark:text-{{ activity.color }}-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    {% if activity.icon == 'calendar' %}
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    {% elif activity.icon == 'user-plus' %}
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                                    {% elif activity.icon == 'bell' %}
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                    {% endif %}
+                                </svg>
+                            </div>
+                            <div class="ml-3 flex-1">
+                                <p class="text-sm font-medium text-foreground">{{ activity.title }}</p>
+                                <p class="text-xs text-muted-foreground mt-1">{{ activity.description }}</p>
+                                <div class="flex items-center mt-2">
+                                    <span class="text-xs text-muted-foreground">{{ activity.time_ago }}</span>
+                                    <span class="mx-2 text-muted-foreground">•</span>
+                                    <span class="badge badge-{{ activity.color }} text-xs">{{ activity.status }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 3: Monthly Payroll Overview -->
+<div class="card card-lg mb-6">
+    <div class="card-header">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold text-foreground">Monthly Payroll Overview</h3>
+                <p class="text-sm text-muted-foreground mt-1">Last 6 months payroll breakdown</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="flex items-center">
+                    <div class="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                    <span class="text-xs text-muted-foreground">Basic</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                    <span class="text-xs text-muted-foreground">Allowances</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-3 h-3 rounded-full bg-orange-500 mr-2"></div>
+                    <span class="text-xs text-muted-foreground">Overtime</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                    <span class="text-xs text-muted-foreground">Deductions</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-6">
+        <canvas id="payrollOverviewChart" height="60"></canvas>
+    </div>
+</div>
+
+<!-- Section 4: Three Column Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+    <!-- Employee Status Breakdown -->
+    <div class="card card-lg">
+        <div class="card-header">
+            <h3 class="text-lg font-semibold text-foreground">Employee Status</h3>
+            <p class="text-sm text-muted-foreground mt-1">Workforce status distribution</p>
+        </div>
+        <div class="card-body p-6">
+            <div class="flex justify-center mb-4">
+                <canvas id="employeeStatusChart" width="180" height="180"></canvas>
+            </div>
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                        <span class="text-sm text-muted-foreground">Active</span>
+                    </div>
+                    <span class="text-sm font-semibold text-foreground">{{ employee_status.active }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
+                        <span class="text-sm text-muted-foreground">Probation</span>
+                    </div>
+                    <span class="text-sm font-semibold text-foreground">{{ employee_status.probation }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                        <span class="text-sm text-muted-foreground">Suspended</span>
+                    </div>
+                    <span class="text-sm font-semibold text-foreground">{{ employee_status.suspended }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-gray-500 mr-2"></div>
+                        <span class="text-sm text-muted-foreground">Resigned</span>
+                    </div>
+                    <span class="text-sm font-semibold text-foreground">{{ employee_status.resigned }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leave Balance Summary -->
+    <div class="card card-lg">
+        <div class="card-header">
+            <h3 class="text-lg font-semibold text-foreground">Leave Balance</h3>
+            <p class="text-sm text-muted-foreground mt-1">Top leave types overview</p>
+        </div>
+        <div class="card-body p-6">
+            <div class="space-y-4">
+                {% for leave in leave_summary %}
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-foreground">{{ leave.name }}</span>
+                        <span class="text-xs text-muted-foreground">{{ leave.used|floatformat:0 }}/{{ leave.entitled|floatformat:0 }} days</span>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div class="bg-primary h-2 rounded-full transition-all" style="width: {{ leave.percentage }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Events -->
+    <div class="card card-lg">
+        <div class="card-header">
+            <h3 class="text-lg font-semibold text-foreground">Upcoming Events</h3>
+            <p class="text-sm text-muted-foreground mt-1">Next 7 days</p>
+        </div>
+        <div class="card-body p-0">
+            <div class="divide-y divide-border">
+                {% for event in upcoming_events %}
+                <div class="p-4 hover:bg-accent transition-colors">
+                    <div class="flex items-start">
+                        <div class="w-10 h-10 rounded-lg bg-{{ event.color }}-100 dark:bg-{{ event.color }}-900/30 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-{{ event.color }}-600 dark:text-{{ event.color }}-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                {% if event.icon == 'calendar' %}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                {% elif event.icon == 'book' %}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5s3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18s-3.332.477-4.5 1.253"/>
+                                {% endif %}
+                            </svg>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-medium text-foreground">{{ event.title }}</p>
+                            <p class="text-xs text-muted-foreground mt-1">{{ event.date_formatted }}</p>
+                            <div class="flex items-center mt-2">
+                                <span class="text-xs text-muted-foreground">
+                                    {% if event.days_away == 0 %}
+                                    Today
+                                    {% elif event.days_away == 1 %}
+                                    Tomorrow
+                                    {% else %}
+                                    In {{ event.days_away }} days
+                                    {% endif %}
+                                </span>
+                                <span class="mx-2 text-muted-foreground">•</span>
+                                <span class="badge badge-{{ event.color }} text-xs">{{ event.type|title }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 5: Two Column Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <!-- Left: Late Arrivals & Early Departures -->
+    <div class="card card-lg">
+        <div class="card-header">
+            <h3 class="text-lg font-semibold text-foreground">Punctuality Issues</h3>
+            <p class="text-sm text-muted-foreground mt-1">Late arrivals and early departures trend</p>
+        </div>
+        <div class="card-body p-6">
+            <canvas id="punctualityChart" height="60"></canvas>
+        </div>
+    </div>
+
+    <!-- Right: Top Overtime Workers -->
+    <div class="card card-lg">
+        <div class="card-header">
+            <h3 class="text-lg font-semibold text-foreground">Top Overtime Workers</h3>
+            <p class="text-sm text-muted-foreground mt-1">This month's overtime leaders</p>
+        </div>
+        <div class="card-body p-0">
+            <div class="divide-y divide-border">
+                {% for worker in top_overtime %}
+                <div class="p-4 hover:bg-accent transition-colors">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-orange-400 to-red-500 flex items-center justify-center text-white font-semibold text-sm">
+                                {{ worker.name|slice:":1" }}
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-foreground">{{ worker.name }}</p>
+                                <p class="text-xs text-muted-foreground">{{ worker.designation }}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-bold text-orange-600">{{ worker.overtime_hours|floatformat:1 }}h</p>
+                            <p class="text-xs text-muted-foreground">Overtime</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 6: Alert Cards -->
+{% if alerts %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    {% for alert in alerts %}
+    <div class="card border-l-4 border-l-{{ alert.type }}-500">
+        <div class="card-body p-4">
+            <div class="flex items-start">
+                <div class="w-8 h-8 rounded-lg bg-{{ alert.type }}-100 dark:bg-{{ alert.type }}-900/30 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-4 h-4 text-{{ alert.type }}-600 dark:text-{{ alert.type }}-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {% if alert.icon == 'alert-triangle' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.924-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        {% elif alert.icon == 'file-text' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        {% elif alert.icon == 'clock' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        {% elif alert.icon == 'calendar' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        {% endif %}
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h4 class="text-sm font-semibold text-foreground">{{ alert.title }}</h4>
+                    <p class="text-xs text-muted-foreground mt-1">{{ alert.description }}</p>
+                    <div class="mt-2">
+                        <span class="badge badge-{{ alert.type }} text-xs">{{ alert.count }} items</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Section 7: Quick Action Buttons -->
+<div class="card mb-6">
+    <div class="card-body p-4">
+        <div class="flex flex-wrap gap-3 justify-center">
+            <button class="btn btn-primary">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+                Add New Employee
+            </button>
+            <button class="btn btn-secondary">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Process Payroll
+            </button>
+            <button class="btn btn-outline">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Generate Report
+            </button>
+            <button class="btn btn-outline">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                </svg>
+                Send Announcement
+            </button>
+            <button class="btn btn-outline">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                Create Roster
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Chart.js Configuration
+const chartColors = {
+    primary: 'hsl(var(--primary))',
+    secondary: 'hsl(var(--secondary))',
+    success: 'hsl(var(--success))',
+    danger: 'hsl(var(--destructive))',
+    warning: 'hsl(var(--warning))',
+    info: 'hsl(var(--info))',
+    muted: 'hsl(var(--muted-foreground))'
+};
+
+// Common Chart Configuration
+const chartConfig = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: {
+            position: 'top',
+            labels: {
+                usePointStyle: true,
+                padding: 15,
+                color: 'hsl(var(--foreground))'
+            }
+        },
+        tooltip: {
+            backgroundColor: 'hsl(var(--card))',
+            titleColor: 'hsl(var(--foreground))',
+            bodyColor: 'hsl(var(--foreground))',
+            borderColor: 'hsl(var(--border))',
+            borderWidth: 1,
+            cornerRadius: 8,
+            displayColors: true,
+            usePointStyle: true
+        }
+    },
+    scales: {
+        x: {
+            grid: {
+                color: 'hsl(var(--border))',
+                drawBorder: false
+            },
+            ticks: {
+                color: 'hsl(var(--muted-foreground))'
+            }
+        },
+        y: {
+            grid: {
+                color: 'hsl(var(--border))',
+                drawBorder: false
+            },
+            ticks: {
+                color: 'hsl(var(--muted-foreground))'
+            }
+        }
+    }
+};
+
+// Initialize all charts when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAttendanceTrendChart();
+    initializeDepartmentHeadcountChart();
+    initializeAttendanceStatusChart();
+    initializePayrollOverviewChart();
+    initializeEmployeeStatusChart();
+    initializePunctualityChart();
+});
+
+// 1. Attendance Trend Chart (Line Chart)
+function initializeAttendanceTrendChart() {
+    const ctx = document.getElementById('attendanceTrendChart').getContext('2d');
+    
+    const labels = {{ attendance_trend|safe }}.map(item => item.date_label);
+    const presentData = {{ attendance_trend|safe }}.map(item => item.present);
+    const absentData = {{ attendance_trend|safe }}.map(item => item.absent);
+    const leaveData = {{ attendance_trend|safe }}.map(item => item.leave);
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Present',
+                    data: presentData,
+                    borderColor: chartColors.success,
+                    backgroundColor: chartColors.success + '20',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Absent',
+                    data: absentData,
+                    borderColor: chartColors.danger,
+                    backgroundColor: chartColors.danger + '20',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Leave',
+                    data: leaveData,
+                    borderColor: chartColors.warning,
+                    backgroundColor: chartColors.warning + '20',
+                    tension: 0.4,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            ...chartConfig,
+            plugins: {
+                ...chartConfig.plugins,
+                title: {
+                    display: false
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            scales: {
+                ...chartConfig.scales,
+                y: {
+                    ...chartConfig.scales.y,
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Employees',
+                        color: 'hsl(var(--muted-foreground))'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// 2. Department Headcount Chart (Horizontal Bar Chart)
+function initializeDepartmentHeadcountChart() {
+    const ctx = document.getElementById('departmentHeadcountChart').getContext('2d');
+    
+    const departments = {{ department_headcount|safe }}.map(dept => dept.name);
+    const employeeCounts = {{ department_headcount|safe }}.map(dept => dept.employee_count);
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: departments,
+            datasets: [{
+                label: 'Employees',
+                data: employeeCounts,
+                backgroundColor: [
+                    chartColors.primary + '80',
+                    chartColors.info + '80',
+                    chartColors.success + '80',
+                    chartColors.warning + '80',
+                    chartColors.danger + '80',
+                    chartColors.secondary + '80'
+                ],
+                borderColor: [
+                    chartColors.primary,
+                    chartColors.info,
+                    chartColors.success,
+                    chartColors.warning,
+                    chartColors.danger,
+                    chartColors.secondary
+                ],
+                borderWidth: 2,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            ...chartConfig,
+            indexAxis: 'y',
+            plugins: {
+                ...chartConfig.plugins,
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                ...chartConfig.scales,
+                x: {
+                    ...chartConfig.scales.x,
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Employees',
+                        color: 'hsl(var(--muted-foreground))'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// 3. Today's Attendance Status Chart (Doughnut Chart)
+function initializeAttendanceStatusChart() {
+    const ctx = document.getElementById('attendanceStatusChart').getContext('2d');
+    
+    const statusData = {
+        present: {{ attendance_status.present }},
+        absent: {{ attendance_status.absent }},
+        leave: {{ attendance_status.leave }},
+        holiday: {{ attendance_status.holiday }}
+    };
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Present', 'Absent', 'Leave', 'Holiday'],
+            datasets: [{
+                data: [statusData.present, statusData.absent, statusData.leave, statusData.holiday],
+                backgroundColor: [
+                    chartColors.success,
+                    chartColors.danger,
+                    chartColors.warning,
+                    chartColors.info
+                ],
+                borderColor: 'hsl(var(--card))',
+                borderWidth: 3,
+                hoverOffset: 15
+            }]
+        },
+        options: {
+            ...chartConfig,
+            cutout: '65%',
+            plugins: {
+                ...chartConfig.plugins,
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    ...chartConfig.plugins.tooltip,
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = Math.round((value / total) * 100);
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// 4. Monthly Payroll Overview Chart (Stacked Bar Chart)
+function initializePayrollOverviewChart() {
+    const ctx = document.getElementById('payrollOverviewChart').getContext('2d');
+    
+    const payrollData = {{ payroll_overview|safe }};
+    const labels = payrollData.map(item => item.month_short);
+    const basicSalary = payrollData.map(item => item.basic_salary);
+    const allowances = payrollData.map(item => item.allowances);
+    const overtime = payrollData.map(item => item.overtime);
+    const deductions = payrollData.map(item => item.deductions);
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Basic Salary',
+                    data: basicSalary,
+                    backgroundColor: chartColors.primary + '80',
+                    borderColor: chartColors.primary,
+                    borderWidth: 1
+                },
+                {
+                    label: 'Allowances',
+                    data: allowances,
+                    backgroundColor: chartColors.success + '80',
+                    borderColor: chartColors.success,
+                    borderWidth: 1
+                },
+                {
+                    label: 'Overtime',
+                    data: overtime,
+                    backgroundColor: chartColors.warning + '80',
+                    borderColor: chartColors.warning,
+                    borderWidth: 1
+                },
+                {
+                    label: 'Deductions',
+                    data: deductions,
+                    backgroundColor: chartColors.danger + '80',
+                    borderColor: chartColors.danger,
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            ...chartConfig,
+            plugins: {
+                ...chartConfig.plugins
+            },
+            scales: {
+                ...chartConfig.scales,
+                x: {
+                    ...chartConfig.scales.x,
+                    stacked: true
+                },
+                y: {
+                    ...chartConfig.scales.y,
+                    stacked: true,
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '৳' + value.toLocaleString();
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Amount (BDT)',
+                        color: 'hsl(var(--muted-foreground))'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// 5. Employee Status Chart (Pie Chart)
+function initializeEmployeeStatusChart() {
+    const ctx = document.getElementById('employeeStatusChart').getContext('2d');
+    
+    const statusData = {
+        active: {{ employee_status.active }},
+        probation: {{ employee_status.probation }},
+        suspended: {{ employee_status.suspended }},
+        resigned: {{ employee_status.resigned }}
+    };
+    
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Active', 'Probation', 'Suspended', 'Resigned'],
+            datasets: [{
+                data: [statusData.active, statusData.probation, statusData.suspended, statusData.resigned],
+                backgroundColor: [
+                    chartColors.success,
+                    chartColors.warning,
+                    chartColors.danger,
+                    chartColors.muted
+                ],
+                borderColor: 'hsl(var(--card))',
+                borderWidth: 3,
+                hoverOffset: 15
+            }]
+        },
+        options: {
+            ...chartConfig,
+            plugins: {
+                ...chartConfig.plugins,
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        color: 'hsl(var(--foreground))'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// 6. Punctuality Chart (Line Chart for Late Arrivals & Early Departures)
+function initializePunctualityChart() {
+    const ctx = document.getElementById('punctualityChart').getContext('2d');
+    
+    // Sample data - you'll need to replace this with actual data from your context
+    const punctualityData = {{ punctuality_data|safe }};
+    const labels = punctualityData.map(item => item.date);
+    const lateData = punctualityData.map(item => item.late);
+    const earlyData = punctualityData.map(item => item.early);
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Late Arrivals',
+                    data: lateData,
+                    borderColor: chartColors.danger,
+                    backgroundColor: chartColors.danger + '20',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Early Departures',
+                    data: earlyData,
+                    borderColor: chartColors.warning,
+                    backgroundColor: chartColors.warning + '20',
+                    tension: 0.4,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            ...chartConfig,
+            plugins: {
+                ...chartConfig.plugins
+            },
+            scales: {
+                ...chartConfig.scales,
+                y: {
+                    ...chartConfig.scales.y,
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Occurrences',
+                        color: 'hsl(var(--muted-foreground))'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Utility function to format currency
+function formatCurrency(amount) {
+    return '৳' + amount.toLocaleString('en-BD', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+// Utility function to format numbers with commas
+function formatNumber(number) {
+    return number.toLocaleString('en-BD');
+}
+
+// Handle window resize for responsive charts
+window.addEventListener('resize', function() {
+    // Charts will automatically resize due to Chart.js responsive configuration
+});
+
+// Add click events to stat cards for navigation
+document.querySelectorAll('.stat-card').forEach(card => {
+    card.addEventListener('click', function() {
+        const cardTitle = this.querySelector('p').textContent.trim();
+        
+        // Define navigation routes based on card title
+        const routes = {
+            'Active Employees': "{% url 'zkteco:employee_list' %}",
+            'Attendance Rate': "{% url 'zkteco:attendance_list' %}",
+            'Leave Requests': "{% url 'zkteco:leave_list' %}",
+            'Overtime Hours': "{% url 'zkteco:attendance_reports_main' %}",
+            'Open Positions': "",
+            'Pending Payroll': ""
+        };
+        
+        if (routes[cardTitle]) {
+            window.location.href = routes[cardTitle];
+        }
+    });
+});
+
+// Add hover effects to cards
+document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-2px)';
+        this.style.transition = 'all 0.3s ease';
+    });
+    
+    card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+    });
+});
+
+// Initialize tooltips for better UX
+function initializeTooltips() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+}
+
+// Export functions for potential reuse
+window.HRMCharts = {
+    initializeAttendanceTrendChart,
+    initializeDepartmentHeadcountChart,
+    initializeAttendanceStatusChart,
+    initializePayrollOverviewChart,
+    initializeEmployeeStatusChart,
+    initializePunctualityChart,
+    formatCurrency,
+    formatNumber
+};
+</script>
+{% endblock %}

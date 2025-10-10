@@ -1756,7 +1756,6 @@ class PerformanceGoal(models.Model):
 # ==================== DOCUMENTS ====================
 
 
-# models.py - Update EmployeeDocument model
 
 class EmployeeDocument(models.Model):
     """
@@ -1968,7 +1967,6 @@ class Complaint(models.Model):
         verbose_name = _("Complaint")
         verbose_name_plural = _("Complaints")
         ordering = ['-submitted_date']
-# models.py এ এই মডেলগুলো যোগ করুন
 
 class PayrollCycle(models.Model):
     """

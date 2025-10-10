@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Form Header -->
+    <div class="card mb-6">
+        <div class="card-header">
+            <h3 class="text-xl font-semibold text-foreground">{{ title|default:"Attendance Record" }}</h3>
+            <p class="text-muted-foreground">{% if object %}Edit{% else %}Create{% endif %} attendance record for employee</p>
+        </div>
+        
+        <div class="card-body">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Employee Selection -->
+                <div class="form-group">
+                    <label for="id_employee" class="form-label required">Employee</label>
+                    <select id="id_employee" name="employee" class="input" required>
+                        <option value="">Select Employee</option>
+                        {% for employee in employees %}
+                            <option value="{{ employee.id }}" {% if form.employee.value == employee.id %}selected{% endif %}>
+                                {{ employee.name }} ({{ employee.employee_id }}) - {{ employee.department.name|default:"No Department" }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {% if form.employee.errors %}
+                        <div class="form-error">{{ form.employee.errors.0 }}</div>
+                    {% endif %}
+                    <div class="form-help">Select the employee for this attendance record</div>
+                </div>
+
+                <!-- Date and Shift Section -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Date -->
+                    <div class="form-group">
+                        <label for="id_date" class="form-label required">Date</label>
+                        <input type="date" id="id_date" name="date" class="input" 
+                               value="{{ form.date.value|default:'' }}" required>
+                        {% if form.date.errors %}
+                            <div class="form-error">{{ form.date.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-help">Select the attendance date</div>
+                    </div>
+
+                    <!-- Shift -->
+                    <div class="form-group">
+                        <label for="id_shift" class="form-label">Shift</label>
+                        <select id="id_shift" name="shift" class="input">
+                            <option value="">Select Shift</option>
+                            {% for shift in shifts %}
+                                <option value="{{ shift.id }}" {% if form.shift.value == shift.id %}selected{% endif %}>
+                                    {{ shift.name }} ({{ shift.start_time|time:"H:i" }} - {{ shift.end_time|time:"H:i" }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.shift.errors %}
+                            <div class="form-error">{{ form.shift.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-help">Select the work shift</div>
+                    </div>
+                </div>
+
+                <!-- Time Section -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Check-in Time -->
+                    <div class="form-group">
+                        <label for="id_check_in_time" class="form-label">Check-in Time</label>
+                        <input type="time" id="id_check_in_time" name="check_in_time" class="input" 
+                               value="{{ form.check_in_time.value|default:'' }}">
+                        {% if form.check_in_time.errors %}
+                            <div class="form-error">{{ form.check_in_time.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-help">Employee check-in time</div>
+                    </div>
+
+                    <!-- Check-out Time -->
+                    <div class="form-group">
+                        <label for="id_check_out_time" class="form-label">Check-out Time</label>
+                        <input type="time" id="id_check_out_time" name="check_out_time" class="input" 
+                               value="{{ form.check_out_time.value|default:'' }}">
+                        {% if form.check_out_time.errors %}
+                            <div class="form-error">{{ form.check_out_time.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-help">Employee check-out time</div>
+                    </div>
+                </div>
+
+                <!-- Status and Overtime Section -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Status -->
+                    <div class="form-group">
+                        <label for="id_status" class="form-label required">Status</label>
+                        <select id="id_status" name="status" class="input" required>
+                            <option value="">Select Status</option>
+                            <option value="P" {% if form.status.value == 'P' %}selected{% endif %}>Present</option>
+                            <option value="A" {% if form.status.value == 'A' %}selected{% endif %}>Absent</option>
+                            <option value="L" {% if form.status.value == 'L' %}selected{% endif %}>Leave</option>
+                            <option value="H" {% if form.status.value == 'H' %}selected{% endif %}>Holiday</option>
+                            <option value="W" {% if form.status.value == 'W' %}selected{% endif %}>Weekly Off</option>
+                        </select>
+                        {% if form.status.errors %}
+                            <div class="form-error">{{ form.status.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-help">Select attendance status</div>
+                    </div>
+
+                    <!-- Overtime Hours -->
+                    <div class="form-group">
+                        <label for="id_overtime_hours" class="form-label">Overtime Hours</label>
+                        <input type="number" id="id_overtime_hours" name="overtime_hours" class="input" 
+                               step="0.5" min="0" value="{{ form.overtime_hours.value|default:0 }}">
+                        {% if form.overtime_hours.errors %}
+                            <div class="form-error">{{ form.overtime_hours.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-help">Overtime hours worked (in hours)</div>
+                    </div>
+                </div>
+
+                <!-- Auto-calculate work hours display -->
+                <div class="bg-gradient-to-r from-muted/10 to-muted/5 p-4 rounded-lg border border-border">
+                    <h4 class="text-sm font-semibold text-foreground mb-2">Work Hours Calculation</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div>
+                            <span class="text-muted-foreground">Check-in:</span>
+                            <span id="check-in-display" class="font-medium ml-2">-</span>
+                        </div>
+                        <div>
+                            <span class="text-muted-foreground">Check-out:</span>
+                            <span id="check-out-display" class="font-medium ml-2">-</span>
+                        </div>
+                        <div>
+                            <span class="text-muted-foreground">Total Hours:</span>
+                            <span id="total-hours-display" class="font-medium text-primary ml-2">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-border">
+                    <button type="submit" class="btn btn-primary flex-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        {{ button_text|default:"Save Attendance" }}
+                    </button>
+                    <a href="{% url 'zkteco:attendance_list' %}" class="btn btn-outline flex-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quick Help -->
+    <div class="card">
+        <div class="card-header info-header">
+            <h3 class="text-lg font-semibold">Attendance Guidelines</h3>
+        </div>
+        <div class="card-body">
+            <div class="space-y-3 text-sm text-muted-foreground">
+                <div class="flex items-start space-x-2">
+                    <svg class="w-4 h-4 text-info mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span><strong>Present:</strong> Employee attended work with check-in/check-out times</span>
+                </div>
+                <div class="flex items-start space-x-2">
+                    <svg class="w-4 h-4 text-warning mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.924-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <span><strong>Absent:</strong> Employee did not attend work without approved leave</span>
+                </div>
+                <div class="flex items-start space-x-2">
+                    <svg class="w-4 h-4 text-success mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span><strong>Leave:</strong> Employee on approved leave</span>
+                </div>
+                <div class="flex items-start space-x-2">
+                    <svg class="w-4 h-4 text-primary mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <span><strong>Holiday/Weekly Off:</strong> Company holiday or weekly day off</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkInInput = document.getElementById('id_check_in_time');
+    const checkOutInput = document.getElementById('id_check_out_time');
+    const checkInDisplay = document.getElementById('check-in-display');
+    const checkOutDisplay = document.getElementById('check-out-display');
+    const totalHoursDisplay = document.getElementById('total-hours-display');
+    const statusSelect = document.getElementById('id_status');
+
+    function calculateWorkHours() {
+        const checkIn = checkInInput.value;
+        const checkOut = checkOutInput.value;
+        
+        // Update displays
+        checkInDisplay.textContent = checkIn || '-';
+        checkOutDisplay.textContent = checkOut || '-';
+        
+        // Calculate total hours
+        if (checkIn && checkOut) {
+            const [inHours, inMinutes] = checkIn.split(':').map(Number);
+            const [outHours, outMinutes] = checkOut.split(':').map(Number);
+            
+            let totalMinutes = (outHours * 60 + outMinutes) - (inHours * 60 + inMinutes);
+            
+            // Handle overnight shifts
+            if (totalMinutes < 0) {
+                totalMinutes += 24 * 60;
+            }
+            
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            
+            totalHoursDisplay.textContent = `${hours}h ${minutes}m`;
+        } else {
+            totalHoursDisplay.textContent = '-';
+        }
+    }
+
+    // Auto-calculate when times change
+    checkInInput.addEventListener('change', calculateWorkHours);
+    checkOutInput.addEventListener('change', calculateWorkHours);
+
+    // Initialize calculation
+    calculateWorkHours();
+
+    // Auto-set status based on time inputs
+    function autoSetStatus() {
+        if (checkInInput.value && checkOutInput.value) {
+            statusSelect.value = 'P'; // Auto-set to Present if both times are provided
+        } else if (!checkInInput.value && !checkOutInput.value && statusSelect.value === 'P') {
+            statusSelect.value = ''; // Clear status if no times but was Present
+        }
+    }
+
+    checkInInput.addEventListener('change', autoSetStatus);
+    checkOutInput.addEventListener('change', autoSetStatus);
+
+    // Form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const requiredFields = this.querySelectorAll('[required]');
+        let isValid = true;
+
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                isValid = false;
+                field.classList.add('error');
+                
+                if (!field.nextElementSibling?.classList.contains('form-error')) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'form-error';
+                    errorDiv.textContent = 'This field is required';
+                    field.parentNode.appendChild(errorDiv);
+                }
+            } else {
+                field.classList.remove('error');
+                const errorMsg = field.parentNode.querySelector('.form-error');
+                if (errorMsg) {
+                    errorMsg.remove();
+                }
+            }
+        });
+
+        // Validate date not in future
+        const dateInput = document.getElementById('id_date');
+        if (dateInput.value) {
+            const selectedDate = new Date(dateInput.value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (selectedDate > today) {
+                isValid = false;
+                if (!dateInput.nextElementSibling?.classList.contains('form-error')) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'form-error';
+                    errorDiv.textContent = 'Attendance date cannot be in the future';
+                    dateInput.parentNode.appendChild(errorDiv);
+                }
+            }
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+            showToast('Please fill in all required fields correctly', 'error', 'Validation Error');
+        }
+    });
+});
+</script>
+{% endblock %}

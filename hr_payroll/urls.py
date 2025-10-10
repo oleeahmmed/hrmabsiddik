@@ -1,5 +1,6 @@
 # zkteco/urls.py
 from django.urls import path
+from .views import dashboard_views
 from . import attendance_log_views
 from . import simple_attendance_generation_views
 from .views import location_views
@@ -26,16 +27,11 @@ app_name = 'zkteco'
 
 urlpatterns = [
     # ==================== AUTHENTICATION VIEWS ====================
-    path('', device_views.HomeView.as_view(), name='home'),
-    
-    # Staff dashboard
-    path('staff-dashboard/', device_views.StaffHomeDashboardView.as_view(), name='staff_home'),
-    
-    # User dashboard  
-    path('user-dashboard/', device_views.UserHomeDashboardView.as_view(), name='user_home'),
-    
-    path('login/', device_views.LoginView.as_view(), name='login'),
-    path('logout/', device_views.LogoutView.as_view(), name='logout'),
+    path('', dashboard_views.HomeView.as_view(), name='home'),
+    path('staff-dashboard/', dashboard_views.StaffHomeDashboardView.as_view(), name='staff_home'),
+    path('user-dashboard/', dashboard_views.UserHomeDashboardView.as_view(), name='user_home'),
+    path('login/', dashboard_views.LoginView.as_view(), name='login'),
+    path('logout/', dashboard_views.LogoutView.as_view(), name='logout'),
     
     # ==================== DEVICE MANAGEMENT VIEWS ====================
     path('devices/', device_views.DeviceListView.as_view(), name='device_list'),

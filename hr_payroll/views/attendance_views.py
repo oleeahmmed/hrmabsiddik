@@ -23,7 +23,7 @@ class AttendanceListView(LoginRequiredMixin, ListView):
     Enhanced Attendance List View with advanced filtering, search, and export
     """
     model = Attendance
-    template_name = 'zkteco/attendance_list.html'
+    template_name = 'attendance/attendance_list.html'
     context_object_name = 'attendances'
     paginate_by = 50
     
@@ -288,7 +288,7 @@ class AttendanceDetailView(LoginRequiredMixin, DetailView):
     Detailed view of a single attendance record
     """
     model = Attendance
-    template_name = 'zkteco/attendance_detail.html'
+    template_name = 'attendance/attendance_detail.html'
     context_object_name = 'attendance'
     
     def get_queryset(self):
@@ -353,7 +353,7 @@ class AttendanceCreateView(LoginRequiredMixin, CreateView):
     Create new attendance record
     """
     model = Attendance
-    template_name = 'zkteco/attendance_form.html'
+    template_name = 'attendance/attendance_form.html'
     # <CHANGE> Only use fields that exist in the Attendance model
     fields = [
         'employee', 'date', 'shift', 'check_in_time', 'check_out_time',
@@ -377,7 +377,7 @@ class AttendanceUpdateView(LoginRequiredMixin, UpdateView):
     Update existing attendance record
     """
     model = Attendance
-    template_name = 'zkteco/attendance_form.html'
+    template_name = 'attendance/attendance_form.html'
     # <CHANGE> Fixed FieldError - only use fields that exist in Attendance model
     fields = [
         'employee', 'date', 'shift', 'check_in_time', 'check_out_time',
@@ -405,7 +405,7 @@ class AttendanceDeleteView(LoginRequiredMixin, DeleteView):
     Delete attendance record with confirmation
     """
     model = Attendance
-    template_name = 'zkteco/attendance_confirm_delete.html'
+    template_name = 'attendance/attendance_confirm_delete.html'
     success_url = reverse_lazy('zkteco:attendance_list')
     
     def get_queryset(self):

@@ -1543,6 +1543,166 @@
         }
 
 
+                    /* Sidebar Dropdown Styles */
+            .nav-item-dropdown {
+                position: relative;
+            }
+
+            .nav-item-dropdown .nav-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                cursor: pointer;
+            }
+
+            .nav-item-dropdown .dropdown-icon {
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                width: 16px;
+                height: 16px;
+                color: hsl(var(--muted-foreground));
+            }
+
+            .nav-item-dropdown.open .dropdown-icon {
+                transform: rotate(180deg);
+                color: hsl(var(--primary));
+            }
+
+            /* Dropdown Menu */
+            .dropdown-menu {
+                max-height: 0;
+                overflow: hidden;
+                opacity: 0;
+                transform: translateY(-10px);
+                transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+                margin-top: 0.25rem;
+                padding-left: 1rem;
+                border-left: 2px solid transparent;
+            }
+
+            .nav-item-dropdown.open .dropdown-menu {
+                max-height: 500px;
+                opacity: 1;
+                transform: translateY(0);
+                border-left-color: hsl(var(--primary) / 0.3);
+            }
+
+            .dropdown-menu-item {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.5rem 0.875rem;
+                margin: 0.25rem 0;
+                border-radius: var(--radius-sm);
+                color: hsl(var(--muted-foreground));
+                font-size: 0.8125rem;
+                font-weight: 500;
+                transition: all 0.2s ease;
+                cursor: pointer;
+                text-decoration: none;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .dropdown-menu-item::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 3px;
+                background: hsl(var(--primary));
+                transform: scaleY(0);
+                transition: transform 0.2s ease;
+            }
+
+            .dropdown-menu-item:hover {
+                background: hsl(var(--accent));
+                color: hsl(var(--foreground));
+                transform: translateX(4px);
+                padding-left: 1.25rem;
+            }
+
+            .dropdown-menu-item:hover::before {
+                transform: scaleY(1);
+            }
+
+            .dropdown-menu-item.active {
+                background: hsl(var(--primary) / 0.1);
+                color: hsl(var(--primary));
+                font-weight: 600;
+            }
+
+            .dropdown-menu-item.active::before {
+                transform: scaleY(1);
+            }
+
+            .dropdown-menu-item svg {
+                width: 16px;
+                height: 16px;
+                flex-shrink: 0;
+            }
+
+            /* Badge for dropdown items */
+            .dropdown-badge {
+                margin-left: auto;
+                padding: 0.125rem 0.375rem;
+                background: hsl(var(--primary) / 0.1);
+                color: hsl(var(--primary));
+                font-size: 0.625rem;
+                font-weight: 600;
+                border-radius: 9999px;
+                line-height: 1;
+            }
+
+            /* Animation on open */
+            @keyframes dropdownSlideIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px) translateX(-5px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0) translateX(0);
+                }
+            }
+
+            .nav-item-dropdown.open .dropdown-menu-item {
+                animation: dropdownSlideIn 0.3s ease-out backwards;
+            }
+
+            .nav-item-dropdown.open .dropdown-menu-item:nth-child(1) {
+                animation-delay: 0.05s;
+            }
+
+            .nav-item-dropdown.open .dropdown-menu-item:nth-child(2) {
+                animation-delay: 0.1s;
+            }
+
+            .nav-item-dropdown.open .dropdown-menu-item:nth-child(3) {
+                animation-delay: 0.15s;
+            }
+
+            .nav-item-dropdown.open .dropdown-menu-item:nth-child(4) {
+                animation-delay: 0.2s;
+            }
+
+            .nav-item-dropdown.open .dropdown-menu-item:nth-child(5) {
+                animation-delay: 0.25s;
+            }
+
+            /* Hover effect for parent nav item */
+            .nav-item-dropdown .nav-item:hover .dropdown-icon {
+                color: hsl(var(--foreground));
+            }
+
+            /* Dark mode adjustments */
+            .dark .dropdown-menu {
+                border-left-color: hsl(var(--primary) / 0.2);
+            }
+
+            .dark .dropdown-menu-item:hover {
+                background: hsl(var(--accent) / 0.8);
+            }
         /* Enhanced Navigation Items for Gradient Sidebar */
         .sidebar .nav-item {
             backdrop-filter: blur(10px);
@@ -2522,8 +2682,8 @@
                 </div>
                 
                 <!-- Navigation Items -->
-<!-- Navigation Items -->
 <nav class="space-y-1">
+    <!-- Dashboard -->
     <a href="{% url 'zkteco:home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
@@ -2531,149 +2691,327 @@
         <span>Dashboard</span>
     </a>
 
-        <!-- Company Menu -->
-    <a href="{% url 'core:company_list' %}" class="nav-item {% if 'company' in request.resolver_match.url_name %}active{% endif %}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-        </svg>
-        <span>Company</span>
-    </a>
-        <!-- Project Menu -->
-    <a href="{% url 'core:project_list' %}" class="nav-item {% if 'project' in request.resolver_match.url_name %}active{% endif %}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
-        </svg>
-        <span>Project</span>
-    </a>
-    
-    <!-- Task Menu -->
-    <a href="{% url 'core:task_list' %}" class="nav-item {% if 'task' in request.resolver_match.url_name %}active{% endif %}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-        </svg>
-        <span>Task</span>
-    </a>
-    <!-- Device Menu -->
-    <a href="{% url 'zkteco:device_list' %}" class="nav-item {% if 'device' in request.resolver_match.url_name %}active{% endif %}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
-        </svg>
-        <span>Device</span>
-    </a>
-    
-    <!-- Employee Menu -->
-    <a href="{% url 'zkteco:employee_list' %}" class="nav-item {% if 'employee' in request.resolver_match.url_name %}active{% endif %}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-        </svg>
-        <span>Employee</span>
-    </a>
-    
-    <!-- Location Menu -->
-    <a href="{% url 'zkteco:location_list' %}" class="nav-item {% if 'location' in request.resolver_match.url_name and 'user_location' not in request.resolver_match.url_name %}active{% endif %}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-        </svg>
-        <span>Location</span>
-    </a>
-    
-    <!-- Mobile Attendance Menu -->
-    <a href="{% url 'zkteco:mobile_attendance' %}" class="nav-item {% if 'mobile_attendance' in request.resolver_match.url_name %}active{% endif %}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-        </svg>
-        <span>Mobile Attendance</span>
-    </a>
-    
-    <!-- User Location Menu -->
-    <a href="{% url 'zkteco:user_location_list' %}" class="nav-item {% if 'user_location' in request.resolver_match.url_name %}active{% endif %}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-        </svg>
-        <span>User Location</span>
-    </a>
-    
-    <!-- Holiday Menu -->
-    <a href="#" class="nav-item {% if 'holiday' in request.resolver_match.url_name %}active{% endif %}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4m8-8v16m8-8a8 8 0 11-16 0 8 8 0 0116 0z"/>
-        </svg>
-        <span>Holiday</span>
-    </a>
-    
-    <!-- Leave Menu -->
-    <a href="{% url 'zkteco:leave_list' %}" class="nav-item {% if 'leave' in request.resolver_match.url_name %}active{% endif %}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-        </svg>
-        <span>Leave</span>
-    </a>
-    
-    <!-- Attendance Log Menu -->
-    <a href="{% url 'zkteco:attendance_log_list' %}" class="nav-item {% if 'attendance_log' in request.resolver_match.url_name %}active{% endif %}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-        </svg>
-        <span>Attendance Log</span>
-    </a>
-        <a href="{% url 'zkteco:simple_attendance_generation' %}" class="nav-item {% if 'attendance' in request.resolver_match.url_name and 'simple_attendance_generation' not in request.resolver_match.url_name %}active{% endif %}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <span>Attendance Generation </span>
-    </a>
-    
-    <!-- Attendance Menu -->
-    <a href="{% url 'zkteco:attendance_list' %}" class="nav-item {% if 'attendance' in request.resolver_match.url_name and 'attendance_log' not in request.resolver_match.url_name %}active{% endif %}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <span>Attendance</span>
-    </a>
+    <!-- ==================== CORE CONFIGURATION DROPDOWN ==================== -->
+    <div class="nav-item-dropdown">
+        <div class="nav-item {% if 'company' in request.resolver_match.url_name or 'project' in request.resolver_match.url_name or 'task' in request.resolver_match.url_name %}active{% endif %}">
+            <div class="flex items-center gap-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                </svg>
+                <span>Core Configuration</span>
+            </div>
+            <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </div>
+        
+        <div class="dropdown-menu">
+            <!-- Company -->
+            <a href="{% url 'core:company_list' %}" class="dropdown-menu-item {% if 'company' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+                <span>Company</span>
+            </a>
+            
+            <!-- Project -->
+            <a href="{% url 'core:project_list' %}" class="dropdown-menu-item {% if 'project' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
+                </svg>
+                <span>Project</span>
+            </a>
+            
+            <!-- Task -->
+            <a href="{% url 'core:task_list' %}" class="dropdown-menu-item {% if 'task' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                </svg>
+                <span>Task</span>
+            </a>
+        </div>
+    </div>
 
-    
-    <!-- Payroll Menu -->
-    <a href="{% url 'zkteco:payroll_dashboard' %}" class="nav-item {% if 'payroll' in request.resolver_match.url_name %}active{% endif %}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <span>Payroll</span>
-    </a>
-    
-    <!-- Shift Menu -->
-    <a href="#" class="nav-item {% if 'shift' in request.resolver_match.url_name %}active{% endif %}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"/>
-        </svg>
-        <span>Shift</span>
-    </a>
-    
-    <!-- Roster Menu -->
-    <a href="#" class="nav-item {% if 'roster' in request.resolver_match.url_name %}active{% endif %}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-        </svg>
-        <span>Roster</span>
-    </a>
-    
-    <!-- Task Menu -->
-    <a href="#" class="nav-item {% if 'task' in request.resolver_match.url_name %}active{% endif %}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-        </svg>
-        <span>Task</span>
-    </a>
-    
-    <!-- Report Menu -->
-    <a href="{% url 'zkteco:attendance_reports_main' %}" class="nav-item {% if 'report' in request.resolver_match.url_name %}active{% endif %}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-        </svg>
-        <span>Report</span>
-    </a>
+    <!-- ==================== EMPLOYEE MANAGEMENT DROPDOWN ==================== -->
+    <div class="nav-item-dropdown">
+        <div class="nav-item {% if 'employee' in request.resolver_match.url_name or 'leave' in request.resolver_match.url_name or 'complaint' in request.resolver_match.url_name %}active{% endif %}">
+            <div class="flex items-center gap-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                <span>Employee Management</span>
+            </div>
+            <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </div>
+        
+        <div class="dropdown-menu">
+            <!-- Employee -->
+            <a href="{% url 'zkteco:employee_list' %}" class="dropdown-menu-item {% if 'employee' in request.resolver_match.url_name and 'document' not in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                <span>Employees</span>
+            </a>
+            
+            <!-- Employee Documents -->
+            <a href="{% url 'zkteco:employee_document_list' %}" class="dropdown-menu-item {% if 'employee_document' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <span>Employee Documents</span>
+            </a>
+            
+            <!-- Leave Management -->
+            <a href="{% url 'zkteco:leave_list' %}" class="dropdown-menu-item {% if 'leave' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span>Leave Management</span>
+            </a>
+            
+            <!-- Complaints -->
+            <a href="{% url 'zkteco:complaint_list' %}" class="dropdown-menu-item {% if 'complaint' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <span>Complaints</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- ==================== ATTENDANCE MANAGEMENT DROPDOWN ==================== -->
+    <div class="nav-item-dropdown">
+        <div class="nav-item {% if 'attendance' in request.resolver_match.url_name or 'shift' in request.resolver_match.url_name or 'roster' in request.resolver_match.url_name or 'holiday' in request.resolver_match.url_name %}active{% endif %}">
+            <div class="flex items-center gap-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Attendance Management</span>
+            </div>
+            <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </div>
+        
+        <div class="dropdown-menu">
+            <!-- Attendance Log -->
+            <a href="{% url 'zkteco:attendance_log_list' %}" class="dropdown-menu-item {% if 'attendance_log' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                <span>Attendance Log</span>
+            </a>
+            
+            <!-- Attendance -->
+            <a href="{% url 'zkteco:attendance_list' %}" class="dropdown-menu-item {% if 'attendance' in request.resolver_match.url_name and 'attendance_log' not in request.resolver_match.url_name and 'simple_attendance_generation' not in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Attendance Records</span>
+            </a>
+            
+            <!-- Attendance Generation -->
+            <a href="{% url 'zkteco:simple_attendance_generation' %}" class="dropdown-menu-item {% if 'simple_attendance_generation' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <span>Attendance Generation</span>
+            </a>
+            
+            <!-- Shift Management -->
+            <a href="{% url 'zkteco:shift_list' %}" class="dropdown-menu-item {% if 'shift' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"/>
+                </svg>
+                <span>Shift Management</span>
+            </a>
+            
+            <!-- Roster Management -->
+            <a href="{% url 'zkteco:roster_list' %}" class="dropdown-menu-item {% if 'roster' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                </svg>
+                <span>Roster Management</span>
+            </a>
+            
+            <!-- Holiday Management -->
+            <a href="{% url 'zkteco:holiday_list' %}" class="dropdown-menu-item {% if 'holiday' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4m8-8v16m8-8a8 8 0 11-16 0 8 8 0 0116 0z"/>
+                </svg>
+                <span>Holiday Management</span>
+            </a>
+            
+            <!-- Attendance Config -->
+            <a href="{% url 'zkteco:config_list' %}" class="dropdown-menu-item {% if 'config' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                </svg>
+                <span>Attendance Config</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- ==================== DEVICE & LOCATION DROPDOWN ==================== -->
+    <div class="nav-item-dropdown">
+        <div class="nav-item {% if 'device' in request.resolver_match.url_name or 'location' in request.resolver_match.url_name or 'mobile_attendance' in request.resolver_match.url_name %}active{% endif %}">
+            <div class="flex items-center gap-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+                </svg>
+                <span>Device & Location</span>
+            </div>
+            <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </div>
+        
+        <div class="dropdown-menu">
+            <!-- Device Management -->
+            <a href="{% url 'zkteco:device_list' %}" class="dropdown-menu-item {% if 'device' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+                </svg>
+                <span>Device Management</span>
+            </a>
+            
+            <!-- Location Management -->
+            <a href="{% url 'zkteco:location_list' %}" class="dropdown-menu-item {% if 'location' in request.resolver_match.url_name and 'user_location' not in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span>Location Management</span>
+            </a>
+            
+            <!-- User Location -->
+            <a href="{% url 'zkteco:user_location_list' %}" class="dropdown-menu-item {% if 'user_location' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                </svg>
+                <span>User Location</span>
+            </a>
+            
+            <!-- Mobile Attendance -->
+            <a href="{% url 'zkteco:mobile_attendance' %}" class="dropdown-menu-item {% if 'mobile_attendance' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                </svg>
+                <span>Mobile Attendance</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- ==================== PAYROLL MANAGEMENT DROPDOWN ==================== -->
+    <div class="nav-item-dropdown">
+        <div class="nav-item {% if 'payroll' in request.resolver_match.url_name %}active{% endif %}">
+            <div class="flex items-center gap-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Payroll Management</span>
+            </div>
+            <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </div>
+        
+        <div class="dropdown-menu">
+            <!-- Payroll Dashboard -->
+            <a href="{% url 'zkteco:payroll_dashboard' %}" class="dropdown-menu-item {% if 'payroll_dashboard' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <span>Payroll Dashboard</span>
+            </a>
+            
+            <!-- Payroll Cycles -->
+            <a href="{% url 'zkteco:payroll_cycle_list' %}" class="dropdown-menu-item {% if 'payroll_cycle' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span>Payroll Cycles</span>
+            </a>
+            
+            <!-- Payroll Preview -->
+            <a href="{% url 'zkteco:payroll_preview' %}" class="dropdown-menu-item {% if 'payroll_preview' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+                <span>Payroll Preview</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- ==================== REPORTS & ANALYTICS DROPDOWN ==================== -->
+    <div class="nav-item-dropdown">
+        <div class="nav-item {% if 'report' in request.resolver_match.url_name or 'analytics' in request.resolver_match.url_name %}active{% endif %}">
+            <div class="flex items-center gap-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <span>Reports & Analytics</span>
+            </div>
+            <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </div>
+        
+        <div class="dropdown-menu">
+            <!-- Reports Dashboard -->
+            <a href="{% url 'zkteco:attendance_reports_main' %}" class="dropdown-menu-item {% if 'attendance_reports_main' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <span>Reports Dashboard</span>
+            </a>
+            
+            <!-- Attendance Log Reports -->
+            <a href="{% url 'zkteco:attendance_log_dashboard' %}" class="dropdown-menu-item {% if 'attendance_log_dashboard' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                <span>Attendance Log Reports</span>
+            </a>
+            
+            <!-- Hourly Report -->
+            <a href="{% url 'zkteco:hourly_attendance_report' %}" class="dropdown-menu-item {% if 'hourly_attendance_report' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Hourly Attendance Report</span>
+            </a>
+            
+            <!-- Daily Report -->
+            <a href="{% url 'zkteco:daily_attendance_report' %}" class="dropdown-menu-item {% if 'daily_attendance_report' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span>Daily Attendance Report</span>
+            </a>
+            
+            <!-- Monthly Report -->
+            <a href="{% url 'zkteco:monthly_attendance_report' %}" class="dropdown-menu-item {% if 'monthly_attendance_report' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span>Monthly Attendance Report</span>
+            </a>
+            
+            <!-- Employee Performance -->
+            <a href="{% url 'zkteco:employee_performance_report' %}" class="dropdown-menu-item {% if 'employee_performance_report' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                </svg>
+                <span>Employee Performance</span>
+            </a>
+        </div>
+    </div>
 </nav>
                 {% endblock %}
             </div>
@@ -3201,6 +3539,7 @@
         }
     </script>
 <script>
+
 // Modern Rich Toast System for Django
 function showToast(message, type = 'success', title = null, duration = 5000) {
     const container = document.getElementById('toast-container');
@@ -3304,6 +3643,49 @@ document.addEventListener('DOMContentLoaded', function() {
 });  
 
 
+</script>
+
+<script>
+
+    // Sidebar Dropdown Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const dropdownItems = document.querySelectorAll('.nav-item-dropdown');
+    
+    dropdownItems.forEach(dropdown => {
+        const navItem = dropdown.querySelector('.nav-item');
+        
+        navItem.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Close other dropdowns
+            dropdownItems.forEach(item => {
+                if (item !== dropdown) {
+                    item.classList.remove('open');
+                }
+            });
+            
+            // Toggle current dropdown
+            dropdown.classList.toggle('open');
+        });
+    });
+    
+    // Keep dropdown open if active link inside
+    dropdownItems.forEach(dropdown => {
+        const activeItem = dropdown.querySelector('.dropdown-menu-item.active');
+        if (activeItem) {
+            dropdown.classList.add('open');
+        }
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.nav-item-dropdown')) {
+            dropdownItems.forEach(dropdown => {
+                dropdown.classList.remove('open');
+            });
+        }
+    });
+});
 </script>
 {% block extra_js %}{% endblock %}
 
