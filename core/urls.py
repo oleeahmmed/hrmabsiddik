@@ -5,7 +5,13 @@ app_name = 'core'
 
 urlpatterns = [
 
-    
+    # Company URLs
+    path('companies/', views.CompanyListView.as_view(), name='company_list'),
+    path('companies/create/', views.CompanyCreateView.as_view(), name='company_create'),
+    path('companies/<int:pk>/', views.CompanyDetailView.as_view(), name='company_detail'),
+    path('companies/<int:pk>/edit/', views.CompanyUpdateView.as_view(), name='company_update'),
+    path('companies/<int:pk>/delete/', views.CompanyDeleteView.as_view(), name='company_delete'),
+       
     # Project URLs
     path('projects/', views.ProjectListView.as_view(), name='project_list'),
     path('projects/create/', views.ProjectCreateView.as_view(), name='project_create'),

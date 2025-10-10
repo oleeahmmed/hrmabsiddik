@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ company.name }} - Company Details{% endblock %}
+
+{% block page_title %}{{ company.name }}{% endblock %}
+{% block page_subtitle %}Company Details & Overview{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Company Header with Stats -->
+    <div class="card-lg border-2 border-transparent bg-gradient-to-r from-primary/5 to-primary/3 rounded-xl shadow-lg">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <!-- Company Info -->
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-full gradient-primary flex items-center justify-center text-white font-bold text-xl">
+                    {{ company.name|slice:":1"|upper }}
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-foreground">{{ company.name }}</h1>
+                    <div class="flex items-center gap-3 mt-1">
+                        <span class="text-sm text-muted-foreground">Code: {{ company.company_code }}</span>
+                        {% if company.is_active %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                            Active
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                            Inactive
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-2">
+                <a href="{% url 'core:company_update' company.pk %}" class="btn btn-outline btn-sm flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Edit
+                </a>
+                <a href="{% url 'core:company_list' %}" class="btn btn-outline btn-sm flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- Projects Card -->
+        <div class="relative overflow-hidden rounded-2xl border border-blue-200 dark:border-blue-900 bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-900 dark:to-blue-950 p-4 md:p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Total Projects</p>
+                    <p class="text-xl md:text-3xl font-bold">{{ project_count }}</p>
+                </div>
+                <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
+                    <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tasks Card -->
+        <div class="relative overflow-hidden rounded-2xl border border-green-200 dark:border-green-900 bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-900 dark:to-emerald-950 p-4 md:p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Total Tasks</p>
+                    <p class="text-xl md:text-3xl font-bold">{{ task_count }}</p>
+                </div>
+                <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
+                    <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Projects Card -->
+        <div class="relative overflow-hidden rounded-2xl border border-purple-200 dark:border-purple-900 bg-gradient-to-br from-purple-500 to-indigo-600 dark:from-purple-900 dark:to-indigo-950 p-4 md:p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Active Projects</p>
+                    <p class="text-xl md:text-3xl font-bold">{{ active_projects }}</p>
+                </div>
+                <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
+                    <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Hours Card -->
+        <div class="relative overflow-hidden rounded-2xl border border-orange-200 dark:border-orange-900 bg-gradient-to-br from-orange-500 to-amber-600 dark:from-orange-900 dark:to-amber-950 p-4 md:p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Total Hours</p>
+                    <p class="text-xl md:text-3xl font-bold">{{ total_hours }}</p>
+                </div>
+                <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
+                    <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column: Company Details -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Contact Information Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-lg font-semibold text-foreground">Contact Information</h3>
+                </div>
+                <div class="card-body">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-muted-foreground">Email</label>
+                            <div class="text-foreground">
+                                {% if company.email %}
+                                <a href="mailto:{{ company.email }}" class="hover:text-primary transition-colors">{{ company.email }}</a>
+                                {% else %}
+                                <span class="text-muted-foreground">Not specified</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-muted-foreground">Phone</label>
+                            <div class="text-foreground">
+                                {% if company.phone_number %}
+                                <a href="tel:{{ company.phone_number }}" class="hover:text-primary transition-colors">{{ company.phone_number }}</a>
+                                {% else %}
+                                <span class="text-muted-foreground">Not specified</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-muted-foreground">Website</label>
+                            <div class="text-foreground">
+                                {% if company.website %}
+                                <a href="{{ company.website }}" target="_blank" class="hover:text-primary transition-colors">{{ company.website }}</a>
+                                {% else %}
+                                <span class="text-muted-foreground">Not specified</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-muted-foreground">Tax ID</label>
+                            <div class="text-foreground">
+                                {% if company.tax_id %}
+                                {{ company.tax_id }}
+                                {% else %}
+                                <span class="text-muted-foreground">Not specified</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address Information Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-lg font-semibold text-foreground">Address Information</h3>
+                </div>
+                <div class="card-body">
+                    <div class="space-y-3">
+                        {% if company.address_line1 %}
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-muted-foreground mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <div class="text-foreground">
+                                <div>{{ company.address_line1 }}</div>
+                                {% if company.address_line2 %}
+                                <div>{{ company.address_line2 }}</div>
+                                {% endif %}
+                                <div>
+                                    {% if company.city %}{{ company.city }}{% endif %}
+                                    {% if company.state %}, {{ company.state }}{% endif %}
+                                    {% if company.zip_code %} {{ company.zip_code }}{% endif %}
+                                </div>
+                                {% if company.country %}
+                                <div>{{ company.country }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% else %}
+                        <p class="text-muted-foreground">No address information available</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Projects Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-lg font-semibold text-foreground">Recent Projects</h3>
+                    <a href="#" class="btn btn-outline btn-sm">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_projects %}
+                    <div class="space-y-4">
+                        {% for project in recent_projects %}
+                        <div class="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-accent/50 transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-foreground">{{ project.name }}</div>
+                                    <div class="text-xs text-muted-foreground">Owner: {{ project.owner.get_full_name|default:project.owner.username }}</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-medium text-foreground">
+                                    {% if project.is_active %}
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Active</span>
+                                    {% else %}
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">Inactive</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-xs text-muted-foreground">{{ project.created_at|date:"M d, Y" }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-8">
+                        <svg class="w-12 h-12 text-muted-foreground mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        <p class="text-muted-foreground">No projects found for this company</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Additional Information -->
+        <div class="space-y-6">
+            <!-- Company Settings Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-lg font-semibold text-foreground">Company Settings</h3>
+                </div>
+                <div class="card-body">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-foreground">Status</span>
+                            {% if company.is_active %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                Active
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                                Inactive
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-foreground">Location Restricted</span>
+                            {% if company.location_restricted %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                                Yes
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400">
+                                No
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-foreground">Currency</span>
+                            <span class="text-sm text-muted-foreground">{{ company.currency|default:"Not set" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-lg font-semibold text-foreground">Recent Tasks</h3>
+                </div>
+                <div class="card-body">
+                    {% if recent_tasks %}
+                    <div class="space-y-3">
+                        {% for task in recent_tasks %}
+                        <div class="p-3 rounded-lg border border-border hover:bg-accent/50 transition-colors">
+                            <div class="font-medium text-sm text-foreground">{{ task.title }}</div>
+                            <div class="flex items-center justify-between mt-2">
+                                <span class="text-xs text-muted-foreground">{{ task.project.name }}</span>
+                                <span class="text-xs text-muted-foreground">{{ task.hours_spent }}h</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted-foreground text-sm">No recent tasks</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Danger Zone Card -->
+            <div class="card border border-destructive/20">
+                <div class="card-header border-b border-destructive/20">
+                    <h3 class="text-lg font-semibold text-destructive">Danger Zone</h3>
+                </div>
+                <div class="card-body">
+                    <p class="text-sm text-muted-foreground mb-4">
+                        Once you delete a company, there is no going back. Please be certain.
+                    </p>
+                    <a href="{% url 'core:company_delete' company.pk %}" class="btn btn-destructive w-full">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        Delete Company
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,36 +1,64 @@
 {% extends 'base.html' %}
-{% load static %}
 
-{% block title %}Location Management - {{ block.super }}{% endblock %}
-{% block page_title %}Location Management{% endblock %}
-{% block page_subtitle %}Manage attendance locations and geographical boundaries{% endblock %}
+{% block title %}Complaints - {{ block.super }}{% endblock %}
+{% block page_title %}Complaint Management{% endblock %}
+{% block page_subtitle %}Manage and track employee complaints{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
-    <!-- Location Statistics -->
+    <!-- Complaint Statistics -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <!-- Total Locations Card -->
+        <!-- Total Complaints Card -->
         <div class="relative overflow-hidden rounded-2xl border border-blue-200 dark:border-blue-900 bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-900 dark:to-blue-950 p-4 md:p-6 text-white shadow-lg">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs md:text-sm font-medium opacity-90">Total Locations</p>
-                    <p class="text-xl md:text-3xl font-bold">{{ total_locations }}</p>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Total Complaints</p>
+                    <p class="text-xl md:text-3xl font-bold">{{ total_complaints }}</p>
                 </div>
                 <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
                     <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                 </div>
             </div>
         </div>
 
-        <!-- Active Locations Card -->
+        <!-- High Priority Card -->
+        <div class="relative overflow-hidden rounded-2xl border border-red-200 dark:border-red-900 bg-gradient-to-br from-red-500 to-rose-600 dark:from-red-900 dark:to-rose-950 p-4 md:p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium opacity-90">High Priority</p>
+                    <p class="text-xl md:text-3xl font-bold">{{ high_priority_count }}</p>
+                </div>
+                <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
+                    <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Under Review Card -->
+        <div class="relative overflow-hidden rounded-2xl border border-yellow-200 dark:border-yellow-900 bg-gradient-to-br from-yellow-500 to-amber-600 dark:from-yellow-900 dark:to-amber-950 p-4 md:p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Under Review</p>
+                    <p class="text-xl md:text-3xl font-bold">{{ under_review_count }}</p>
+                </div>
+                <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
+                    <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resolved Card -->
         <div class="relative overflow-hidden rounded-2xl border border-green-200 dark:border-green-900 bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-900 dark:to-emerald-950 p-4 md:p-6 text-white shadow-lg">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs md:text-sm font-medium opacity-90">Active Locations</p>
-                    <p class="text-xl md:text-3xl font-bold">{{ active_locations }}</p>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Resolved</p>
+                    <p class="text-xl md:text-3xl font-bold">{{ resolved_count }}</p>
                 </div>
                 <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
                     <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,39 +67,9 @@
                 </div>
             </div>
         </div>
-
-        <!-- Inactive Locations Card -->
-        <div class="relative overflow-hidden rounded-2xl border border-red-200 dark:border-red-900 bg-gradient-to-br from-red-500 to-rose-600 dark:from-red-900 dark:to-rose-950 p-4 md:p-6 text-white shadow-lg">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs md:text-sm font-medium opacity-90">Inactive Locations</p>
-                    <p class="text-xl md:text-3xl font-bold">{{ inactive_locations }}</p>
-                </div>
-                <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
-                    <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        <!-- User Assignments Card -->
-        <div class="relative overflow-hidden rounded-2xl border border-orange-200 dark:border-orange-900 bg-gradient-to-br from-orange-500 to-amber-600 dark:from-orange-900 dark:to-amber-950 p-4 md:p-6 text-white shadow-lg">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs md:text-sm font-medium opacity-90">User Assignments</p>
-                    <p class="text-xl md:text-3xl font-bold">{{ total_assignments }}</p>
-                </div>
-                <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
-                    <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
     </div>
 
-    <!-- Locations Table Card -->
+    <!-- Complaints Table Card -->
     <div class="card-lg border-2 border-transparent bg-gradient-to-r from-primary/5 to-primary/3 dark:from-primary/10 dark:to-primary/5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 animate-pulse-border">
         <!-- Table Header with Actions -->
         <div class="card-header border-b-0 bg-transparent">
@@ -80,13 +78,12 @@
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                         <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-xl font-bold text-foreground">All Locations</h3>
-                        <p class="text-sm text-muted-foreground">Manage and organize attendance locations</p>
+                        <h3 class="text-xl font-bold text-foreground">All Complaints</h3>
+                        <p class="text-sm text-muted-foreground">Manage and track employee complaints</p>
                     </div>
                 </div>
 
@@ -100,13 +97,13 @@
                         Filter
                     </button>
 
-                    <!-- Create Location Button -->
-                    {% if perms.hr_payroll.add_location %}
-                    <a href="{% url 'zkteco:location_create' %}" class="btn btn-primary btn-sm flex items-center gap-2">
+                    <!-- Create Complaint Button -->
+                    {% if perms.hr_payroll.add_complaint %}
+                    <a href="{% url 'zkteco:complaint_create' %}" class="btn btn-primary btn-sm flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                         </svg>
-                        Add Location
+                        Create Complaint
                     </a>
                     {% endif %}
                 </div>
@@ -119,11 +116,11 @@
                 <form method="get" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <!-- Search -->
-                        <div class="md:col-span-2">
-                            <label class="form-label">Search Locations</label>
+                        <div>
+                            <label class="form-label">Search Complaints</label>
                             <div class="relative">
                                 <input type="text" name="search" value="{{ request.GET.search|default:'' }}" 
-                                       placeholder="Search by name or address..." class="input pr-10 w-full">
+                                       placeholder="Search by title or employee..." class="input pr-10 w-full">
                                 <svg class="absolute right-3 top-2.5 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                                 </svg>
@@ -133,11 +130,13 @@
                         <!-- Status Filter -->
                         <div>
                             <label class="form-label">Status</label>
-                            <select name="is_active" class="input">
-                                <option value="">All Status</option>
-                                <option value="True" {% if request.GET.is_active == 'True' %}selected{% endif %}>Active</option>
-                                <option value="False" {% if request.GET.is_active == 'False' %}selected{% endif %}>Inactive</option>
-                            </select>
+                            {{ filter_form.status }}
+                        </div>
+
+                        <!-- Priority Filter -->
+                        <div>
+                            <label class="form-label">Priority</label>
+                            {{ filter_form.priority }}
                         </div>
                     </div>
 
@@ -158,96 +157,109 @@
             <table class="w-full">
                 <thead>
                     <tr class="bg-gradient-to-r from-primary to-primary-hover border-b border-primary/30" style="background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-hover)) 100%);">
-                        <th class="text-left p-4 text-sm font-semibold text-white">Location Info</th>
-                        <th class="text-left p-4 text-sm font-semibold text-white">Address</th>
-                        <th class="text-left p-4 text-sm font-semibold text-white">Coordinates</th>
-                        <th class="text-left p-4 text-sm font-semibold text-white">Radius</th>
+                        <th class="text-left p-4 text-sm font-semibold text-white">Complaint</th>
+                        <th class="text-left p-4 text-sm font-semibold text-white">Employee</th>
+                        <th class="text-left p-4 text-sm font-semibold text-white">Priority</th>
                         <th class="text-left p-4 text-sm font-semibold text-white">Status</th>
+                        <th class="text-left p-4 text-sm font-semibold text-white">Submitted</th>
+                        <th class="text-left p-4 text-sm font-semibold text-white">Assigned To</th>
                         <th class="text-center p-4 text-sm font-semibold text-white">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for location in locations %}
+                    {% for complaint in complaints %}
                     <tr class="border-b border-border hover:bg-accent/50 transition-colors group">
-                        <!-- Location Info -->
+                        <!-- Complaint Title -->
                         <td class="p-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                                     <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-medium text-foreground group-hover:text-primary transition-colors">{{ location.name }}</div>
-                                    <div class="text-xs text-muted-foreground">ID: {{ location.id }}</div>
+                                    <div class="font-medium text-foreground group-hover:text-primary transition-colors">{{ complaint.title }}</div>
+                                    <div class="text-xs text-muted-foreground">{{ complaint.description|truncatewords:8 }}</div>
                                 </div>
                             </div>
                         </td>
                         
-                        <!-- Address -->
+                        <!-- Employee -->
                         <td class="p-4">
-                            <div class="text-sm text-foreground max-w-xs" title="{{ location.address }}">
-                                {{ location.address|default:"No address provided" }}
+                            <div class="text-sm text-foreground font-medium">
+                                {{ complaint.employee.name }}
+                            </div>
+                            <div class="text-xs text-muted-foreground">
+                                {{ complaint.employee.employee_id }}
                             </div>
                         </td>
                         
-                        <!-- Coordinates -->
+                        <!-- Priority -->
                         <td class="p-4">
-                            <div class="text-sm font-mono text-foreground">
-                                <div>{{ location.latitude|floatformat:6 }}°</div>
-                                <div>{{ location.longitude|floatformat:6 }}°</div>
-                            </div>
-                        </td>
-                        
-                        <!-- Radius -->
-                        <td class="p-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                                {{ location.radius }}m
+                            {% if complaint.priority == 'high' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                High
                             </span>
+                            {% elif complaint.priority == 'medium' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                Medium
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                Low
+                            </span>
+                            {% endif %}
                         </td>
                         
                         <!-- Status -->
                         <td class="p-4">
-                            {% if location.is_active %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                                Active
+                            {% if complaint.status == 'submitted' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                Submitted
+                            </span>
+                            {% elif complaint.status == 'under_review' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                Under Review
+                            </span>
+                            {% elif complaint.status == 'resolved' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                Resolved
                             </span>
                             {% else %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
-                                Inactive
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
+                                Closed
                             </span>
                             {% endif %}
+                        </td>
+                        
+                        <!-- Submitted Date -->
+                        <td class="p-4 text-sm text-foreground">
+                            {{ complaint.submitted_date|date:"M d, Y" }}
+                        </td>
+                        
+                        <!-- Assigned To -->
+                        <td class="p-4 text-sm text-foreground">
+                            {{ complaint.assigned_to.get_full_name|default:"-" }}
                         </td>
                         
                         <!-- Actions -->
                         <td class="p-4">
                             <div class="flex items-center justify-center gap-1">
-                                <a href="{% url 'zkteco:location_detail' location.pk %}" class="btn-ghost p-2 rounded hover:bg-accent transition-colors" title="View Details">
+                                <a href="{% url 'zkteco:complaint_detail' complaint.pk %}" class="btn-ghost p-2 rounded hover:bg-accent transition-colors" title="View">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                     </svg>
                                 </a>
-                                
-                                {% if perms.hr_payroll.change_location %}
-                                <a href="{% url 'zkteco:location_update' location.pk %}" class="btn-ghost p-2 rounded hover:bg-accent transition-colors" title="Edit Location">
+                                {% if perms.hr_payroll.change_complaint %}
+                                <a href="{% url 'zkteco:complaint_update' complaint.pk %}" class="btn-ghost p-2 rounded hover:bg-accent transition-colors" title="Edit">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                 </a>
                                 {% endif %}
-
-                                <button onclick="showLocationOnMap({{ location.latitude }}, {{ location.longitude }}, '{{ location.name|escapejs }}', {{ location.radius }})" 
-                                        class="btn-ghost p-2 rounded hover:bg-accent transition-colors" title="View on Map">
-                                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                                    </svg>
-                                </button>
-                                
-                                {% if perms.hr_payroll.delete_location %}
-                                <a href="{% url 'zkteco:location_delete' location.pk %}" 
-                                   class="btn-ghost p-2 rounded hover:bg-destructive-light hover:text-destructive transition-colors" title="Delete Location">
+                                {% if perms.hr_payroll.delete_complaint %}
+                                <a href="{% url 'zkteco:complaint_delete' complaint.pk %}" class="btn-ghost p-2 rounded hover:bg-destructive-light hover:text-destructive transition-colors" title="Delete">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                     </svg>
@@ -258,21 +270,20 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="p-8 text-center">
+                        <td colspan="7" class="p-8 text-center">
                             <div class="flex flex-col items-center justify-center space-y-3">
                                 <div class="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
                                     <svg class="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                     </svg>
                                 </div>
                                 <div class="text-center">
-                                    <p class="text-foreground font-medium">No locations found</p>
-                                    <p class="text-sm text-muted-foreground mt-1">Get started by creating your first location</p>
+                                    <p class="text-foreground font-medium">No complaints found</p>
+                                    <p class="text-sm text-muted-foreground mt-1">Get started by creating your first complaint</p>
                                 </div>
-                                {% if perms.hr_payroll.add_location %}
-                                <a href="{% url 'zkteco:location_create' %}" class="btn btn-primary mt-2">
-                                    Create First Location
+                                {% if perms.hr_payroll.add_complaint %}
+                                <a href="{% url 'zkteco:complaint_create' %}" class="btn btn-primary mt-2">
+                                    Create Complaint
                                 </a>
                                 {% endif %}
                             </div>
@@ -349,10 +360,5 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-
-// Map Modal function
-function showLocationOnMap(lat, lng, name, radius) {
-    alert(`Location: ${name}\nCoordinates: ${lat.toFixed(6)}°, ${lng.toFixed(6)}°\nRadius: ${radius}m\n\nMap integration would display here with actual map visualization.`);
-}
 </script>
 {% endblock %}

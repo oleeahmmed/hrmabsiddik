@@ -20,7 +20,8 @@ from .views import payroll_advanced_views
 from .views import payroll_generation_views
 from .views import shift_views
 from .views import roster_views
-
+from .views import holiday_views
+from .views import complaint_views
 app_name = 'zkteco'
 
 urlpatterns = [
@@ -130,8 +131,18 @@ urlpatterns = [
     path('roster/<int:pk>/update/', roster_views.RosterUpdateView.as_view(), name='roster_update'),
     path('roster/<int:pk>/delete/', roster_views.RosterDeleteView.as_view(), name='roster_delete'),
 
-    
-    
+    # ==================== HOLIDAY MANAGEMENT URLS ====================
+    path('holidays/', holiday_views.HolidayListView.as_view(), name='holiday_list'),
+    path('holidays/create/', holiday_views.HolidayCreateView.as_view(), name='holiday_create'),
+    path('holidays/<int:pk>/', holiday_views.HolidayDetailView.as_view(), name='holiday_detail'),
+    path('holidays/<int:pk>/update/', holiday_views.HolidayUpdateView.as_view(), name='holiday_update'),
+    path('holidays/<int:pk>/delete/', holiday_views.HolidayDeleteView.as_view(), name='holiday_delete'),   
+    # Roster Day URLs
+    path('roster-days/', shift_views.RosterDayListView.as_view(), name='roster_day_list'),
+    path('roster-days/create/', shift_views.RosterDayCreateView.as_view(), name='roster_day_create'),
+    path('roster-days/<int:pk>/', shift_views.RosterDayDetailView.as_view(), name='roster_day_detail'),
+    path('roster-days/<int:pk>/update/', shift_views.RosterDayUpdateView.as_view(), name='roster_day_update'),
+    path('roster-days/<int:pk>/delete/', shift_views.RosterDayDeleteView.as_view(), name='roster_day_delete'),
     # ==================== LOCATION URLS ====================
     path('locations/', location_views.LocationListView.as_view(), name='location_list'),
     path('locations/create/', location_views.LocationCreateView.as_view(), name='location_create'),
@@ -199,6 +210,13 @@ urlpatterns = [
     path('attendance/<int:pk>/update/', attendance_views.AttendanceUpdateView.as_view(), name='attendance_update'),
     path('attendance/<int:pk>/delete/', attendance_views.AttendanceDeleteView.as_view(), name='attendance_delete'),
     path('attendance/export/', attendance_views.AttendanceExportCSVView.as_view(), name='attendance_export'),
+
+    # ==================== COMPLAINT MANAGEMENT URLS ====================
+    path('complaints/', complaint_views.ComplaintListView.as_view(), name='complaint_list'),
+    path('complaints/create/', complaint_views.ComplaintCreateView.as_view(), name='complaint_create'),
+    path('complaints/<int:pk>/', complaint_views.ComplaintDetailView.as_view(), name='complaint_detail'),
+    path('complaints/<int:pk>/update/', complaint_views.ComplaintUpdateView.as_view(), name='complaint_update'),
+    path('complaints/<int:pk>/delete/', complaint_views.ComplaintDeleteView.as_view(), name='complaint_delete'),
 # # ==================== PAYROLL MANAGEMENT URLS ====================
 
 # # Payroll Dashboard

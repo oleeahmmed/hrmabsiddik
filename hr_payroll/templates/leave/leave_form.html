@@ -35,7 +35,7 @@
         </div>
 
         <!-- Card Body -->
-        <div class="p-6">
+        <div class="p-6 ">
             <form method="post" id="leave-form" class="space-y-6">
                 {% csrf_token %}
                 
@@ -175,22 +175,15 @@
     </div>
 
     <!-- Information Card -->
-    <div class="card border border-blue-200/20 bg-gradient-to-r from-primary/5 to-primary/3">
-        <div class="flex items-start space-x-3">
-            <svg class="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <div class="space-y-2">
-                <h3 class="font-medium text-blue-900 dark:text-blue-100">Leave Application Guidelines</h3>
-                <ul class="text-sm text-blue-800/80 dark:text-blue-200/80 space-y-1">
-                    <li>• Submit leave applications at least 3 days in advance</li>
-                    <li>• Ensure proper handover of responsibilities before leave</li>
-                    <li>• Check your remaining leave balance before applying</li>
-                    <li>• Emergency leaves require immediate supervisor approval</li>
-                </ul>
-            </div>
-        </div>
-    </div>
+<div class="card p-4 gradient-mesh border border-blue-200/20">
+    <h4 class="text-sm font-semibold text-foreground mb-3">📋 Leave Application Guidelines</h4>
+    <ul class="text-xs text-muted-foreground space-y-1">
+        <li>• Submit leave applications at least 3 days in advance</li>
+        <li>• Ensure proper handover of responsibilities before leave</li>
+        <li>• Check your remaining leave balance before applying</li>
+        <li>• Emergency leaves require immediate supervisor approval</li>
+    </ul>
+</div>
 </div>
 
 <script>

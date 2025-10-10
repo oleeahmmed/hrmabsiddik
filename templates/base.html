@@ -15,7 +15,405 @@
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+    <style>
+.animate-pulse-border {
+    position: relative;
+    overflow: hidden;
+}
+
+.animate-pulse-border::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, hsl(var(--primary)), transparent);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        left: -100%;
+    }
+    50% {
+        left: 100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+
+</style>
+
+<style> 
+    /* ===============================================
+   MODERN RICH TOAST NOTIFICATION SYSTEM
+=============================================== */
+
+/* Toast Container */
+.toast-container {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 9999;
+    max-width: 420px;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* Individual Toast */
+.toast {
+    pointer-events: auto;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.98) 100%);
+    backdrop-filter: blur(20px) saturate(180%);
+    border-radius: 16px;
+    box-shadow: 
+        0 20px 25px -5px rgba(0, 0, 0, 0.1),
+        0 10px 10px -5px rgba(0, 0, 0, 0.04),
+        0 0 0 1px rgba(0, 0, 0, 0.05),
+        0 0 40px rgba(0, 0, 0, 0.08);
+    padding: 1rem 1.25rem;
+    min-width: 320px;
+    transform: translateX(calc(100% + 3rem)) scale(0.8);
+    opacity: 0;
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* Dark mode toast */
+.dark .toast {
+    background: linear-gradient(135deg, rgba(30, 30, 35, 0.95) 0%, rgba(25, 25, 30, 0.98) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+        0 20px 25px -5px rgba(0, 0, 0, 0.5),
+        0 10px 10px -5px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.05),
+        0 0 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Show state */
+.toast.show {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+    animation: toastBounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Hide state */
+.toast.hide {
+    transform: translateX(calc(100% + 3rem)) scale(0.8);
+    opacity: 0;
+    animation: toastSlideOut 0.4s cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* Shimmer effect overlay */
+.toast::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+    );
+    animation: toastShimmer 3s infinite;
+    pointer-events: none;
+}
+
+.dark .toast::before {
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.1),
+        transparent
+    );
+}
+
+/* Icon container with gradient backgrounds */
+.toast-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.toast-icon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: inherit;
+    opacity: 0.2;
+    filter: blur(8px);
+}
+
+.toast-icon svg {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    z-index: 1;
+    animation: toastIconPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Success variant */
+.toast.toast-success .toast-icon {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.toast.toast-success .toast-progress-bar {
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+}
+
+.toast.toast-success .toast-accent {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.08) 100%);
+}
+
+/* Error variant */
+.toast.toast-error .toast-icon {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.toast.toast-error .toast-progress-bar {
+    background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+}
+
+.toast.toast-error .toast-accent {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.08) 100%);
+}
+
+/* Warning variant */
+.toast.toast-warning .toast-icon {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.toast.toast-warning .toast-progress-bar {
+    background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+}
+
+.toast.toast-warning .toast-accent {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.08) 100%);
+}
+
+/* Info variant */
+.toast.toast-info .toast-icon {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.toast.toast-info .toast-progress-bar {
+    background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.toast.toast-info .toast-accent {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.08) 100%);
+}
+
+/* Toast content */
+.toast-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    z-index: 1;
+}
+
+.toast-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.toast-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    margin: 0 0 0.25rem 0;
+    line-height: 1.4;
+}
+
+.toast-message {
+    font-size: 0.8125rem;
+    color: hsl(var(--muted-foreground));
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Close button */
+.toast-close {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    color: hsl(var(--muted-foreground));
+}
+
+.dark .toast-close {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.toast-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+    transform: scale(1.1);
+    color: hsl(var(--foreground));
+}
+
+.dark .toast-close:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.toast-close svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Progress bar container */
+.toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    border-radius: 0 0 16px 16px;
+}
+
+.dark .toast-progress {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.toast-progress-bar {
+    height: 100%;
+    width: 100%;
+    transform-origin: left;
+    transition: transform linear;
+    box-shadow: 0 0 10px currentColor;
+}
+
+/* Accent decoration */
+.toast-accent {
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(40px);
+    opacity: 0.6;
+}
+
+/* Animations */
+@keyframes toastBounceIn {
+    0% {
+        transform: translateX(calc(100% + 3rem)) scale(0.8) rotate(5deg);
+        opacity: 0;
+    }
+    60% {
+        transform: translateX(-10px) scale(1.05) rotate(-2deg);
+        opacity: 1;
+    }
+    80% {
+        transform: translateX(5px) scale(0.98) rotate(1deg);
+    }
+    100% {
+        transform: translateX(0) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+@keyframes toastSlideOut {
+    0% {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(calc(100% + 3rem)) scale(0.8);
+        opacity: 0;
+    }
+}
+
+@keyframes toastShimmer {
+    0% {
+        left: -100%;
+    }
+    50%, 100% {
+        left: 200%;
+    }
+}
+
+@keyframes toastIconPop {
+    0% {
+        transform: scale(0) rotate(-180deg);
+        opacity: 0;
+    }
+    60% {
+        transform: scale(1.2) rotate(10deg);
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+    .toast-container {
+        left: 1rem;
+        right: 1rem;
+        top: 1rem;
+        max-width: none;
+    }
+
+    .toast {
+        min-width: auto;
+        transform: translateY(-150%) scale(0.9);
+    }
+
+    .toast.show {
+        transform: translateY(0) scale(1);
+        animation: toastBounceInMobile 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    .toast.hide {
+        transform: translateY(-150%) scale(0.9);
+    }
+}
+
+@keyframes toastBounceInMobile {
+    0% {
+        transform: translateY(-150%) scale(0.9);
+        opacity: 0;
+    }
+    60% {
+        transform: translateY(10px) scale(1.02);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+    </style>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
@@ -1130,7 +1528,6 @@
         :root:not(.dark) .sidebar {
             background: linear-gradient(135deg, hsl(var(--primary-light)) 0%, hsl(var(--primary) / 0.1) 50%, hsl(var(--card)) 100%) !important;
         }
-
         /* Enhanced Sidebar Header for Light Mode */
         :root:not(.dark) .sidebar .p-4.border-b {
             background: linear-gradient(135deg, hsl(var(--primary) / 0.8) 0%, hsl(var(--primary) / 0.6) 100%);
@@ -1144,6 +1541,7 @@
         :root:not(.dark) .sidebar .p-4.border-b p {
             color: hsl(0 0% 100% / 0.8);
         }
+
 
         /* Enhanced Navigation Items for Gradient Sidebar */
         .sidebar .nav-item {
@@ -1165,6 +1563,7 @@
             transform: translateX(4px);
         }
 
+
         /* Profile Section Enhancement */
         .sidebar .p-3.border-t {
             background: hsl(var(--card) / 0.8);
@@ -1172,8 +1571,10 @@
             border-top: 1px solid hsl(var(--border) / 0.5);
         }
 
+
         /* Dark mode specific sidebar enhancements */
         .dark .sidebar {
+            background: hsl(var(--card)) !important;
             border-right: 1px solid hsl(var(--border) / 0.3);
             box-shadow: 
                 2px 0 20px hsl(var(--primary) / 0.1),
@@ -1194,22 +1595,22 @@
         }
 
         /* Scrollbar styling for sidebar */
-        .sidebar::-webkit-scrollbar {
-            width: 4px;
-        }
+            .sidebar::-webkit-scrollbar {
+                width: 4px;
+            }
 
-        .sidebar::-webkit-scrollbar-track {
-            background: transparent;
-        }
+            .sidebar::-webkit-scrollbar-track {
+                background: transparent;
+            }
 
-        .sidebar::-webkit-scrollbar-thumb {
-            background: hsl(var(--primary) / 0.3);
-            border-radius: 2px;
-        }
+            .sidebar::-webkit-scrollbar-thumb {
+                background: hsl(var(--primary) / 0.3);
+                border-radius: 2px;
+            }
 
-        .sidebar::-webkit-scrollbar-thumb:hover {
-            background: hsl(var(--primary) / 0.5);
-        }
+            .sidebar::-webkit-scrollbar-thumb:hover {
+                background: hsl(var(--primary) / 0.5);
+            }
         /* Toast - Enhanced Animations */
         .toast-container {
             position: fixed;
@@ -1352,34 +1753,322 @@
             border-radius: 0 0 9999px 9999px;
         }
         
-        /* FAB - Enhanced */
+           /* ===============================================
+           RICH FAB (Floating Action Button) MENU SYSTEM
+        =============================================== */
+        
+        /* Main FAB Button */
         .fab {
             position: fixed;
-            bottom: 5rem;
-            right: 1rem;
-            width: 56px;
-            height: 56px;
+            bottom: 2rem;
+            right:0rem;
+            width: 64px;
+            height: 64px;
             border-radius: 50%;
-            background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-hover)) 100%);
-            color: hsl(var(--primary-foreground));
+            background: linear-gradient(135deg, hsl(221, 83%, 53%) 0%, hsl(221, 83%, 48%) 100%);
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 16px hsl(var(--primary) / 0.4);
+            box-shadow: 
+                0 8px 24px rgba(59, 130, 246, 0.4),
+                0 4px 12px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
             z-index: 999;
-            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             cursor: pointer;
             border: none;
+            position: relative;
+            overflow: hidden;
         }
-        
+
+        /* FAB pulse animation */
+        .fab::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, hsl(221, 83%, 53%), hsl(221, 83%, 48%));
+            opacity: 0;
+            animation: fabPulse 2s infinite;
+        }
+
+        .fab::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: fabShimmer 3s infinite;
+        }
+
+        .fab svg {
+            width: 28px;
+            height: 28px;
+            position: relative;
+            z-index: 1;
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
         .fab:hover {
-            box-shadow: 0 6px 20px hsl(var(--primary) / 0.5);
-            transform: scale(1.05);
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 
+                0 12px 32px rgba(59, 130, 246, 0.5),
+                0 8px 16px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
-        
+
         .fab:active {
             transform: scale(0.95);
         }
+
+        .fab.active svg {
+            transform: rotate(135deg);
+        }
+
+        /* FAB Menu Container */
+        .fab-menu {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 998;
+            pointer-events: none;
+        }
+
+        /* Backdrop overlay */
+        .fab-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 997;
+            pointer-events: none;
+        }
+
+        .fab-backdrop.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Individual Menu Items */
+        .fab-menu-item {
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            opacity: 0;
+            transform: translateY(20px) scale(0.8);
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            pointer-events: none;
+        }
+
+        .fab-menu-item.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        /* Stagger animation delays */
+        .fab-menu-item:nth-child(1) { transition-delay: 0.05s; }
+        .fab-menu-item:nth-child(2) { transition-delay: 0.1s; }
+        .fab-menu-item:nth-child(3) { transition-delay: 0.15s; }
+        .fab-menu-item:nth-child(4) { transition-delay: 0.2s; }
+        .fab-menu-item:nth-child(5) { transition-delay: 0.25s; }
+        .fab-menu-item:nth-child(6) { transition-delay: 0.3s; }
+
+        /* Menu Item Label */
+        .fab-label {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.98) 100%);
+            backdrop-filter: blur(20px);
+            color: #1f2937;
+            padding: 0.625rem 1rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            white-space: nowrap;
+            box-shadow: 
+                0 8px 16px rgba(0, 0, 0, 0.1),
+                0 4px 8px rgba(0, 0, 0, 0.06),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dark .fab-label {
+            background: linear-gradient(135deg, rgba(30, 30, 35, 0.95) 0%, rgba(25, 25, 30, 0.98) 100%);
+            color: #f9fafb;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 8px 16px rgba(0, 0, 0, 0.5),
+                0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .fab-label::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .fab-menu-item:hover .fab-label::before {
+            left: 100%;
+        }
+
+        /* Menu Item Button */
+        .fab-action {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            box-shadow: 
+                0 6px 16px rgba(0, 0, 0, 0.15),
+                0 3px 8px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .fab-action::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: inherit;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .fab-action svg {
+            width: 24px;
+            height: 24px;
+            color: white;
+            position: relative;
+            z-index: 1;
+            transition: transform 0.3s ease;
+        }
+
+        .fab-action:hover {
+            transform: scale(1.15) rotate(-5deg);
+            box-shadow: 
+                0 10px 24px rgba(0, 0, 0, 0.2),
+                0 6px 12px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .fab-action:hover::before {
+            opacity: 0.2;
+        }
+
+        .fab-action:hover svg {
+            transform: scale(1.1);
+        }
+
+        .fab-action:active {
+            transform: scale(0.95);
+        }
+
+        /* Color variants for different actions */
+        .fab-action.leave {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .fab-action.holiday {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .fab-action.notice {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+
+        .fab-action.attendance {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+
+        .fab-action.task {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .fab-action.report {
+            background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+        }
+
+        /* Animations */
+        @keyframes fabPulse {
+            0%, 100% {
+                opacity: 0;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.3;
+                transform: scale(1.2);
+            }
+        }
+
+        @keyframes fabShimmer {
+            0% {
+                left: -100%;
+            }
+            50%, 100% {
+                left: 200%;
+            }
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .fab {
+                bottom: 5rem;
+                right: 1rem;
+                width: 56px;
+                height: 56px;
+            }
+
+            .fab svg {
+                width: 24px;
+                height: 24px;
+            }
+
+            .fab-menu {
+                bottom: 5rem;
+                right: 1rem;
+            }
+
+            .fab-menu-item {
+                bottom: 70px;
+            }
+
+            .fab-action {
+                width: 48px;
+                height: 48px;
+            }
+
+            .fab-action svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .fab-label {
+                font-size: 0.8125rem;
+                padding: 0.5rem 0.875rem;
+            }
+        }
+
         
         /* Scrollbar Styling */
         ::-webkit-scrollbar {
@@ -1568,6 +2257,220 @@
         transform: translateX(20px);
     }
 
+
+        /* ===============================================
+    DROPDOWN & MODAL STYLES - ENHANCED
+    =============================================== */
+
+    /* Profile Dropdown */
+    #profile-dropdown {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-xl);
+        backdrop-filter: blur(20px);
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        right: 0;
+        margin-bottom: 0.5rem;
+        z-index: 1000;
+        min-width: 200px;
+    }
+
+    /* Dark mode profile dropdown */
+    .dark #profile-dropdown {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border) / 0.5);
+        box-shadow: var(--shadow-xl);
+    }
+
+    /* Color Theme Dropdown */
+    #color-theme-dropdown {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-xl);
+        backdrop-filter: blur(20px);
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 0.5rem;
+        z-index: 1000;
+        min-width: 300px;
+    }
+
+    /* Dark mode color theme dropdown */
+    .dark #color-theme-dropdown {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border) / 0.5);
+        box-shadow: var(--shadow-xl);
+    }
+
+    /* Dropdown Items */
+    #profile-dropdown a,
+    .color-theme-btn {
+        transition: all 0.2s ease;
+        border-radius: var(--radius);
+    }
+
+    #profile-dropdown a:hover,
+    .color-theme-btn:hover {
+        background: hsl(var(--accent));
+        transform: translateY(-1px);
+    }
+
+    /* Ensure dropdowns appear above everything */
+    #profile-dropdown,
+    #color-theme-dropdown {
+        z-index: 1000 !important;
+    }
+
+    /* Dropdown header styles */
+    #color-theme-dropdown h3 {
+        color: hsl(var(--foreground));
+        font-weight: 600;
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Color theme buttons container */
+    #color-theme-dropdown .grid {
+        gap: 0.5rem;
+    }
+
+    /* Individual color theme button */
+    .color-theme-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0.5rem;
+        border-radius: var(--radius);
+        transition: all 0.2s ease;
+    }
+
+    .color-theme-btn:hover {
+        background: hsl(var(--accent));
+    }
+
+    .color-theme-btn span {
+        color: hsl(var(--foreground));
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Profile dropdown items */
+    #profile-dropdown .px-3.py-2 {
+        color: hsl(var(--foreground));
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-radius: var(--radius);
+        transition: all 0.2s ease;
+    }
+
+    #profile-dropdown .px-3.py-2:hover {
+        background: hsl(var(--accent));
+        color: hsl(var(--foreground));
+    }
+
+    /* Destructive items in profile dropdown */
+    #profile-dropdown .text-destructive {
+        color: hsl(var(--destructive));
+    }
+
+    #profile-dropdown .text-destructive:hover {
+        background: hsl(var(--destructive-light));
+        color: hsl(var(--destructive));
+    }
+
+    /* Ensure dropdowns have proper spacing */
+    #profile-dropdown .space-y-1 > * + * {
+        margin-top: 0.25rem;
+    }
+
+    /* Backdrop for dropdowns when open */
+    .dropdown-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: transparent;
+        z-index: 999;
+    }
+
+    /* Mobile responsive adjustments */
+    @media (max-width: 768px) {
+        #color-theme-dropdown {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 320px;
+            margin: 0;
+        }
+        
+        #profile-dropdown {
+            position: fixed;
+            bottom: auto;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 280px;
+            margin: 0;
+        }
+    }
+
+    /* Animation for dropdowns */
+    @keyframes dropdownFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    #profile-dropdown:not(.hidden),
+    #color-theme-dropdown:not(.hidden) {
+        animation: dropdownFadeIn 0.2s ease-out;
+    }
+
+    /* Ensure proper z-index stacking */
+    header {
+        z-index: 20;
+    }
+
+    .sidebar {
+        z-index: 40;
+    }
+
+    #profile-dropdown,
+    #color-theme-dropdown {
+        z-index: 1000;
+    }
+
+    #drawer-overlay {
+        z-index: 30;
+    }
+
+    /* Enhanced hover states for better UX */
+    #profile-menu-btn:hover,
+    #color-theme-toggle:hover {
+        background: hsl(var(--accent));
+    }
+
+    /* Active state for profile menu */
+    #profile-menu-btn:focus + #profile-dropdown,
+    #color-theme-toggle:focus + #color-theme-dropdown {
+        display: block;
+    }
     </style>
 
 
@@ -1627,7 +2530,29 @@
         </svg>
         <span>Dashboard</span>
     </a>
+
+        <!-- Company Menu -->
+    <a href="{% url 'core:company_list' %}" class="nav-item {% if 'company' in request.resolver_match.url_name %}active{% endif %}">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+        </svg>
+        <span>Company</span>
+    </a>
+        <!-- Project Menu -->
+    <a href="{% url 'core:project_list' %}" class="nav-item {% if 'project' in request.resolver_match.url_name %}active{% endif %}">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
+        </svg>
+        <span>Project</span>
+    </a>
     
+    <!-- Task Menu -->
+    <a href="{% url 'core:task_list' %}" class="nav-item {% if 'task' in request.resolver_match.url_name %}active{% endif %}">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+        </svg>
+        <span>Task</span>
+    </a>
     <!-- Device Menu -->
     <a href="{% url 'zkteco:device_list' %}" class="nav-item {% if 'device' in request.resolver_match.url_name %}active{% endif %}">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1963,296 +2888,7 @@
         <!-- Main Content Area -->
         <main class="p-6 mobile-padding">
             {% block content %}
-            <!-- Demo Content Showcasing All Design Elements -->
-            <div class="space-y-6">
-                <!-- Stats Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="card stat-card p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <p class="text-sm text-muted-foreground">Total Employees</p>
-                                <h3 class="text-2xl font-bold text-foreground mt-1">1,234</h3>
-                            </div>
-                            <div class="w-12 h-12 rounded-full bg-primary-light flex items-center justify-center">
-                                <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-2 text-sm">
-                            <span class="badge badge-success">+12%</span>
-                            <span class="text-muted-foreground">from last month</span>
-                        </div>
-                    </div>
-                    
-                    <div class="card stat-card p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <p class="text-sm text-muted-foreground">Present Today</p>
-                                <h3 class="text-2xl font-bold text-foreground mt-1">1,089</h3>
-                            </div>
-                            <div class="w-12 h-12 rounded-full bg-success-light flex items-center justify-center">
-                                <svg class="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-2 text-sm">
-                            <span class="badge badge-success">88.2%</span>
-                            <span class="text-muted-foreground">attendance rate</span>
-                        </div>
-                    </div>
-                    
-                    <div class="card stat-card p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <p class="text-sm text-muted-foreground">On Leave</p>
-                                <h3 class="text-2xl font-bold text-foreground mt-1">89</h3>
-                            </div>
-                            <div class="w-12 h-12 rounded-full bg-warning-light flex items-center justify-center">
-                                <svg class="w-6 h-6 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-2 text-sm">
-                            <span class="badge badge-warning">7.2%</span>
-                            <span class="text-muted-foreground">of workforce</span>
-                        </div>
-                    </div>
-                    
-                    <div class="card stat-card p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <p class="text-sm text-muted-foreground">Pending Tasks</p>
-                                <h3 class="text-2xl font-bold text-foreground mt-1">56</h3>
-                            </div>
-                            <div class="w-12 h-12 rounded-full bg-info-light flex items-center justify-center">
-                                <svg class="w-6 h-6 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-2 text-sm">
-                            <span class="badge badge-info">-8</span>
-                            <span class="text-muted-foreground">from yesterday</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Table Example -->
-                <div class="card-lg p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <div>
-                            <h3 class="text-lg font-semibold text-foreground">Recent Employees</h3>
-                            <p class="text-sm text-muted-foreground mt-1">Latest employee registrations</p>
-                        </div>
-                        <button class="btn btn-outline">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                            </svg>
-                            Add Employee
-                        </button>
-                    </div>
-                    
-                    <div class="overflow-x-auto">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Employee</th>
-                                    <th>Department</th>
-                                    <th>Position</th>
-                                    <th>Status</th>
-                                    <th>Join Date</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <div class="flex items-center space-x-3">
-                                            <img src="https://ui-avatars.com/api/?name=John+Doe&background=random" alt="John Doe" class="w-10 h-10 rounded-full">
-                                            <div>
-                                                <p class="font-medium">John Doe</p>
-                                                <p class="text-sm text-muted-foreground">john@example.com</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>Engineering</td>
-                                    <td>Senior Developer</td>
-                                    <td><span class="badge badge-success">Active</span></td>
-                                    <td>Jan 15, 2024</td>
-                                    <td>
-                                        <div class="flex items-center space-x-2">
-                                            <button class="btn-ghost p-2" title="Edit">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                                </svg>
-                                            </button>
-                                            <button class="btn-ghost p-2" title="Delete">
-                                                <svg class="w-4 h-4 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="flex items-center space-x-3">
-                                            <img src="https://ui-avatars.com/api/?name=Jane+Smith&background=random" alt="Jane Smith" class="w-10 h-10 rounded-full">
-                                            <div>
-                                                <p class="font-medium">Jane Smith</p>
-                                                <p class="text-sm text-muted-foreground">jane@example.com</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>Marketing</td>
-                                    <td>Marketing Manager</td>
-                                    <td><span class="badge badge-success">Active</span></td>
-                                    <td>Feb 20, 2024</td>
-                                    <td>
-                                        <div class="flex items-center space-x-2">
-                                            <button class="btn-ghost p-2" title="Edit">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                                </svg>
-                                            </button>
-                                            <button class="btn-ghost p-2" title="Delete">
-                                                <svg class="w-4 h-4 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="flex items-center space-x-3">
-                                            <img src="https://ui-avatars.com/api/?name=Mike+Johnson&background=random" alt="Mike Johnson" class="w-10 h-10 rounded-full">
-                                            <div>
-                                                <p class="font-medium">Mike Johnson</p>
-                                                <p class="text-sm text-muted-foreground">mike@example.com</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>Sales</td>
-                                    <td>Sales Executive</td>
-                                    <td><span class="badge badge-warning">On Leave</span></td>
-                                    <td>Mar 10, 2024</td>
-                                    <td>
-                                        <div class="flex items-center space-x-2">
-                                            <button class="btn-ghost p-2" title="Edit">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                                </svg>
-                                            </button>
-                                            <button class="btn-ghost p-2" title="Delete">
-                                                <svg class="w-4 h-4 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Form Example -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="card-lg p-6">
-                        <h3 class="text-lg font-semibold text-foreground mb-4">Quick Form</h3>
-                        <form class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-foreground mb-2">Employee Name</label>
-                                <input type="text" class="input" placeholder="Enter full name">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-foreground mb-2">Email Address</label>
-                                <input type="email" class="input" placeholder="employee@example.com">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-foreground mb-2">Department</label>
-                                <select class="input">
-                                    <option>Select Department</option>
-                                    <option>Engineering</option>
-                                    <option>Marketing</option>
-                                    <option>Sales</option>
-                                    <option>HR</option>
-                                </select>
-                            </div>
-                            <div class="flex space-x-3">
-                                <button type="submit" class="btn btn-primary flex-1">Submit</button>
-                                <button type="reset" class="btn btn-secondary flex-1">Reset</button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- Progress & Badges -->
-                    <div class="card-lg p-6">
-                        <h3 class="text-lg font-semibold text-foreground mb-4">Project Progress</h3>
-                        <div class="space-y-6">
-                            <div>
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-sm font-medium">Website Redesign</span>
-                                    <span class="badge badge-primary">In Progress</span>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="progress-bar-fill" style="width: 75%"></div>
-                                </div>
-                                <p class="text-xs text-muted-foreground mt-1">75% Complete</p>
-                            </div>
-                            
-                            <div>
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-sm font-medium">Mobile App</span>
-                                    <span class="badge badge-success">Completed</span>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="progress-bar-fill" style="width: 100%"></div>
-                                </div>
-                                <p class="text-xs text-muted-foreground mt-1">100% Complete</p>
-                            </div>
-                            
-                            <div>
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-sm font-medium">API Integration</span>
-                                    <span class="badge badge-warning">Pending</span>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="progress-bar-fill" style="width: 30%"></div>
-                                </div>
-                                <p class="text-xs text-muted-foreground mt-1">30% Complete</p>
-                            </div>
-                            
-                            <div>
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-sm font-medium">Database Migration</span>
-                                    <span class="badge badge-info">Planning</span>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="progress-bar-fill" style="width: 10%"></div>
-                                </div>
-                                <p class="text-xs text-muted-foreground mt-1">10% Complete</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Button Variations -->
-                <div class="card-lg p-6">
-                    <h3 class="text-lg font-semibold text-foreground mb-4">Button Styles</h3>
-                    <div class="flex flex-wrap gap-3">
-                        <button class="btn btn-primary">Primary</button>
-                        <button class="btn btn-secondary">Secondary</button>
-                        <button class="btn btn-outline">Outline</button>
-                        <button class="btn btn-ghost">Ghost</button>
-                        <button class="btn btn-primary" disabled>Disabled</button>
-                    </div>
-                </div>
-            </div>
+       
             {% endblock %}
         </main>
     </div>
@@ -2301,9 +2937,70 @@
     <!-- Toast Container -->
     <div id="toast-container" class="toast-container"></div>
 
-    <!-- FAB Button -->
+!-- FAB Backdrop -->
+    <div id="fab-backdrop" class="fab-backdrop"></div>
+
+    <!-- FAB Menu -->
+    <div id="fab-menu" class="fab-menu">
+        <!-- Menu Items (in reverse order for stacking) -->
+        <div class="fab-menu-item" style="bottom: 380px;">
+            <span class="fab-label">Submit Report</span>
+            <button class="fab-action report" onclick="handleFabAction('report')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="fab-menu-item" style="bottom: 320px;">
+            <span class="fab-label">Create Task</span>
+            <button class="fab-action task" onclick="handleFabAction('task')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="fab-menu-item" style="bottom: 260px;">
+            <span class="fab-label">Mark Attendance</span>
+            <button class="fab-action attendance" onclick="handleFabAction('attendance')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="fab-menu-item" style="bottom: 200px;">
+            <span class="fab-label">Post Notice</span>
+            <button class="fab-action notice" onclick="handleFabAction('notice')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="fab-menu-item" style="bottom: 140px;">
+            <span class="fab-label">Add Holiday</span>
+            <button class="fab-action holiday" onclick="handleFabAction('holiday')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="fab-menu-item" style="bottom: 80px;">
+            <span class="fab-label">Apply Leave</span>
+            <button class="fab-action leave" onclick="handleFabAction('leave')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main FAB Button -->
     <button id="fab" class="fab">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
     </button>
@@ -2406,52 +3103,10 @@
             });
         }
         
-        // Toast notification system
-        function showToast(message, type = 'success', duration = 3000) {
-            const container = document.getElementById('toast-container');
-            const toastId = 'toast-' + Date.now();
-            
-            const icons = {
-                success: `<svg class="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`,
-                error: `<svg class="w-5 h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>`,
-                warning: `<svg class="w-5 h-5 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-1.732-1.333-2.5 0L4.268 16c-.77 1.333.192 3 1.732 3z"/></svg>`,
-                info: `<svg class="w-5 h-5 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
-            };
-            
-            const toast = document.createElement('div');
-            toast.id = toastId;
-            toast.className = 'toast';
-            toast.innerHTML = `
-                <div class="flex items-center space-x-3">
-                    ${icons[type]}
-                    <p class="flex-1 text-sm font-medium text-foreground">${message}</p>
-                    <button onclick="hideToast('${toastId}')" class="text-muted-foreground hover:text-foreground">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
-                </div>
-            `;
-            
-            container.appendChild(toast);
-            setTimeout(() => toast.classList.add('show'), 10);
-            setTimeout(() => hideToast(toastId), duration);
-        }
+
         
-        function hideToast(toastId) {
-            const toast = document.getElementById(toastId);
-            if (toast) {
-                toast.classList.remove('show');
-                toast.classList.add('hide');
-                setTimeout(() => toast.remove(), 300);
-            }
-        }
+  
         
-        // FAB functionality
-        const fab = document.getElementById('fab');
-        fab.addEventListener('click', () => {
-            showToast('Quick action menu coming soon!', 'info');
-        });
         
         // Close dropdowns on outside click
         document.addEventListener('click', () => {
@@ -2467,83 +3122,190 @@
             profileDropdown.addEventListener('click', (e) => e.stopPropagation());
         }
         
-        // Initialize with welcome toast
-        // setTimeout(() => {
-        //     showToast('Welcome to HRM Dashboard! 🎉', 'success', 2000);
-        // }, 500);
+
         
     </script>
+ <script>
+        // FAB Menu Functionality
+        const fab = document.getElementById('fab');
+        const fabMenu = document.getElementById('fab-menu');
+        const fabBackdrop = document.getElementById('fab-backdrop');
+        const fabMenuItems = document.querySelectorAll('.fab-menu-item');
+        let isMenuOpen = false;
 
-<script>
-    // Enhanced Toast System
-    function showToast(message, type = 'success', duration = 5000) {
-        const container = document.getElementById('toast-container');
-        const toastId = 'toast-' + Date.now();
-        
-        const typeConfig = {
-            success: {
-                icon: `<svg class="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`,
-                bg: 'bg-success-light border-success/20'
-            },
-            error: {
-                icon: `<svg class="w-5 h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>`,
-                bg: 'bg-destructive-light border-destructive/20'
-            },
-            warning: {
-                icon: `<svg class="w-5 h-5 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-1.732-1.333-2.5 0L4.268 16c-.77 1.333.192 3 1.732 3z"/></svg>`,
-                bg: 'bg-warning-light border-warning/20'
-            },
-            info: {
-                icon: `<svg class="w-5 h-5 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
-                bg: 'bg-info-light border-info/20'
+        // Toggle FAB menu
+        fab.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isMenuOpen = !isMenuOpen;
+            
+            if (isMenuOpen) {
+                openFabMenu();
+            } else {
+                closeFabMenu();
             }
-        };
-        
-        const config = typeConfig[type] || typeConfig.success;
-        
-        const toast = document.createElement('div');
-        toast.id = toastId;
-        toast.className = `toast ${config.bg} border`;
-        toast.innerHTML = `
-            <div class="flex items-center space-x-3">
+        });
+
+        // Open menu
+        function openFabMenu() {
+            fab.classList.add('active');
+            fabBackdrop.classList.add('active');
+            fabMenuItems.forEach(item => {
+                item.classList.add('active');
+            });
+        }
+
+        // Close menu
+        function closeFabMenu() {
+            fab.classList.remove('active');
+            fabBackdrop.classList.remove('active');
+            fabMenuItems.forEach(item => {
+                item.classList.remove('active');
+            });
+            isMenuOpen = false;
+        }
+
+        // Close on backdrop click
+        fabBackdrop.addEventListener('click', closeFabMenu);
+
+        // Close on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && isMenuOpen) {
+                closeFabMenu();
+            }
+        });
+
+        // Handle FAB actions
+        function handleFabAction(action) {
+            closeFabMenu();
+            
+            // Action messages
+            const messages = {
+                leave: 'Opening Leave Application Form...',
+                holiday: 'Opening Holiday Management...',
+                notice: 'Opening Notice Board...',
+                attendance: 'Opening Attendance Marking...',
+                task: 'Opening Task Creation...',
+                report: 'Opening Report Submission...'
+            };
+            
+            console.log(messages[action]);
+            alert(messages[action]);
+            
+            // Here you can navigate to different pages or open modals
+            // window.location.href = `/your-app/${action}/`;
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+        }
+    </script>
+<script>
+// Modern Rich Toast System for Django
+function showToast(message, type = 'success', title = null, duration = 5000) {
+    const container = document.getElementById('toast-container');
+    const toastId = 'toast-' + Date.now();
+    
+    const typeConfig = {
+        success: {
+            icon: `<svg fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>`,
+            defaultTitle: 'Success'
+        },
+        error: {
+            icon: `<svg fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>`,
+            defaultTitle: 'Error'
+        },
+        warning: {
+            icon: `<svg fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.924-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`,
+            defaultTitle: 'Warning'
+        },
+        info: {
+            icon: `<svg fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+            defaultTitle: 'Info'
+        }
+    };
+    
+    const config = typeConfig[type] || typeConfig.success;
+    const toastTitle = title || config.defaultTitle;
+    
+    const toast = document.createElement('div');
+    toast.id = toastId;
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <div class="toast-accent"></div>
+        <div class="toast-content">
+            <div class="toast-icon">
                 ${config.icon}
-                <p class="flex-1 text-sm font-medium text-foreground">${message}</p>
-                <button onclick="hideToast('${toastId}')" class="text-muted-foreground hover:text-foreground transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
             </div>
-        `;
+            <div class="toast-text">
+                <h4 class="toast-title">${toastTitle}</h4>
+                <p class="toast-message">${message}</p>
+            </div>
+            <button class="toast-close" onclick="hideToast('${toastId}')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="toast-progress">
+            <div class="toast-progress-bar"></div>
+        </div>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Trigger show animation
+    setTimeout(() => toast.classList.add('show'), 10);
+    
+    // Progress bar animation
+    if (duration > 0) {
+        const progressBar = toast.querySelector('.toast-progress-bar');
+        progressBar.style.transition = `transform ${duration}ms linear`;
+        setTimeout(() => {
+            progressBar.style.transform = 'scaleX(0)';
+        }, 10);
         
-        container.appendChild(toast);
-        setTimeout(() => toast.classList.add('show'), 10);
-        
-        if (duration > 0) {
-            setTimeout(() => hideToast(toastId), duration);
-        }
+        // Auto hide
+        setTimeout(() => hideToast(toastId), duration);
     }
+}
 
-    function hideToast(toastId) {
-        const toast = document.getElementById(toastId);
-        if (toast) {
-            toast.classList.remove('show');
-            toast.classList.add('hide');
-            setTimeout(() => toast.remove(), 300);
-        }
+function hideToast(toastId) {
+    const toast = document.getElementById(toastId);
+    if (toast) {
+        toast.classList.remove('show');
+        toast.classList.add('hide');
+        setTimeout(() => toast.remove(), 400);
     }
+}
 
-    // Show Django messages as toasts
-    function showDjangoMessages() {
-        {% if messages %}
-            {% for message in messages %}
-                showToast("{{ message|escapejs }}", "{{ message.tags }}", 5000);
-            {% endfor %}
-        {% endif %}
-    }
+// Helper function to show Django messages
+function showDjangoMessages() {
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == 'success' %}
+                showToast("{{ message|escapejs }}", "success", "Success", 5000);
+            {% elif message.tags == 'error' or message.tags == 'danger' %}
+                showToast("{{ message|escapejs }}", "error", "Error", 5000);
+            {% elif message.tags == 'warning' %}
+                showToast("{{ message|escapejs }}", "warning", "Warning", 5000);
+            {% elif message.tags == 'info' %}
+                showToast("{{ message|escapejs }}", "info", "Info", 5000);
+            {% else %}
+                showToast("{{ message|escapejs }}", "info", "Notification", 5000);
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+}
+
+// Auto-show messages on page load
+document.addEventListener('DOMContentLoaded', function() {
+    showDjangoMessages();
+});  
+
 
 </script>
-        {% block extra_js %}{% endblock %}
+{% block extra_js %}{% endblock %}
 
 </body>
 </html>

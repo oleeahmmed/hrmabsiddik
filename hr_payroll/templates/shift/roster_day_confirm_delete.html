@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 
-{% block title %}Delete Shift - {{ object.name }}{% endblock %}
+{% block title %}Delete Roster Day - {{ object.roster_assignment.employee.name }}{% endblock %}
 
-{% block page_title %}Delete Shift{% endblock %}
-{% block page_subtitle %}Are you sure you want to delete this shift?{% endblock %}
+{% block page_title %}Delete Roster Day{% endblock %}
+{% block page_subtitle %}Are you sure you want to delete this roster day?{% endblock %}
 
 {% block content %}
 <div class="max-w-2xl mx-auto">
@@ -18,23 +18,25 @@
             </div>
 
             <!-- Warning Message -->
-            <h3 class="text-xl font-bold text-foreground mb-2">Delete {{ object.name }}?</h3>
+            <h3 class="text-xl font-bold text-foreground mb-2">Delete Roster Day?</h3>
             <p class="text-muted-foreground mb-6">
-                This action cannot be undone. This will permanently delete the shift 
-                <span class="font-semibold text-foreground">"{{ object.name }}"</span> and all associated data.
+                This action cannot be undone. This will permanently delete the roster day assignment for 
+                <span class="font-semibold text-foreground">"{{ object.roster_assignment.employee.name }}"</span> on 
+                <span class="font-semibold text-foreground">"{{ object.date|date:'M d, Y' }}"</span>.
             </p>
 
-            <!-- Shift Details -->
+            <!-- Roster Day Details -->
             <div class="bg-muted/30 border border-border rounded-lg p-4 mb-6">
                 <div class="text-sm text-muted-foreground">
-                    <div class="font-medium text-foreground">{{ object.start_time|time:"H:i" }} - {{ object.end_time|time:"H:i" }}</div>
-                    <div>Duration: {{ object.duration }} • Break: {{ object.break_time }}min</div>
+                    <div class="font-medium text-foreground">{{ object.roster_assignment.employee.name }} ({{ object.roster_assignment.employee.employee_id }})</div>
+                    <div>Date: {{ object.date|date:"M d, Y" }} • Shift: {{ object.shift.name }}</div>
+                    <div>Roster: {{ object.roster_assignment.roster.name }}</div>
                 </div>
             </div>
 
             <!-- Action Buttons -->
             <div class="flex items-center justify-center space-x-4">
-                <a href="{% url 'zkteco:shift_list' %}" class="btn btn-outline">
+                <a href="{% url 'zkteco:roster_day_list' %}" class="btn btn-outline">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
@@ -46,7 +48,7 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                         </svg>
-                        Delete Shift
+                        Delete Roster Day
                     </button>
                 </form>
             </div>

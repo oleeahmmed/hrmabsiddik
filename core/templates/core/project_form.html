@@ -291,9 +291,8 @@
             const today = new Date().toISOString().split('T')[0];
             startDateInput.value = today;
         }
-
-        // Show Django messages as toasts
-        showDjangoMessages();
+        
+        // Django messages will be shown automatically by base.html
     });
 </script>
 {% endblock %}

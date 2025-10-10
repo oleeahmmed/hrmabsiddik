@@ -34,7 +34,7 @@ class LeaveFilterForm(forms.Form):
     )
     
     leave_type = forms.ModelChoiceField(
-        queryset=None,  # Will be set in __init__
+        queryset=LeaveType.objects.none(),  # Start with empty queryset
         required=False,
         empty_label=_('All Leave Types'),
         widget=forms.Select(attrs={
@@ -74,11 +74,14 @@ class LeaveFilterForm(forms.Form):
         employee = kwargs.pop('employee', None)
         super().__init__(*args, **kwargs)
         
+        # Set leave_type queryset based on employee or use all active leave types
         if employee:
             self.fields['leave_type'].queryset = LeaveType.objects.filter(
                 company=employee.company
             ).order_by('name')
-
+        else:
+            # Fallback for cases where no employee is provided
+            self.fields['leave_type'].queryset = LeaveType.objects.all().order_by('name')
 
 class LeaveApplicationForm(forms.ModelForm):
     """ModelForm for LeaveApplication with proper validation"""
@@ -190,7 +193,6 @@ class LeaveApplicationForm(forms.ModelForm):
         
         return cleaned_data
 
-
 class LeaveListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = LeaveApplication
     template_name = 'leave/leave_list.html'
@@ -216,6 +218,7 @@ class LeaveListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
             employee = Employee.objects.get(user=self.request.user)
             self.filter_form = LeaveFilterForm(self.request.GET, employee=employee)
         except:
+            # If employee doesn't exist, create form without employee context
             self.filter_form = LeaveFilterForm(self.request.GET)
         
         if self.filter_form.is_valid():
@@ -262,8 +265,6 @@ class LeaveListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
                 context['leave_balances'] = []
         
         return context
-
-
 class LeaveCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     model = LeaveApplication
     form_class = LeaveApplicationForm

@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 
-{% block title %}Delete Shift - {{ object.name }}{% endblock %}
+{% block title %}Delete Company - {{ object.name }}{% endblock %}
 
-{% block page_title %}Delete Shift{% endblock %}
-{% block page_subtitle %}Are you sure you want to delete this shift?{% endblock %}
+{% block page_title %}Delete Company{% endblock %}
+{% block page_subtitle %}Are you sure you want to delete this company?{% endblock %}
 
 {% block content %}
 <div class="max-w-2xl mx-auto">
@@ -20,21 +20,35 @@
             <!-- Warning Message -->
             <h3 class="text-xl font-bold text-foreground mb-2">Delete {{ object.name }}?</h3>
             <p class="text-muted-foreground mb-6">
-                This action cannot be undone. This will permanently delete the shift 
+                This action cannot be undone. This will permanently delete the company 
                 <span class="font-semibold text-foreground">"{{ object.name }}"</span> and all associated data.
             </p>
 
-            <!-- Shift Details -->
-            <div class="bg-muted/30 border border-border rounded-lg p-4 mb-6">
-                <div class="text-sm text-muted-foreground">
-                    <div class="font-medium text-foreground">{{ object.start_time|time:"H:i" }} - {{ object.end_time|time:"H:i" }}</div>
-                    <div>Duration: {{ object.duration }} • Break: {{ object.break_time }}min</div>
+            <!-- Impact Warning -->
+            {% if project_count > 0 or task_count > 0 %}
+            <div class="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-6">
+                <div class="flex items-start space-x-3">
+                    <svg class="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                    <div class="text-left">
+                        <p class="text-sm font-medium text-destructive mb-2">This will also affect:</p>
+                        <ul class="text-sm text-destructive space-y-1">
+                            {% if project_count > 0 %}
+                            <li>• {{ project_count }} project{{ project_count|pluralize }} associated with this company</li>
+                            {% endif %}
+                            {% if task_count > 0 %}
+                            <li>• {{ task_count }} task{{ task_count|pluralize }} associated with this company</li>
+                            {% endif %}
+                        </ul>
+                    </div>
                 </div>
             </div>
+            {% endif %}
 
             <!-- Action Buttons -->
             <div class="flex items-center justify-center space-x-4">
-                <a href="{% url 'zkteco:shift_list' %}" class="btn btn-outline">
+                <a href="{% url 'core:company_detail' object.pk %}" class="btn btn-outline">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
@@ -46,7 +60,7 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                         </svg>
-                        Delete Shift
+                        Delete Company
                     </button>
                 </form>
             </div>

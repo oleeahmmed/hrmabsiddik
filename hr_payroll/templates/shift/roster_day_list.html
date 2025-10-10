@@ -1,77 +1,85 @@
 {% extends 'base.html' %}
-{% load static %}
 
-{% block title %}Location Management - {{ block.super }}{% endblock %}
-{% block page_title %}Location Management{% endblock %}
-{% block page_subtitle %}Manage attendance locations and geographical boundaries{% endblock %}
+{% block title %}Roster Days - {{ block.super }}{% endblock %}
+{% block page_title %}Roster Day Management{% endblock %}
+{% block page_subtitle %}Manage and track all roster day assignments{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
-    <!-- Location Statistics -->
+    <!-- Roster Day Statistics -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <!-- Total Locations Card -->
+        <!-- Total Roster Days Card -->
         <div class="relative overflow-hidden rounded-2xl border border-blue-200 dark:border-blue-900 bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-900 dark:to-blue-950 p-4 md:p-6 text-white shadow-lg">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs md:text-sm font-medium opacity-90">Total Locations</p>
-                    <p class="text-xl md:text-3xl font-bold">{{ total_locations }}</p>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Total Roster Days</p>
+                    <p class="text-xl md:text-3xl font-bold">{{ total_roster_days }}</p>
                 </div>
                 <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
                     <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                 </div>
             </div>
         </div>
 
-        <!-- Active Locations Card -->
+        <!-- Date Range Card -->
         <div class="relative overflow-hidden rounded-2xl border border-green-200 dark:border-green-900 bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-900 dark:to-emerald-950 p-4 md:p-6 text-white shadow-lg">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs md:text-sm font-medium opacity-90">Active Locations</p>
-                    <p class="text-xl md:text-3xl font-bold">{{ active_locations }}</p>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Date Range</p>
+                    <p class="text-lg md:text-xl font-bold">
+                        {% if date_range_start and date_range_end %}
+                            {{ date_range_start|date:"M d" }} - {{ date_range_end|date:"M d" }}
+                        {% else %}
+                            No data
+                        {% endif %}
+                    </p>
                 </div>
                 <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
                     <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                 </div>
             </div>
         </div>
 
-        <!-- Inactive Locations Card -->
-        <div class="relative overflow-hidden rounded-2xl border border-red-200 dark:border-red-900 bg-gradient-to-br from-red-500 to-rose-600 dark:from-red-900 dark:to-rose-950 p-4 md:p-6 text-white shadow-lg">
+        <!-- Active Employees Card -->
+        <div class="relative overflow-hidden rounded-2xl border border-purple-200 dark:border-purple-900 bg-gradient-to-br from-purple-500 to-violet-600 dark:from-purple-900 dark:to-violet-950 p-4 md:p-6 text-white shadow-lg">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs md:text-sm font-medium opacity-90">Inactive Locations</p>
-                    <p class="text-xl md:text-3xl font-bold">{{ inactive_locations }}</p>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Unique Employees</p>
+                    <p class="text-xl md:text-3xl font-bold">
+                        {{ roster_days.values|dictsort:"roster_assignment.employee.id"|length }}
+                    </p>
                 </div>
                 <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
                     <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                     </svg>
                 </div>
             </div>
         </div>
 
-        <!-- User Assignments Card -->
+        <!-- Total Shifts Card -->
         <div class="relative overflow-hidden rounded-2xl border border-orange-200 dark:border-orange-900 bg-gradient-to-br from-orange-500 to-amber-600 dark:from-orange-900 dark:to-amber-950 p-4 md:p-6 text-white shadow-lg">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs md:text-sm font-medium opacity-90">User Assignments</p>
-                    <p class="text-xl md:text-3xl font-bold">{{ total_assignments }}</p>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Unique Shifts</p>
+                    <p class="text-xl md:text-3xl font-bold">
+                        {{ roster_days.values|dictsort:"shift.id"|length }}
+                    </p>
                 </div>
                 <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
                     <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Locations Table Card -->
+    <!-- Roster Days Table Card -->
     <div class="card-lg border-2 border-transparent bg-gradient-to-r from-primary/5 to-primary/3 dark:from-primary/10 dark:to-primary/5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 animate-pulse-border">
         <!-- Table Header with Actions -->
         <div class="card-header border-b-0 bg-transparent">
@@ -80,13 +88,12 @@
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                         <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-xl font-bold text-foreground">All Locations</h3>
-                        <p class="text-sm text-muted-foreground">Manage and organize attendance locations</p>
+                        <h3 class="text-xl font-bold text-foreground">All Roster Days</h3>
+                        <p class="text-sm text-muted-foreground">Manage daily roster assignments</p>
                     </div>
                 </div>
 
@@ -100,13 +107,13 @@
                         Filter
                     </button>
 
-                    <!-- Create Location Button -->
-                    {% if perms.hr_payroll.add_location %}
-                    <a href="{% url 'zkteco:location_create' %}" class="btn btn-primary btn-sm flex items-center gap-2">
+                    <!-- Create Roster Day Button -->
+                    {% if perms.hr_payroll.add_rosterday %}
+                    <a href="{% url 'zkteco:roster_day_create' %}" class="btn btn-primary btn-sm flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                         </svg>
-                        Add Location
+                        Create Roster Day
                     </a>
                     {% endif %}
                 </div>
@@ -117,27 +124,29 @@
         <div id="filter-section" class="hidden border-t border-border/30 bg-gradient-to-r from-muted/5 to-muted/10">
             <div class="p-6">
                 <form method="get" class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <!-- Search -->
                         <div class="md:col-span-2">
-                            <label class="form-label">Search Locations</label>
+                            <label class="form-label">Search Roster Days</label>
                             <div class="relative">
                                 <input type="text" name="search" value="{{ request.GET.search|default:'' }}" 
-                                       placeholder="Search by name or address..." class="input pr-10 w-full">
+                                       placeholder="Search by employee, roster, or shift..." class="input pr-10 w-full">
                                 <svg class="absolute right-3 top-2.5 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                                 </svg>
                             </div>
                         </div>
 
-                        <!-- Status Filter -->
+                        <!-- Date From -->
                         <div>
-                            <label class="form-label">Status</label>
-                            <select name="is_active" class="input">
-                                <option value="">All Status</option>
-                                <option value="True" {% if request.GET.is_active == 'True' %}selected{% endif %}>Active</option>
-                                <option value="False" {% if request.GET.is_active == 'False' %}selected{% endif %}>Inactive</option>
-                            </select>
+                            <label class="form-label">From Date</label>
+                            <input type="date" name="date_from" value="{{ request.GET.date_from|default:'' }}" class="input">
+                        </div>
+
+                        <!-- Date To -->
+                        <div>
+                            <label class="form-label">To Date</label>
+                            <input type="date" name="date_to" value="{{ request.GET.date_to|default:'' }}" class="input">
                         </div>
                     </div>
 
@@ -158,96 +167,78 @@
             <table class="w-full">
                 <thead>
                     <tr class="bg-gradient-to-r from-primary to-primary-hover border-b border-primary/30" style="background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-hover)) 100%);">
-                        <th class="text-left p-4 text-sm font-semibold text-white">Location Info</th>
-                        <th class="text-left p-4 text-sm font-semibold text-white">Address</th>
-                        <th class="text-left p-4 text-sm font-semibold text-white">Coordinates</th>
-                        <th class="text-left p-4 text-sm font-semibold text-white">Radius</th>
-                        <th class="text-left p-4 text-sm font-semibold text-white">Status</th>
+                        <th class="text-left p-4 text-sm font-semibold text-white">Employee</th>
+                        <th class="text-left p-4 text-sm font-semibold text-white">Roster</th>
+                        <th class="text-left p-4 text-sm font-semibold text-white">Date</th>
+                        <th class="text-left p-4 text-sm font-semibold text-white">Shift</th>
+                        <th class="text-left p-4 text-sm font-semibold text-white">Shift Time</th>
                         <th class="text-center p-4 text-sm font-semibold text-white">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for location in locations %}
+                    {% for roster_day in roster_days %}
                     <tr class="border-b border-border hover:bg-accent/50 transition-colors group">
-                        <!-- Location Info -->
+                        <!-- Employee -->
                         <td class="p-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                                     <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-medium text-foreground group-hover:text-primary transition-colors">{{ location.name }}</div>
-                                    <div class="text-xs text-muted-foreground">ID: {{ location.id }}</div>
+                                    <div class="font-medium text-foreground group-hover:text-primary transition-colors">
+                                        {{ roster_day.roster_assignment.employee.name }}
+                                    </div>
+                                    <div class="text-xs text-muted-foreground">{{ roster_day.roster_assignment.employee.employee_id }}</div>
                                 </div>
                             </div>
                         </td>
                         
-                        <!-- Address -->
+                        <!-- Roster -->
                         <td class="p-4">
-                            <div class="text-sm text-foreground max-w-xs" title="{{ location.address }}">
-                                {{ location.address|default:"No address provided" }}
+                            <div class="text-sm text-foreground font-medium">
+                                {{ roster_day.roster_assignment.roster.name }}
+                            </div>
+                            <div class="text-xs text-muted-foreground">
+                                {{ roster_day.roster_assignment.roster.start_date|date:"M d" }} - {{ roster_day.roster_assignment.roster.end_date|date:"M d" }}
                             </div>
                         </td>
                         
-                        <!-- Coordinates -->
-                        <td class="p-4">
-                            <div class="text-sm font-mono text-foreground">
-                                <div>{{ location.latitude|floatformat:6 }}°</div>
-                                <div>{{ location.longitude|floatformat:6 }}°</div>
-                            </div>
+                        <!-- Date -->
+                        <td class="p-4 text-sm text-foreground">
+                            <div class="font-medium">{{ roster_day.date|date:"M d, Y" }}</div>
+                            <div class="text-xs text-muted-foreground">{{ roster_day.date|date:"l" }}</div>
                         </td>
                         
-                        <!-- Radius -->
-                        <td class="p-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                                {{ location.radius }}m
-                            </span>
+                        <!-- Shift -->
+                        <td class="p-4 text-sm text-foreground">
+                            {{ roster_day.shift.name }}
                         </td>
                         
-                        <!-- Status -->
-                        <td class="p-4">
-                            {% if location.is_active %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                                Active
-                            </span>
-                            {% else %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
-                                Inactive
-                            </span>
-                            {% endif %}
+                        <!-- Shift Time -->
+                        <td class="p-4 text-sm text-foreground">
+                            {{ roster_day.shift.start_time|time:"H:i" }} - {{ roster_day.shift.end_time|time:"H:i" }}
                         </td>
                         
                         <!-- Actions -->
                         <td class="p-4">
                             <div class="flex items-center justify-center gap-1">
-                                <a href="{% url 'zkteco:location_detail' location.pk %}" class="btn-ghost p-2 rounded hover:bg-accent transition-colors" title="View Details">
+                                <a href="{% url 'zkteco:roster_day_detail' roster_day.pk %}" class="btn-ghost p-2 rounded hover:bg-accent transition-colors" title="View">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                     </svg>
                                 </a>
-                                
-                                {% if perms.hr_payroll.change_location %}
-                                <a href="{% url 'zkteco:location_update' location.pk %}" class="btn-ghost p-2 rounded hover:bg-accent transition-colors" title="Edit Location">
+                                {% if perms.hr_payroll.change_rosterday %}
+                                <a href="{% url 'zkteco:roster_day_update' roster_day.pk %}" class="btn-ghost p-2 rounded hover:bg-accent transition-colors" title="Edit">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                 </a>
                                 {% endif %}
-
-                                <button onclick="showLocationOnMap({{ location.latitude }}, {{ location.longitude }}, '{{ location.name|escapejs }}', {{ location.radius }})" 
-                                        class="btn-ghost p-2 rounded hover:bg-accent transition-colors" title="View on Map">
-                                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                                    </svg>
-                                </button>
-                                
-                                {% if perms.hr_payroll.delete_location %}
-                                <a href="{% url 'zkteco:location_delete' location.pk %}" 
-                                   class="btn-ghost p-2 rounded hover:bg-destructive-light hover:text-destructive transition-colors" title="Delete Location">
+                                {% if perms.hr_payroll.delete_rosterday %}
+                                <a href="{% url 'zkteco:roster_day_delete' roster_day.pk %}" class="btn-ghost p-2 rounded hover:bg-destructive-light hover:text-destructive transition-colors" title="Delete">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                     </svg>
@@ -262,17 +253,16 @@
                             <div class="flex flex-col items-center justify-center space-y-3">
                                 <div class="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
                                     <svg class="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                     </svg>
                                 </div>
                                 <div class="text-center">
-                                    <p class="text-foreground font-medium">No locations found</p>
-                                    <p class="text-sm text-muted-foreground mt-1">Get started by creating your first location</p>
+                                    <p class="text-foreground font-medium">No roster days found</p>
+                                    <p class="text-sm text-muted-foreground mt-1">Get started by creating your first roster day</p>
                                 </div>
-                                {% if perms.hr_payroll.add_location %}
-                                <a href="{% url 'zkteco:location_create' %}" class="btn btn-primary mt-2">
-                                    Create First Location
+                                {% if perms.hr_payroll.add_rosterday %}
+                                <a href="{% url 'zkteco:roster_day_create' %}" class="btn btn-primary mt-2">
+                                    Create Roster Day
                                 </a>
                                 {% endif %}
                             </div>
@@ -349,10 +339,5 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-
-// Map Modal function
-function showLocationOnMap(lat, lng, name, radius) {
-    alert(`Location: ${name}\nCoordinates: ${lat.toFixed(6)}°, ${lng.toFixed(6)}°\nRadius: ${radius}m\n\nMap integration would display here with actual map visualization.`);
-}
 </script>
 {% endblock %}
