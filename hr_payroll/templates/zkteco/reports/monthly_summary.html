@@ -1,8 +1,13 @@
+<!-- monthly_summary.html -->
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}মাসিক উপস্থিতি সারাংশ{% endblock %}
-
 {% block page_title %}মাসিক উপস্থিতি সারাংশ{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/print-js/1.6.0/print.min.css">
+{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
@@ -12,7 +17,7 @@
             <h1 class="text-2xl font-bold tracking-tight text-foreground">মাসিক উপস্থিতি সারাংশ</h1>
             <p class="text-muted-foreground mt-1">কর্মচারীদের মাসিক উপস্থিতি রেকর্ড এবং পরিসংখ্যান।</p>
         </div>
-        <button onclick="printReport()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-primary-foreground bg-primary hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all">
+        <button onclick="printReport()" class="btn btn-primary">
             <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
             </svg>
@@ -48,7 +53,7 @@
                 </div>
 
                 <div class="flex items-end">
-                    <button type="submit" class="w-full inline-flex justify-center items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    <button type="submit" class="btn btn-outline">
                         <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
                         </svg>
@@ -140,7 +145,7 @@
                 </div>
                 <div class="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                     <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                     </svg>
                 </div>
             </div>
@@ -152,10 +157,9 @@
     <div id="printable-area" class="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
         <!-- Print Header -->
         <div id="print-header" class="hidden print:block p-6 text-center border-b border-border">
-            <h1 class="text-2xl font-bold text-foreground mb-2">{% if company %}{{ company.name }}{% else %}কোম্পানির নাম{% endif %}</h1>
+            <h1 class="text-2xl font-bold text-foreground mb-2">কোম্পানির নাম</h1>
             <h2 class="text-xl font-semibold text-muted-foreground mb-1">মাসিক উপস্থিতি সারাংশ</h2>
-            <p class="text-sm text-muted-foreground">সময়কাল: {{ start_date|date:"d F, Y" }} - {{ end_date|date:"d F, Y" }}</p>
-            <p class="text-sm text-muted-foreground">মোট দিন: {{ summary.date_range_days }} | সাপ্তাহিক ছুটি: {{ summary.total_weekly_off_days }} | ছুটির দিন: {{ summary.total_holiday_days }}</p>
+            <p class="text-sm text-muted-foreground">তারিখ: {{ start_date|date:"d F, Y" }} - {{ end_date|date:"d F, Y" }}</p>
         </div>
 
         {% if report_data %}
@@ -166,17 +170,16 @@
                             <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">আইডি</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">নাম</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">বিভাগ</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">মোট দিন</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">উপস্থিত</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">অনুপস্থিত</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">প্রকৃত অনুপস্থিত</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">ছুটি</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">ছুটির দিন</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">সাপ্তাহিক ছুটি</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">কাজের সময়</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">ওভারটাইম</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">গড় দৈনিক ঘন্টা</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">উপস্থিতি %</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">পদবি</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">মোট দিন</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">উপস্থিত</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">অনুপস্থিত</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">ছুটি</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">ছুটির দিন</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">সাপ্তাহিক ছুটি</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">উপস্থিতি (%)</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">মোট কাজের সময়</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">মোট ওভারটাইম</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-border">
@@ -185,74 +188,26 @@
                                 <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-foreground">{{ data.employee_id }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm text-foreground">{{ data.employee_name }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm text-foreground">{{ data.department }}</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-foreground text-center">{{ data.total_days }}</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-center">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                                        {{ data.present_days }}
-                                    </span>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-foreground">{{ data.designation }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-foreground">{{ data.total_days }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-foreground">{{ data.present_days }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-foreground">{{ data.absent_days }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-foreground">{{ data.leave_days }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-foreground">{{ data.holiday_days }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-foreground">{{ data.weekly_off_days }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-foreground">
+                                    <div class="flex items-center">
+                                        <span class="mr-2">{{ data.attendance_percentage }}%</span>
+                                        <div class="w-16 bg-gray-200 rounded-full h-2">
+                                            <div class="bg-primary h-2 rounded-full" style="width: {{ data.attendance_percentage }}%"></div>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-center">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
-                                        {{ data.absent_days }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-center">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">
-                                        {{ data.actual_absent_days }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-center">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                                        {{ data.leave_days }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-center">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
-                                        {{ data.holiday_days }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-center">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400">
-                                        {{ data.weekly_off_days }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-foreground text-center font-medium">{{ data.total_work_hours }}</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-foreground text-center">{{ data.total_overtime_hours }}</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-foreground text-center">{{ data.avg_daily_hours }}</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-center">
-                                    {% if data.attendance_percentage >= 90 %}
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                                            {{ data.attendance_percentage }}%
-                                        </span>
-                                    {% elif data.attendance_percentage >= 75 %}
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
-                                            {{ data.attendance_percentage }}%
-                                        </span>
-                                    {% else %}
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
-                                            {{ data.attendance_percentage }}%
-                                        </span>
-                                    {% endif %}
-                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-foreground">{{ data.total_work_hours }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-foreground">{{ data.total_overtime_hours }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
-                    <tfoot class="bg-muted/30">
-                        <tr class="font-bold">
-                            <td colspan="3" class="px-4 py-3 text-sm text-foreground">মোট</td>
-                            <td class="px-4 py-3 text-sm text-foreground text-center">{{ summary.date_range_days }}</td>
-                            <td class="px-4 py-3 text-sm text-foreground text-center">{{ summary.total_present_days }}</td>
-                            <td class="px-4 py-3 text-sm text-foreground text-center">{{ summary.total_absent_days }}</td>
-                            <td class="px-4 py-3 text-sm text-foreground text-center">{{ summary.total_actual_absent_days }}</td>
-                            <td class="px-4 py-3 text-sm text-foreground text-center">{{ summary.total_leave_days }}</td>
-                            <td class="px-4 py-3 text-sm text-foreground text-center">{{ summary.total_holiday_days }}</td>
-                            <td class="px-4 py-3 text-sm text-foreground text-center">{{ summary.total_weekly_off_days }}</td>
-                            <td class="px-4 py-3 text-sm text-foreground text-center">{{ summary.total_work_hours }}</td>
-                            <td class="px-4 py-3 text-sm text-foreground text-center">{{ summary.total_overtime_hours }}</td>
-                            <td class="px-4 py-3 text-sm text-foreground text-center">-</td>
-                            <td class="px-4 py-3 text-sm text-foreground text-center">{{ summary.avg_attendance_percentage }}%</td>
-                        </tr>
-                    </tfoot>
                 </table>
             </div>
         {% else %}
@@ -294,22 +249,16 @@
         table {
             border-collapse: collapse;
             width: 100%;
-            font-size: 10px;
         }
         
         th, td {
             border: 1px solid #ddd;
-            padding: 6px;
+            padding: 8px;
             text-align: left;
         }
         
         th {
             background-color: #f3f4f6 !important;
-            font-weight: bold;
-        }
-        
-        tfoot {
-            background-color: #f9fafb !important;
             font-weight: bold;
         }
         
@@ -320,7 +269,6 @@
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/print-js/1.6.0/print.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/print-js/1.6.0/print.min.css">
 
 <script>
 function printReport() {
@@ -334,24 +282,21 @@ function printReport() {
             @page { size: A4 landscape; margin: 1cm; }
             body { font-family: 'Inter', sans-serif; }
             #print-header { display: block !important; text-align: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #e5e7eb; }
-            #print-header h1 { font-size: 24px; font-weight: bold; margin-bottom: 8px; color: #111827; }
+            #print-header h1 { font-size: 24px; font-weight: bold; margin-bottom: 8px; }
             #print-header h2 { font-size: 18px; font-weight: 600; margin-bottom: 4px; color: #6b7280; }
             #print-header p { font-size: 12px; color: #9ca3af; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 9px; }
-            th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
-            th { background-color: #f3f4f6 !important; font-weight: bold; color: #374151; text-transform: uppercase; font-size: 8px; }
-            tfoot { background-color: #f9fafb !important; font-weight: bold; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 12px; }
+            th { background-color: #f3f4f6 !important; font-weight: bold; color: #374151; text-transform: uppercase; font-size: 11px; }
             tr:nth-child(even) { background-color: #f9fafb; }
             tr:hover { background-color: transparent; }
-            .inline-flex { display: inline-block; padding: 2px 6px; border-radius: 9999px; font-size: 8px; font-weight: 500; }
-            .bg-green-100 { background-color: #d1fae5 !important; color: #065f46 !important; }
-            .bg-red-100 { background-color: #fee2e2 !important; color: #991b1b !important; }
-            .bg-orange-100 { background-color: #fed7aa !important; color: #9a3412 !important; }
-            .bg-blue-100 { background-color: #dbeafe !important; color: #1e40af !important; }
-            .bg-purple-100 { background-color: #e9d5ff !important; color: #6b21a8 !important; }
-            .bg-gray-100 { background-color: #f3f4f6 !important; color: #374151 !important; }
-            .bg-yellow-100 { background-color: #fef3c7 !important; color: #92400e !important; }
-            .text-center { text-align: center !important; }
+            .flex { display: flex; }
+            .items-center { align-items: center; }
+            .w-16 { width: 64px; }
+            .bg-gray-200 { background-color: #e5e7eb !important; }
+            .bg-primary { background-color: #3b82f6 !important; }
+            .h-2 { height: 8px; }
+            .rounded-full { border-radius: 9999px; }
         `,
         scanStyles: false
     });

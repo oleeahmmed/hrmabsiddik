@@ -5,536 +5,60 @@
 {% block page_title %}Attendance & Payroll Reports{% endblock %}
 
 {% block content %}
-<style>
-    /* Premium Dashboard Styles - Matching staff_dashboard.html */
-    :root {
-        --gradient-primary: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
-        --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        --gradient-info: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        --gradient-indigo: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-        --gradient-orange: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-        --gradient-cyan: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-        --gradient-fuchsia: linear-gradient(135deg, #d946ef 0%, #c026d3 100%);
-        --gradient-slate: linear-gradient(135deg, #475569 0%, #334155 100%);
-        --gradient-emerald: linear-gradient(135deg, #059669 0%, #047857 100%);
-        --gradient-blue-dark: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-    }
-    
-    .premium-card {
-        position: relative;
-        overflow: hidden;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        background: hsl(var(--card));
-        border: 1px solid hsl(var(--border));
-        border-radius: calc(var(--radius));
-        backdrop-filter: blur(10px);
-    }
-    
-    .premium-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-        border-color: hsl(var(--primary) / 0.5);
-    }
-    
-    .dark .premium-card:hover {
-        box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.4);
-    }
-    
-    .gradient-bg-primary {
-        background: var(--gradient-primary);
-    }
-    
-    .gradient-bg-success {
-        background: var(--gradient-success);
-    }
-    
-    .gradient-bg-warning {
-        background: var(--gradient-warning);
-    }
-    
-    .gradient-bg-danger {
-        background: var(--gradient-danger);
-    }
-    
-    .gradient-bg-info {
-        background: var(--gradient-info);
-    }
-    
-    .gradient-bg-indigo {
-        background: var(--gradient-indigo);
-    }
-    
-    .gradient-bg-orange {
-        background: var(--gradient-orange);
-    }
-    
-    .gradient-bg-cyan {
-        background: var(--gradient-cyan);
-    }
-    
-    .gradient-bg-fuchsia {
-        background: var(--gradient-fuchsia);
-    }
-    
-    .gradient-bg-slate {
-        background: var(--gradient-slate);
-    }
-    
-    .gradient-bg-emerald {
-        background: var(--gradient-emerald);
-    }
-    
-    .gradient-bg-blue-dark {
-        background: var(--gradient-blue-dark);
-    }
-    
-    .quick-action-btn {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        border-radius: calc(var(--radius));
-        background: hsl(var(--card));
-        border: 1px solid hsl(var(--border));
-        transition: all 0.3s ease;
-        cursor: pointer;
-        text-decoration: none;
-        height: 100%;
-    }
-    
-    .quick-action-btn:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-        border-color: hsl(var(--primary));
-        background: hsl(var(--primary) / 0.05);
-    }
-    
-    .icon-box {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 3rem;
-        height: 3rem;
-        border-radius: 12px;
-        margin-bottom: 0.75rem;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .quick-action-btn:hover .icon-box {
-        transform: scale(1.1) rotate(-5deg);
-    }
-    
-    .fade-in-up {
-        animation: fadeInUp 0.6s ease-out;
-    }
-    
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    .stagger-1 { animation-delay: 0.1s; }
-    .stagger-2 { animation-delay: 0.2s; }
-    .stagger-3 { animation-delay: 0.3s; }
-    .stagger-4 { animation-delay: 0.4s; }
-    
-    .hero-section {
-        background: linear-gradient(135deg, hsl(var(--primary) / 0.08), hsl(var(--accent) / 0.08));
-        border: 1px solid hsl(var(--border));
-        border-radius: calc(var(--radius));
-        padding: 40px;
-        margin-bottom: 40px;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .hero-section::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, hsl(var(--primary) / 0.1) 0%, transparent 70%);
-        animation: rotate 20s linear infinite;
-    }
-    
-    @keyframes rotate {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-    
-    .metric-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 6px 14px;
-        border-radius: 9999px;
-        font-size: 0.875rem;
-        font-weight: 600;
-        gap: 6px;
-    }
-    
-    .pulse-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #10b981;
-        animation: pulse-animation 2s infinite;
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-    }
-    
-    @keyframes pulse-animation {
-        0% {
-            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-        }
-        70% {
-            box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
-        }
-        100% {
-            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-        }
-    }
-    
-    .glass-effect {
-        background: hsl(var(--card) / 0.8);
-        backdrop-filter: blur(12px);
-        border: 1px solid hsl(var(--border) / 0.5);
-    }
-    
-    .section-divider {
-        margin: 3rem 0;
-        border: none;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, hsl(var(--border)), transparent);
-    }
-    
-    .section-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 24px;
-    }
-    
-    .section-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 2.5rem;
-        height: 2.5rem;
-        border-radius: 8px;
-        background: hsl(var(--primary) / 0.1);
-        color: hsl(var(--primary));
-    }
-</style>
-
-<div class="space-y-10">
-    <!-- Hero Section -->
-    <div class="hero-section fade-in-up" style="position: relative; z-index: 1;">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center" style="position: relative; z-index: 2;">
-            <div>
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="pulse-dot"></div>
-                    <span class="text-sm font-medium text-muted-foreground">Analytics Dashboard</span>
-                </div>
-                <h1 class="text-4xl font-bold text-foreground mb-3 text-balance">
-                    Reports & Analytics Center 📊
-                </h1>
-                <p class="text-lg text-muted-foreground text-pretty">
-                    Comprehensive HR analytics, payroll insights, and compliance reporting
-                </p>
-                <div class="flex items-center gap-4 mt-6">
-                    <div class="metric-badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        Data Updated
-                    </div>
-                    <div class="metric-badge" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        Last refresh: Just now
-                    </div>
-                </div>
-            </div>
-            <div class="hidden lg:block">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="glass-effect rounded-xl p-6">
-                        <p class="text-sm text-muted-foreground mb-2">Report Accuracy</p>
-                        <p class="text-3xl font-bold text-foreground">99.8%</p>
-                        <div class="trend-indicator trend-up mt-2" style="display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; gap: 4px; background: rgba(16, 185, 129, 0.1); color: #10b981;">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                            </svg>
-                            +0.2%
-                        </div>
-                    </div>
-                    <div class="glass-effect rounded-xl p-6">
-                        <p class="text-sm text-muted-foreground mb-2">Data Coverage</p>
-                        <p class="text-3xl font-bold text-foreground">100%</p>
-                        <div class="trend-indicator trend-up mt-2" style="display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; gap: 4px; background: rgba(16, 185, 129, 0.1); color: #10b981;">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                            </svg>
-                            Complete
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ==================== ATTENDANCE REPORTS SECTION ==================== -->
-    <div class="premium-card p-6 fade-in-up">
-        <div class="section-header">
-            <div class="section-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/>
-                </svg>
-            </div>
-            <div>
-                <h3 class="text-2xl font-bold text-foreground">Attendance Reports</h3>
-                <p class="text-sm text-muted-foreground">Standard attendance tracking and compliance reports</p>
-            </div>
+<div class="space-y-8">
+    <!-- Attendance Reports Section -->
+    <div class="space-y-4">
+        <div>
+            <h3 class="text-xl font-semibold text-foreground">Attendance Reports</h3>
+            <p class="text-sm text-muted-foreground">Standard attendance tracking and compliance reports</p>
         </div>
         
-        <!-- Report Card Grid: 5 columns on XL screens -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-            
-            <!-- Daily Attendance Report (Blue - Info) -->
-            <a href="{% url 'zkteco:daily_attendance_report' %}" class="quick-action-btn fade-in-up stagger-1">
-                <div class="icon-box gradient-bg-info text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M12 16h.01"/>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            <!-- Daily Attendance Report -->
+            <a href="{% url 'zkteco:daily_attendance_report' %}" class="card p-4 text-center hover:shadow-md transition-shadow">
+                <div class="w-12 h-12 mx-auto mb-2 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/>
                     </svg>
                 </div>
-                <h3 class="text-lg font-semibold text-foreground text-center">Daily Attendance</h3>
-                <p class="text-sm text-muted-foreground mt-1 text-center">Today's punch status</p>
+                <h3 class="font-medium text-foreground">Daily Attendance</h3>
+                <p class="text-xs text-muted-foreground mt-1">Today's punch status</p>
             </a>
             
-            <!-- Monthly Attendance Report (Success Green) -->
-            <a href="{% url 'zkteco:monthly_attendance_report' %}" class="quick-action-btn fade-in-up stagger-2">
-                <div class="icon-box gradient-bg-success text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M2 10a12 12 0 0 1 18.5-3.9 12 12 0 0 1-5 13.5"/><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/>
+            <!-- Monthly Attendance Report -->
+            <a href="{% url 'zkteco:monthly_attendance_report' %}" class="card p-4 text-center hover:shadow-md transition-shadow">
+                <div class="w-12 h-12 mx-auto mb-2 rounded-lg bg-green-100 text-green-600 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/>
                     </svg>
                 </div>
-                <h3 class="text-lg font-semibold text-foreground text-center">Monthly Summary</h3>
-                <p class="text-sm text-muted-foreground mt-1 text-center">Total worked hours by month</p>
+                <h3 class="font-medium text-foreground">Monthly Summary</h3>
+                <p class="text-xs text-muted-foreground mt-1">Total worked hours by month</p>
             </a>
 
-            <!-- Employee Monthly Report (Indigo) -->
-            <a href="{% url 'zkteco:employee_monthly_attendance' %}" class="quick-action-btn fade-in-up stagger-3">
-                <div class="icon-box gradient-bg-indigo text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 12h-4"/><path d="M18 12c-2.4 0-4 1-4 2v2"/>
+            <!-- Employee Monthly Report -->
+            <a href="{% url 'zkteco:employee_monthly_attendance' %}" class="card p-4 text-center hover:shadow-md transition-shadow">
+                <div class="w-12 h-12 mx-auto mb-2 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
                     </svg>
                 </div>
-                <h3 class="text-lg font-semibold text-foreground text-center">Employee Monthly</h3>
-                <p class="text-sm text-muted-foreground mt-1 text-center">Individual detailed report</p>
+                <h3 class="font-medium text-foreground">Employee Monthly</h3>
+                <p class="text-xs text-muted-foreground mt-1">Individual detailed report</p>
             </a>
-            
-            <!-- Overtime Payment Report (Danger Red) -->
-            <!-- <a href="{% url 'zkteco:overtime_payment_report' %}" class="quick-action-btn fade-in-up stagger-4">
-                <div class="icon-box gradient-bg-danger text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-foreground text-center">Overtime Payment</h3>
-                <p class="text-sm text-muted-foreground mt-1 text-center">Hours for payroll calculation</p>
-            </a> -->
 
-            <!-- Payroll Summary Report (Orange) -->
-            <!-- <a href="{% url 'zkteco:payroll_summary_report' %}" class="quick-action-btn fade-in-up stagger-1">
-                <div class="icon-box gradient-bg-orange text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect width="20" height="14" x="2" y="5" rx="2"/><path d="M12 5v14"/><path d="M15 8h.01"/><path d="M9 8h.01"/><path d="M15 11h.01"/><path d="M9 11h.01"/><path d="M15 14h.01"/><path d="M9 14h.01"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-foreground text-center">Payroll Summary</h3>
-                <p class="text-sm text-muted-foreground mt-1 text-center">Monthly wage calculation data</p>
-            </a> -->
-            
-            <!-- Hourly Wage Report (Cyan) -->
-            <!-- <a href="{% url 'zkteco:hourly_wage_report' %}" class="quick-action-btn fade-in-up stagger-2">
-                <div class="icon-box gradient-bg-cyan text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M15 17h3a5 5 0 0 0 0-10h-3"/><path d="M9 17H6a5 5 0 0 1 0-10h3"/><path d="M12 10v4"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-foreground text-center">Hourly Wage</h3>
-                <p class="text-sm text-muted-foreground mt-1 text-center">Total hours calculation</p>
-            </a> -->
-            
-            <!-- Late/Early Report (Fuchsia) -->
-            <!-- <a href="{% url 'zkteco:late_early_report' %}" class="quick-action-btn fade-in-up stagger-3">
-                <div class="icon-box gradient-bg-fuchsia text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2v10l-4 4"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-foreground text-center">Late / Early</h3>
-                <p class="text-sm text-muted-foreground mt-1 text-center">Tardiness and premature leaving</p>
-            </a> -->
-            
-            <!-- Leave/Absence Report (Warning Yellow/Orange) -->
-            <!-- <a href="{% url 'zkteco:leave_absence_report' %}" class="quick-action-btn fade-in-up stagger-4">
-                <div class="icon-box gradient-bg-warning text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-foreground text-center">Leave / Absence</h3>
-                <p class="text-sm text-muted-foreground mt-1 text-center">Track planned and unplanned time off</p>
-            </a> -->
-            
-            <!-- Shift Compliance Report (Slate/Gray - Structure) -->
-            <!-- <a href="{% url 'zkteco:shift_compliance_report' %}" class="quick-action-btn fade-in-up stagger-1">
-                <div class="icon-box gradient-bg-slate text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 12 2 2 4-4"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-foreground text-center">Shift Compliance</h3>
-                <p class="text-sm text-muted-foreground mt-1 text-center">Roster adherence tracking</p>
-            </a> -->
-            
-            <!-- Department Analytics Report (Emerald Green) -->
-            <!-- <a href="{% url 'zkteco:department_analytics_report' %}" class="quick-action-btn fade-in-up stagger-2">
-                <div class="icon-box gradient-bg-emerald text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 16.7"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-foreground text-center">Dept. Analytics</h3>
-                <p class="text-sm text-muted-foreground mt-1 text-center">Summary and trends by group</p>
-            </a> -->
-            
-            <!-- Employee Performance Report (Primary Blue) -->
-            <!-- <a href="{% url 'zkteco:employee_performance_report' %}" class="quick-action-btn fade-in-up stagger-3">
-                <div class="icon-box gradient-bg-blue-dark text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 12v.5"/><path d="M16 16.5l3 3"/><path d="M19 16.5l-3 3"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-foreground text-center">Performance</h3>
-                <p class="text-sm text-muted-foreground mt-1 text-center">Review employee attendance metrics</p>
-            </a> -->
-
-        </div>
+            <!-- Payroll Summary Report -->
+<a href="{% url 'zkteco:payroll_summary_report' %}" class="card p-4 text-center hover:shadow-md transition-shadow">
+    <div class="w-12 h-12 mx-auto mb-2 rounded-lg bg-green-100 text-green-600 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
     </div>
-
-    <!-- Section Divider -->
-    <hr class="section-divider">
-
-    <!-- ==================== ATTENDANCE LOG REPORTS SECTION (Enhanced Views) ==================== -->
-    <div class="premium-card p-6 fade-in-up">
-        <div class="section-header">
-            <div class="section-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>
-                </svg>
-            </div>
-            <div>
-                <h3 class="text-2xl font-bold text-foreground">Attendance Log Reports</h3>
-                <p class="text-sm text-muted-foreground">Advanced analytics and detailed log-based reporting</p>
-            </div>
-        </div>
-        
-        <!-- Report Card Grid: 5 columns on XL screens -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-            
-            <!-- Log Reports Dashboard (Primary) -->
-            <!-- <a href="{% url 'zkteco:attendance_log_dashboard' %}" class="quick-action-btn fade-in-up stagger-1">
-                <div class="icon-box gradient-bg-primary text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-foreground text-center">Log Dashboard</h3>
-                <p class="text-sm text-muted-foreground mt-1 text-center">Advanced analytics overview</p>
-            </a> -->
-            
-            <!-- Daily Log Report (Info Blue) -->
-            <a href="{% url 'zkteco:daily_attendance_log_report' %}" class="quick-action-btn fade-in-up stagger-2">
-                <div class="icon-box gradient-bg-info text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-foreground text-center">Daily Log Report</h3>
-                <p class="text-sm text-muted-foreground mt-1 text-center">Detailed daily punch analysis</p>
-            </a>
-            
-            <!-- Monthly Log Report (Success Green) -->
-            <a href="{% url 'zkteco:monthly_attendance_log_report' %}" class="quick-action-btn fade-in-up stagger-3">
-                <div class="icon-box gradient-bg-success text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M8 14h8"/><path d="M8 18h8"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-foreground text-center">Monthly Log Report</h3>
-                <p class="text-sm text-muted-foreground mt-1 text-center">Comprehensive monthly analysis</p>
-            </a>
-            
-            <!-- Employee Detail Report (Indigo) -->
-            <a href="{% url 'zkteco:employee_monthly_detail_report' %}" class="quick-action-btn fade-in-up stagger-4">
-                <div class="icon-box gradient-bg-indigo text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-foreground text-center">Employee Detail</h3>
-                <p class="text-sm text-muted-foreground mt-1 text-center">Individual log analysis</p>
-            </a>
-            
-            <!-- Payroll Summary Report (Orange) -->
-            <!-- <a href="{% url 'zkteco:payroll_summary_report' %}" class="quick-action-btn fade-in-up stagger-1">
-                <div class="icon-box gradient-bg-orange text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect width="20" height="14" x="2" y="5" rx="2"/><path d="M12 5v14"/><path d="M2 9h20"/><path d="M2 15h20"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-foreground text-center">Payroll Summary</h3>
-                <p class="text-sm text-muted-foreground mt-1 text-center">Advanced payroll calculations</p>
-            </a> -->
-            
-            <!-- Export Reports (Cyan) -->
-            <a href="{% url 'zkteco:export_attendance_report' %}?type=daily" class="quick-action-btn fade-in-up stagger-2">
-                <div class="icon-box gradient-bg-cyan text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-semibold text-foreground text-center">Export Reports</h3>
-                <p class="text-sm text-muted-foreground mt-1 text-center">Download data in CSV format</p>
-            </a>
-
+    <h3 class="font-medium text-foreground">Payroll Summary</h3>
+    <p class="text-xs text-muted-foreground mt-1">Monthly salary breakdown</p>
+</a>
         </div>
     </div>
 
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    // Animation for staggered entrance
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add staggered animation delays to report cards
-        const cards = document.querySelectorAll('.quick-action-btn');
-        cards.forEach((card, index) => {
-            card.style.animationDelay = `${(index % 5) * 0.1}s`;
-        });
-    });
-</script>
 {% endblock %}

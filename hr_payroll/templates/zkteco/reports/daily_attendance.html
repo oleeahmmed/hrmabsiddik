@@ -1,8 +1,13 @@
+<!-- daily_attendance.html -->
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}দৈনিক উপস্থিতি রিপোর্ট{% endblock %}
-
 {% block page_title %}দৈনিক উপস্থিতি রিপোর্ট{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/print-js/1.6.0/print.min.css">
+{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
@@ -12,7 +17,7 @@
             <h1 class="text-2xl font-bold tracking-tight text-foreground">দৈনিক উপস্থিতি প্রতিবেদন</h1>
             <p class="text-muted-foreground mt-1">উপস্থিতির রেকর্ড দেখুন এবং ফিল্টার করুন।</p>
         </div>
-        <button onclick="printReport()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-primary-foreground bg-primary hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all">
+        <button onclick="printReport()" class="btn btn-primary">
             <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
             </svg>
@@ -66,7 +71,7 @@
                 </div>
 
                 <div class="flex items-end">
-                    <button type="submit" class="w-full inline-flex justify-center items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    <button type="submit" class="btn btn-outline">
                         <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
                         </svg>
@@ -269,7 +274,6 @@
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/print-js/1.6.0/print.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/print-js/1.6.0/print.min.css">
 
 <script>
 function printReport() {

@@ -75,45 +75,36 @@ urlpatterns = [
     path('reports/', attendance_reports.reports_dashboard, name='attendance_reports_main'),
     path('reports/daily/', attendance_reports.daily_attendance_report, name='daily_attendance_report'),
     path('reports/monthly/', attendance_reports.monthly_attendance_summary, name='monthly_attendance_report'),
-    path('reports/overtime/', attendance_reports.overtime_payment_report, name='overtime_payment_report'),
-    path('reports/hourly-wage/', attendance_reports.hourly_wage_report, name='hourly_wage_report'),
-    path('reports/leave-absence/', attendance_reports.leave_absence_report, name='leave_absence_report'),
-    path('reports/late-early/', attendance_reports.late_early_report, name='late_early_report'),
-    path('reports/payroll/', attendance_reports.payroll_summary_report, name='payroll_summary_report'),
-    path('reports/department-analytics/', attendance_reports.department_analytics_report, name='department_analytics_report'),
-    path('reports/shift-compliance/', attendance_reports.shift_roster_compliance_report, name='shift_compliance_report'),
-    path('reports/employee-performance/', attendance_reports.employee_performance_report, name='employee_performance_report'),
     path('reports/employee-monthly/', attendance_reports.employee_monthly_attendance, name='employee_monthly_attendance'),
+    path('reports/payroll-summary/', attendance_reports.payroll_summary_report, name='payroll_summary_report'),
 
     # ==================== ATTENDANCE LOG REPORTS (Enhanced Views) ====================
-    path('log-reports/', 
-        attendance_log_reports.AttendanceLogDashboardView.as_view(), 
-        name='attendance_log_dashboard'),
+
 
     # Daily Attendance Report from AttendanceLog
-    path('log-reports/daily/', 
-        attendance_log_reports.DailyAttendanceLogReportView.as_view(), 
-        name='daily_attendance_log_report'),
+    # path('log-reports/daily/', 
+    #     attendance_log_reports.DailyAttendanceLogReportView.as_view(), 
+    #     name='daily_attendance_log_report'),
 
-    # Monthly Attendance Report from AttendanceLog
-    path('log-reports/monthly/', 
-        attendance_log_reports.MonthlyAttendanceLogReportView.as_view(), 
-        name='monthly_attendance_log_report'),
+    # # Monthly Attendance Report from AttendanceLog
+    # path('log-reports/monthly/', 
+    #     attendance_log_reports.MonthlyAttendanceLogReportView.as_view(), 
+    #     name='monthly_attendance_log_report'),
 
-    # Employee Monthly Detail Report
-    path('log-reports/employee-detail/', 
-        attendance_log_reports.EmployeeMonthlyDetailReportView.as_view(), 
-        name='employee_monthly_detail_report'),
+    # # Employee Monthly Detail Report
+    # path('log-reports/employee-detail/', 
+    #     attendance_log_reports.EmployeeMonthlyDetailReportView.as_view(), 
+    #     name='employee_monthly_detail_report'),
 
-    # Payroll Summary Report
-    path('log-reports/payroll-summary/', 
-        attendance_log_reports.EmployeePayrollSummaryReportView.as_view(), 
-        name='payroll_summary_report'),
+    # # Payroll Summary Report
+    # path('log-reports/payroll-summary/', 
+    #     attendance_log_reports.EmployeePayrollSummaryReportView.as_view(), 
+    #     name='payroll_summary_report'),
 
-    # Export Reports
-    path('log-reports/export/', 
-        attendance_log_reports.ExportAttendanceReportView.as_view(), 
-        name='export_attendance_report'),
+    # # Export Reports
+    # path('log-reports/export/', 
+    #     attendance_log_reports.ExportAttendanceReportView.as_view(), 
+    #     name='export_attendance_report'),
     # Shift Management URLs
     path('shifts/', shift_views.ShiftListView.as_view(), name='shift_list'),
     path('shifts/create/', shift_views.ShiftCreateView.as_view(), name='shift_create'),

@@ -242,67 +242,6 @@ class BaseAttendanceLogReportView(LoginRequiredMixin, View):
         return False, 0
 
 
-class AttendanceLogDashboardView(BaseAttendanceLogReportView):
-    """Main dashboard for attendance log reports"""
-    
-    def get(self, request):
-        company = self.get_company(request)
-        active_config = self.get_active_config(company)
-        
-        if not company:
-            context = {'error_message': 'No company found'}
-            return render(request, 'zkteco/attendance_logs/dashboard.html', context)
-        
-        # Get summary statistics
-        today = timezone.now().date()
-        
-        # Today's statistics
-        logs_today = AttendanceLog.objects.filter(
-            timestamp__date=today
-        ).count()
-        
-        employees_present_today = AttendanceLog.objects.filter(
-            timestamp__date=today
-        ).values('employee').distinct().count()
-        
-        # This month statistics
-        logs_this_month = AttendanceLog.objects.filter(
-            timestamp__year=today.year,
-            timestamp__month=today.month
-        ).count()
-        
-        # Source type distribution (this month)
-        source_distribution = AttendanceLog.objects.filter(
-            timestamp__year=today.year,
-            timestamp__month=today.month
-        ).values('source_type').annotate(
-            count=Count('id')
-        ).order_by('-count')
-        
-        # Department-wise attendance (today)
-        dept_attendance = AttendanceLog.objects.filter(
-            timestamp__date=today
-        ).values('employee__department__name').annotate(
-            count=Count('employee', distinct=True)
-        ).order_by('-count')
-        
-        # Total active employees
-        total_employees = Employee.objects.filter(is_active=True).count()
-        
-        context = {
-            'company': company,
-            'active_config': active_config,
-            'today': today,
-            'logs_today': logs_today,
-            'employees_present_today': employees_present_today,
-            'total_employees': total_employees,
-            'logs_this_month': logs_this_month,
-            'source_distribution': source_distribution,
-            'dept_attendance': dept_attendance,
-        }
-        
-        return render(request, 'zkteco/attendance_logs/dashboard.html', context)
-
 
 class DailyAttendanceLogReportView(BaseAttendanceLogReportView):
     """Daily attendance report from AttendanceLog"""

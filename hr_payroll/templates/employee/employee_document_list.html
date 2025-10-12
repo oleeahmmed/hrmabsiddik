@@ -1,148 +1,207 @@
-<!-- employee_document_list.html -->
-
 {% extends 'base.html' %}
 
 {% block title %}Employee Documents - {{ block.super }}{% endblock %}
-{% block page_title %}Employee Documents{% endblock %}
+{% block page_title %}Employee Document Management{% endblock %}
 {% block page_subtitle %}Manage and track all employee documents{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
-    <!-- Header with Actions and Stats -->
-    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-            <h1 class="text-2xl font-bold text-foreground">Employee Documents</h1>
-            <p class="text-muted-foreground mt-1">Track and manage all employee documents</p>
-        </div>
-        <div class="flex items-center gap-2">
-            <a href="{% url 'zkteco:employee_document_create' %}" class="btn btn-primary">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                </svg>
-                Upload Document
-            </a>
-        </div>
-    </div>
-
     <!-- Document Statistics -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="card p-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- Total Documents Card -->
+        <div class="relative overflow-hidden rounded-2xl border border-blue-200 dark:border-blue-900 bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-900 dark:to-blue-950 p-4 md:p-6 text-white shadow-lg">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-muted-foreground">Total Documents</p>
-                    <p class="text-2xl font-bold text-foreground mt-1">{{ total_documents }}</p>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Total Documents</p>
+                    <p class="text-xl md:text-3xl font-bold">{{ total_documents }}</p>
                 </div>
-                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
+                    <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                 </div>
             </div>
         </div>
 
-        <div class="card p-4">
+        <!-- Verified Documents Card -->
+        <div class="relative overflow-hidden rounded-2xl border border-green-200 dark:border-green-900 bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-900 dark:to-emerald-950 p-4 md:p-6 text-white shadow-lg">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-muted-foreground">Verified</p>
-                    <p class="text-2xl font-bold text-foreground mt-1">{{ verified_count }}</p>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Verified</p>
+                    <p class="text-xl md:text-3xl font-bold">{{ verified_count }}</p>
                 </div>
-                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
+                    <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                 </div>
             </div>
         </div>
 
-        <div class="card p-4">
+        <!-- Unverified Documents Card -->
+        <div class="relative overflow-hidden rounded-2xl border border-yellow-200 dark:border-yellow-900 bg-gradient-to-br from-yellow-500 to-amber-600 dark:from-yellow-900 dark:to-amber-950 p-4 md:p-6 text-white shadow-lg">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-muted-foreground">Unverified</p>
-                    <p class="text-2xl font-bold text-foreground mt-1">{{ unverified_count }}</p>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Unverified</p>
+                    <p class="text-xl md:text-3xl font-bold">{{ unverified_count }}</p>
                 </div>
-                <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
+                    <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Document Types Card -->
+        <div class="relative overflow-hidden rounded-2xl border border-purple-200 dark:border-purple-900 bg-gradient-to-br from-purple-500 to-violet-600 dark:from-purple-900 dark:to-violet-950 p-4 md:p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Document Types</p>
+                    <p class="text-xl md:text-3xl font-bold">{{ document_types_count }}</p>
+                </div>
+                <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
+                    <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Search and Filter -->
-    <div class="card p-6">
-        <form method="get" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <!-- Search -->
-            <div class="lg:col-span-2">
-                <label class="form-label">Search Documents</label>
-                <div class="relative">
-                    <input type="text" name="search" value="{{ request.GET.search|default:'' }}" 
-                        placeholder="Search by title, employee name or ID..." class="input pr-10 w-full">
-                    <svg class="absolute right-3 top-2.5 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                </div>
-            </div>
-
-                <!-- Employee Filter -->
-                <div>
-                    <label class="form-label">Employee</label>
-                    {{ filter_form.employee }}
+    <!-- Documents Table Card -->
+    <div class="card-lg border-2 border-transparent bg-gradient-to-r from-primary/5 to-primary/3 dark:from-primary/10 dark:to-primary/5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 animate-pulse-border">
+        <!-- Table Header with Actions -->
+        <div class="card-header border-b-0 bg-transparent">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <!-- Left Side: Title -->
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-foreground">All Documents</h3>
+                        <p class="text-sm text-muted-foreground">Manage and organize employee documents</p>
+                    </div>
                 </div>
 
-                <!-- Document Type Filter -->
-                <div>
-                    <label class="form-label">Document Type</label>
-                    {{ filter_form.document_type }}
-                </div>
-            </div>
-
-            <!-- Verification Status -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="form-label">Verification Status</label>
-                    {{ filter_form.verification_status }}
-                </div>
-                <div class="flex items-end">
-                    <button type="submit" class="btn btn-primary w-full">
-                        Apply Filters
+                <!-- Right Side: Action Buttons -->
+                <div class="flex items-center gap-3">
+                    <!-- Filter Button -->
+                    <button id="filter-toggle" class="btn btn-outline btn-sm flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"/>
+                        </svg>
+                        Filter
                     </button>
+
+                    <!-- Upload Document Button -->
+                    <a href="{% url 'zkteco:employee_document_create' %}" class="btn btn-primary btn-sm flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
+                        Upload Document
+                    </a>
                 </div>
             </div>
-        </form>
-    </div>
+        </div>
 
-    <!-- Documents Table -->
-    <div class="card">
+        <!-- Filter Section (Hidden by Default) -->
+        <div id="filter-section" class="hidden border-t border-border/30 bg-gradient-to-r from-muted/5 to-muted/10">
+            <div class="p-6">
+                <form method="get" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Search -->
+                        <div class="md:col-span-2">
+                            <label class="form-label">Search Documents</label>
+                            <div class="relative">
+                                <input type="text" name="search" value="{{ request.GET.search|default:'' }}" 
+                                       placeholder="Search by title, employee name or ID..." class="input pr-10 w-full">
+                                <svg class="absolute right-3 top-2.5 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- Employee Filter -->
+                        <div>
+                            <label class="form-label">Employee</label>
+                            {{ filter_form.employee }}
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Document Type Filter -->
+                        <div>
+                            <label class="form-label">Document Type</label>
+                            {{ filter_form.document_type }}
+                        </div>
+                        
+                        <!-- Verification Status -->
+                        <div>
+                            <label class="form-label">Verification Status</label>
+                            {{ filter_form.verification_status }}
+                        </div>
+                        
+                        <!-- Upload Date Range -->
+                        <div>
+                            <label class="form-label">Upload Date</label>
+                            <select name="upload_date" class="input">
+                                <option value="">All Time</option>
+                                <option value="today" {% if request.GET.upload_date == 'today' %}selected{% endif %}>Today</option>
+                                <option value="week" {% if request.GET.upload_date == 'week' %}selected{% endif %}>This Week</option>
+                                <option value="month" {% if request.GET.upload_date == 'month' %}selected{% endif %}>This Month</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3">
+                        <button type="reset" class="btn btn-outline btn-sm">
+                            Reset
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            Apply Filters
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Table Content -->
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead>
-                    <tr class="border-b border-border bg-muted/30">
-                        <th class="text-left p-4 text-sm font-semibold text-muted-foreground">Document</th>
-                        <th class="text-left p-4 text-sm font-semibold text-muted-foreground">Employee</th>
-                        <th class="text-left p-4 text-sm font-semibold text-muted-foreground">Type</th>
-                        <th class="text-left p-4 text-sm font-semibold text-muted-foreground">Uploaded</th>
-                        <th class="text-left p-4 text-sm font-semibold text-muted-foreground">Status</th>
-                        <th class="text-center p-4 text-sm font-semibold text-muted-foreground">Actions</th>
+                    <tr class="bg-gradient-to-r from-primary to-primary-hover border-b border-primary/30" style="background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-hover)) 100%);">
+                        <th class="text-left p-4 text-sm font-semibold text-white">Document</th>
+                        <th class="text-left p-4 text-sm font-semibold text-white">Employee</th>
+                        <th class="text-left p-4 text-sm font-semibold text-white">Type</th>
+                        <th class="text-left p-4 text-sm font-semibold text-white">Uploaded</th>
+                        <th class="text-left p-4 text-sm font-semibold text-white">Status</th>
+                        <th class="text-center p-4 text-sm font-semibold text-white">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for document in documents %}
-                    <tr class="border-b border-border hover:bg-accent/50 transition-colors">
+                    <tr class="border-b border-border hover:bg-accent/50 transition-colors group">
                         <!-- Document Info -->
                         <td class="p-4">
-                            <div class="flex items-start gap-3">
-                                <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mt-1">
-                                    <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-white font-semibold text-sm group-hover:bg-primary/20 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-medium text-foreground">{{ document.title }}</div>
-                                    {% if document.description %}
-                                    <div class="text-xs text-muted-foreground mt-1 line-clamp-2">{{ document.description|truncatewords:10 }}</div>
-                                    {% endif %}
+                                    <div class="font-medium text-foreground group-hover:text-primary transition-colors">{{ document.title }}</div>
+                                    <div class="text-xs text-muted-foreground">
+                                        {% if document.description %}
+                                        {{ document.description|truncatewords:5 }}
+                                        {% else %}
+                                        No description
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                         </td>
@@ -150,30 +209,32 @@
                         <!-- Employee -->
                         <td class="p-4">
                             <div class="flex items-center gap-2">
-                                <div class="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium text-primary">
+                                <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium text-primary">
                                     {{ document.employee.name|slice:":1"|upper }}
                                 </div>
                                 <div>
-                                    <div class="text-sm text-foreground font-medium">{{ document.employee.name }}</div>
-                                    <div class="text-xs text-muted-foreground">{{ document.employee.employee_id }}</div>
+                                    <div class="text-sm font-medium text-foreground">{{ document.employee.name }}</div>
+                                    <div class="text-xs text-muted-foreground">ID: {{ document.employee.employee_id }}</div>
                                 </div>
                             </div>
                         </td>
                         
-                        <!-- Type -->
+                        <!-- Document Type -->
                         <td class="p-4">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
                                 {{ document.get_document_type_display }}
                             </span>
                         </td>
                         
-                        <!-- Uploaded -->
-                        <td class="p-4">
-                            <div class="text-sm text-foreground">{{ document.uploaded_at|date:"M d, Y" }}</div>
-                            <div class="text-xs text-muted-foreground">{{ document.uploaded_by.get_full_name|default:document.uploaded_by.username }}</div>
+                        <!-- Uploaded Date -->
+                        <td class="p-4 text-sm text-foreground">
+                            {{ document.uploaded_at|date:"M d, Y" }}
+                            <div class="text-xs text-muted-foreground">
+                                by {{ document.uploaded_by.get_full_name|default:document.uploaded_by.username }}
+                            </div>
                         </td>
                         
-                        <!-- Status -->
+                        <!-- Verification Status -->
                         <td class="p-4">
                             {% if document.is_verified %}
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
@@ -195,18 +256,18 @@
                         <!-- Actions -->
                         <td class="p-4">
                             <div class="flex items-center justify-center gap-1">
-                                <a href="{% url 'zkteco:employee_document_detail' document.pk %}" class="btn-ghost p-2 rounded hover:bg-accent" title="View">
+                                <a href="{% url 'zkteco:employee_document_detail' document.pk %}" class="btn-ghost p-2 rounded hover:bg-accent transition-colors" title="View">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                     </svg>
                                 </a>
-                                <a href="{% url 'zkteco:employee_document_update' document.pk %}" class="btn-ghost p-2 rounded hover:bg-accent" title="Edit">
+                                <a href="{% url 'zkteco:employee_document_update' document.pk %}" class="btn-ghost p-2 rounded hover:bg-accent transition-colors" title="Edit">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                 </a>
-                                <a href="{% url 'zkteco:employee_document_delete' document.pk %}" class="btn-ghost p-2 rounded hover:bg-destructive-light hover:text-destructive" title="Delete">
+                                <a href="{% url 'zkteco:employee_document_delete' document.pk %}" class="btn-ghost p-2 rounded hover:bg-destructive-light hover:text-destructive transition-colors" title="Delete">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                     </svg>
@@ -238,9 +299,9 @@
             </table>
         </div>
 
-        <!-- Pagination -->
+        <!-- Pagination Footer -->
         {% if is_paginated %}
-        <div class="border-t border-border px-4 py-3">
+        <div class="card-footer">
             <div class="flex items-center justify-between">
                 <div class="text-sm text-muted-foreground">
                     Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
@@ -263,12 +324,16 @@
     </div>
 </div>
 
-<style>
-    .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterToggle = document.getElementById('filter-toggle');
+    const filterSection = document.getElementById('filter-section');
+    
+    if (filterToggle && filterSection) {
+        filterToggle.addEventListener('click', function() {
+            filterSection.classList.toggle('hidden');
+        });
     }
-</style>
+});
+</script>
 {% endblock %}

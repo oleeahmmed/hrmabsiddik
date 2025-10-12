@@ -510,7 +510,7 @@
             </a>
 
             <!-- Attendance Logs -->
-            <a href="{% url 'zkteco:attendance_logs' %}" class="quick-action-btn">
+            <a href="{% url 'zkteco:attendance_log_list' %}" class="quick-action-btn">
                 <div class="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center mb-3">
                     <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
@@ -518,123 +518,6 @@
                 </div>
                 <span class="text-sm font-medium text-foreground">Attendance Logs</span>
             </a>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Recent Attendance -->
-        <div class="premium-card p-6 fade-in-up">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h3 class="text-xl font-semibold text-foreground">Recent Attendance</h3>
-                    <p class="text-sm text-muted-foreground">Last 7 days overview</p>
-                </div>
-                <a href="{% url 'zkteco:attendance_list' %}" class="text-primary text-sm font-medium hover:underline">View All</a>
-            </div>
-            <div class="space-y-3 max-h-80 overflow-y-auto">
-                {% for day in recent_attendance %}
-                <div class="activity-item">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-foreground">
-                                {{ day.date|date:"D, M j" }}
-                            </p>
-                            <div class="flex items-center gap-2 mt-1">
-                                {% if day.check_in %}
-                                    <span class="text-xs text-muted-foreground">In: {{ day.check_in|date:"H:i" }}</span>
-                                {% endif %}
-                                {% if day.check_out %}
-                                    <span class="text-xs text-muted-foreground">Out: {{ day.check_out|date:"H:i" }}</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            {% if day.status == 'Present' %}
-                                <div class="status-badge status-present">Present</div>
-                            {% elif day.status == 'Absent' %}
-                                <div class="status-badge status-absent">Absent</div>
-                            {% elif day.status == 'Holiday' %}
-                                <div class="status-badge status-holiday">Holiday</div>
-                            {% elif day.status == 'Weekend' %}
-                                <div class="status-badge" style="background: rgba(107, 114, 128, 0.1); color: #6b7280;">Weekend</div>
-                            {% endif %}
-                            {% if day.work_hours > 0 %}
-                                <p class="text-xs text-muted-foreground mt-1">{{ day.work_hours }}h</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                {% empty %}
-                <div class="text-center py-8 text-muted-foreground">
-                    <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
-                        <svg class="w-8 h-8 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <p>No attendance records found</p>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- Leave Information -->
-        <div class="premium-card p-6 fade-in-up">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h3 class="text-xl font-semibold text-foreground">Leave Information</h3>
-                    <p class="text-sm text-muted-foreground">Balance & recent applications</p>
-                </div>
-                <a href="{% url 'zkteco:leave_list' %}" class="text-primary text-sm font-medium hover:underline">View All</a>
-            </div>
-            
-            <!-- Leave Balances -->
-            <div class="mb-6">
-                <h3 class="text-sm font-medium text-foreground mb-3">Leave Balance</h3>
-                <div class="space-y-2">
-                    {% for balance in leave_balances %}
-                    <div class="info-row">
-                        <span class="text-sm text-foreground">{{ balance.leave_type.name }}</span>
-                        <span class="text-sm font-medium text-foreground">{{ balance.remaining_days }} days</span>
-                    </div>
-                    {% empty %}
-                    <div class="text-center py-4 text-muted-foreground">
-                        <p class="text-sm">No leave balances found</p>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- Recent Leave Applications -->
-            <div>
-                <h3 class="text-sm font-medium text-foreground mb-3">Recent Applications</h3>
-                <div class="space-y-3 max-h-40 overflow-y-auto">
-                    {% for leave in leave_applications %}
-                    <div class="attendance-item">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm font-medium text-foreground">{{ leave.leave_type.name }}</p>
-                                <p class="text-xs text-muted-foreground">
-                                    {{ leave.start_date|date:"M d" }} - {{ leave.end_date|date:"M d" }}
-                                </p>
-                            </div>
-                            <div>
-                                {% if leave.status == 'A' %}
-                                    <div class="status-badge status-present">Approved</div>
-                                {% elif leave.status == 'P' %}
-                                    <div class="status-badge" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">Pending</div>
-                                {% elif leave.status == 'R' %}
-                                    <div class="status-badge status-absent">Rejected</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    {% empty %}
-                    <div class="text-center py-4 text-muted-foreground">
-                        <p class="text-sm">No leave applications</p>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
         </div>
     </div>
 
