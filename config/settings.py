@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'corsheaders',  # CORS
     'whitenoise.runserver_nostatic',  # WhiteNoise for dev
     # 'debug_toolbar',  # Debug Toolbar (dev only)
-    'Authentication',
+  
     'core',
     'hr_payroll',
 ]

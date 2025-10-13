@@ -32,8 +32,7 @@
 </head>
 <body>
     <!-- Sidebar -->
-    <aside id="sidebar" class="sidebar fixed left-0 top-0 h-full w-64 transition-transform duration-300 ease-in-out z-40 lg:translate-x-0 -translate-x-full ">
-        <div class="flex flex-col h-full">
+    <aside id="sidebar" class="sidebar fixed left-0 top-0 h-full w-64 transition-transform duration-300 ease-in-out z-50 lg:translate-x-0 -translate-x-full ">                <div class="flex flex-col h-full">
             <!-- Header -->
             <div class="p-4 border-b border-border">
                 <div class="flex items-center justify-between">
@@ -79,46 +78,7 @@
         <span>Dashboard</span>
     </a>
 
-    <!-- ==================== CORE CONFIGURATION DROPDOWN ==================== -->
-    <div class="nav-item-dropdown">
-        <div class="nav-item {% if 'company' in request.resolver_match.url_name or 'project' in request.resolver_match.url_name or 'task' in request.resolver_match.url_name %}active{% endif %}">
-            <div class="flex items-center gap-3">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                </svg>
-                <span>Core Configuration</span>
-            </div>
-            <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-        </div>
-        
-        <div class="dropdown-menu">
-            <!-- Company -->
-            <a href="{% url 'core:company_list' %}" class="dropdown-menu-item {% if 'company' in request.resolver_match.url_name %}active{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                </svg>
-                <span>Company</span>
-            </a>
-            
-            <!-- Project -->
-            <a href="{% url 'core:project_list' %}" class="dropdown-menu-item {% if 'project' in request.resolver_match.url_name %}active{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
-                </svg>
-                <span>Project</span>
-            </a>
-            
-            <!-- Task -->
-            <a href="{% url 'core:task_list' %}" class="dropdown-menu-item {% if 'task' in request.resolver_match.url_name %}active{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                </svg>
-                <span>Task</span>
-            </a>
-        </div>
-    </div>
+
 
     <!-- ==================== EMPLOYEE MANAGEMENT DROPDOWN ==================== -->
     <div class="nav-item-dropdown">
@@ -438,7 +398,7 @@
     </aside>
 
     <!-- Overlay -->
-    <div id="drawer-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 hidden"></div>
+    <div id="drawer-overlay" class="fixed inset-0 bg-white/100  backdrop-blur-sm z-30 hidden"></div>
 
     <!-- Main Content -->
     <div id="main-content" class="min-h-screen lg:ml-64 transition-all duration-300">

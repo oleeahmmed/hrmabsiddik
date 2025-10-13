@@ -1129,8 +1129,7 @@
             color: hsl(0 0% 100% / 0.8);
         }
 
-
-                    /* Sidebar Dropdown Styles */
+           /* Sidebar Dropdown Styles */
             .nav-item-dropdown {
                 position: relative;
             }

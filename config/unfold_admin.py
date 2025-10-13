@@ -52,31 +52,74 @@ def get_navigation_for_user(request):
                 },
             ],
         },
-{
-    "title": _("Core Management"),
-    "separator": True,
-    "collapsible": True,
-    "items": [
+
         {
-            "title": _("Companies"),
-            "icon": "business",
-            "link": admin_changelist("core", "company"),
-            "permission": lambda request: request.user.has_perm("core.view_company"),
+            "title": _("Core Management"),
+            "separator": True,
+            "collapsible": True,
+            "items": [
+                {
+                    "title": _("User Profiles"),
+                    "icon": "account_circle",
+                    "link": admin_changelist("core", "userprofile"),
+                    "permission": lambda request: request.user.has_perm("core.view_userprofile"),
+                },
+                {
+                    "title": _("Companies"),
+                    "icon": "business",
+                    "link": admin_changelist("core", "company"),
+                    "permission": lambda request: request.user.has_perm("core.view_company"),
+                },
+                {
+                    "title": _("Project Roles"),
+                    "icon": "admin_panel_settings",
+                    "link": admin_changelist("core", "projectrole"),
+                    "permission": lambda request: request.user.has_perm("core.view_projectrole"),
+                },
+                {
+                    "title": _("Projects"),
+                    "icon": "folder_special",
+                    "link": admin_changelist("core", "project"),
+                    "permission": lambda request: request.user.has_perm("core.view_project"),
+                },
+                {
+                    "title": _("Tasks"),
+                    "icon": "task",
+                    "link": admin_changelist("core", "task"),
+                    "permission": lambda request: request.user.has_perm("core.view_task"),
+                },
+                {
+                    "title": _("Task Checklists"),
+                    "icon": "checklist",
+                    "link": admin_changelist("core", "taskchecklist"),
+                    "permission": lambda request: request.user.has_perm("core.view_taskchecklist"),
+                },
+                {
+                    "title": _("Task Comments"),
+                    "icon": "comment",
+                    "link": admin_changelist("core", "taskcomment"),
+                    "permission": lambda request: request.user.has_perm("core.view_taskcomment"),
+                },
+                {
+                    "title": _("Project Members"),
+                    "icon": "group",
+                    "link": admin_changelist("core", "projectmember"),
+                    "permission": lambda request: request.user.has_perm("core.view_projectmember"),
+                },
+                {
+                    "title": _("Project Reports"),
+                    "icon": "assessment",
+                    "link": admin_changelist("core", "projectreport"),
+                    "permission": lambda request: request.user.has_perm("core.view_projectreport"),
+                },
+                {
+                    "title": _("Daily Time Logs"),
+                    "icon": "access_time",
+                    "link": admin_changelist("core", "dailytimelog"),
+                    "permission": lambda request: request.user.has_perm("core.view_dailytimelog"),
+                },
+            ],
         },
-        {
-            "title": _("Projects"),
-            "icon": "folder_special",
-            "link": admin_changelist("core", "project"),
-            "permission": lambda request: request.user.has_perm("core.view_project"),
-        },
-        {
-            "title": _("Tasks"),
-            "icon": "task",
-            "link": admin_changelist("core", "task"),
-            "permission": lambda request: request.user.has_perm("core.view_task"),
-        },
-    ],
-},
 
         {
             "title": _("HR & Payroll"),

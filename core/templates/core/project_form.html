@@ -13,7 +13,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-6">
+<div class="max-w-6xl mx-auto space-y-6">
     <!-- Main Form Card -->
     <div class="card overflow-hidden border border-border/50">
         <!-- Card Header with Very Light Gradient -->
@@ -55,9 +55,25 @@
                 </div>
                 {% endif %}
                 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Left Column -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Left Column - Basic Information -->
                     <div class="space-y-6">
+                        <!-- Company Field -->
+                        <div class="form-group">
+                            <label for="{{ form.company.id_for_label }}" class="form-label required">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                </svg>
+                                Company
+                            </label>
+                            {{ form.company }}
+                            {% if form.company.errors %}
+                            <p class="form-error">{{ form.company.errors.0 }}</p>
+                            {% else %}
+                            <p class="form-help">Select the company this project belongs to</p>
+                            {% endif %}
+                        </div>
+
                         <!-- Name Field -->
                         <div class="form-group">
                             <label for="{{ form.name.id_for_label }}" class="form-label required">
@@ -74,19 +90,38 @@
                             {% endif %}
                         </div>
 
-                        <!-- Start Date Field -->
+                        <!-- Status Field -->
                         <div class="form-group">
-                            <label for="{{ form.start_date.id_for_label }}" class="form-label">
+                            <label for="{{ form.status.id_for_label }}" class="form-label required">
                                 <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
-                                Start Date
+                                Project Status
                             </label>
-                            {{ form.start_date }}
-                            {% if form.start_date.errors %}
-                            <p class="form-error">{{ form.start_date.errors.0 }}</p>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                            <p class="form-error">{{ form.status.errors.0 }}</p>
+                            {% else %}
+                            <p class="form-help">Current status of the project</p>
                             {% endif %}
                         </div>
+
+                        <!-- Priority Field -->
+                        <div class="form-group">
+                            <label for="{{ form.priority.id_for_label }}" class="form-label required">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                                Priority
+                            </label>
+                            {{ form.priority }}
+                            {% if form.priority.errors %}
+                            <p class="form-error">{{ form.priority.errors.0 }}</p>
+                            {% else %}
+                            <p class="form-help">Set the project priority level</p>
+                            {% endif %}
+                        </div>
+
                         <!-- Description Field -->
                         <div class="form-group">
                             <label for="{{ form.description.id_for_label }}" class="form-label">
@@ -102,44 +137,126 @@
                             <p class="form-help">Provide detailed information about the project</p>
                             {% endif %}
                         </div>
-
                     </div>
 
-                    <!-- Right Column -->
+                    <!-- Right Column - Team & Timeline -->
                     <div class="space-y-6">
-                        <!-- Active Status Field -->
+                        <!-- Technical Lead Field -->
                         <div class="form-group">
-                            <label for="{{ form.is_active.id_for_label }}" class="form-label">
+                            <label for="{{ form.technical_lead.id_for_label }}" class="form-label">
                                 <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                 </svg>
-                                Project Status
+                                Technical Lead
                             </label>
-                            <div class="flex items-center gap-2 mt-2">
-                                {{ form.is_active }}
-                                <label for="{{ form.is_active.id_for_label }}" class="text-sm text-foreground cursor-pointer">
-                                    Active Project
-                                </label>
-                            </div>
-                            {% if form.is_active.errors %}
-                            <p class="form-error">{{ form.is_active.errors.0 }}</p>
+                            {{ form.technical_lead }}
+                            {% if form.technical_lead.errors %}
+                            <p class="form-error">{{ form.technical_lead.errors.0 }}</p>
                             {% else %}
-                            <p class="form-help">Uncheck to mark project as inactive</p>
+                            <p class="form-help">Select the technical lead for this project</p>
                             {% endif %}
                         </div>
 
-                        <!-- End Date Field -->
+                        <!-- Project Manager Field -->
                         <div class="form-group">
-                            <label for="{{ form.end_date.id_for_label }}" class="form-label">
+                            <label for="{{ form.project_manager.id_for_label }}" class="form-label">
                                 <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                 </svg>
-                                End Date
+                                Project Manager
                             </label>
-                            {{ form.end_date }}
-                            {% if form.end_date.errors %}
-                            <p class="form-error">{{ form.end_date.errors.0 }}</p>
+                            {{ form.project_manager }}
+                            {% if form.project_manager.errors %}
+                            <p class="form-error">{{ form.project_manager.errors.0 }}</p>
+                            {% else %}
+                            <p class="form-help">Select the project manager</p>
                             {% endif %}
+                        </div>
+
+                        <!-- Timeline Section -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Start Date Field -->
+                            <div class="form-group">
+                                <label for="{{ form.start_date.id_for_label }}" class="form-label required">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    Start Date
+                                </label>
+                                {{ form.start_date }}
+                                {% if form.start_date.errors %}
+                                <p class="form-error">{{ form.start_date.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- End Date Field -->
+                            <div class="form-group">
+                                <label for="{{ form.end_date.id_for_label }}" class="form-label required">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    End Date
+                                </label>
+                                {{ form.end_date }}
+                                {% if form.end_date.errors %}
+                                <p class="form-error">{{ form.end_date.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Budget Section -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Total Budget -->
+                            <div class="form-group">
+                                <label for="{{ form.total_budget.id_for_label }}" class="form-label">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                                    </svg>
+                                    Total Budget
+                                </label>
+                                {{ form.total_budget }}
+                                {% if form.total_budget.errors %}
+                                <p class="form-error">{{ form.total_budget.errors.0 }}</p>
+                                {% else %}
+                                <p class="form-help">Total allocated budget</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- Spent Budget -->
+                            <div class="form-group">
+                                <label for="{{ form.spent_budget.id_for_label }}" class="form-label">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                                    </svg>
+                                    Spent Budget
+                                </label>
+                                {{ form.spent_budget }}
+                                {% if form.spent_budget.errors %}
+                                <p class="form-error">{{ form.spent_budget.errors.0 }}</p>
+                                {% else %}
+                                <p class="form-help">Budget spent so far</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Active Status Field -->
+                        <div class="form-group">
+                            <div class="flex items-center gap-3 p-4 rounded-lg border border-border/50 bg-gradient-to-r from-primary/5 to-primary/3">
+                                {{ form.is_active }}
+                                <div>
+                                    <label for="{{ form.is_active.id_for_label }}" class="form-label cursor-pointer">
+                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        Active Project
+                                    </label>
+                                    {% if form.is_active.errors %}
+                                    <p class="form-error">{{ form.is_active.errors.0 }}</p>
+                                    {% else %}
+                                    <p class="form-help">Uncheck to mark project as inactive</p>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -216,6 +333,7 @@
     /* Input Field Styles */
     input[type="text"],
     input[type="date"],
+    input[type="number"],
     select,
     textarea {
         width: 100%;
@@ -232,12 +350,13 @@
 
     /* Checkbox Styles */
     input[type="checkbox"] {
-        width: 1rem;
-        height: 1rem;
-        border-radius: 0.25rem;
-        border: 1px solid hsl(var(--border));
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 0.375rem;
+        border: 2px solid hsl(var(--border));
         background-color: hsl(var(--background));
         cursor: pointer;
+        margin-right: 0.5rem;
     }
 
     input[type="checkbox"]:checked {
@@ -269,7 +388,7 @@
 
     textarea {
         resize: vertical;
-        min-height: 100px;
+        min-height: 120px;
     }
 
     .btn-destructive {
@@ -278,8 +397,18 @@
     }
 
     .btn-destructive:hover {
-        background-color: hsl(var(--destructive-light));
-        border-color: hsl(var(--destructive));
+        background-color: hsl(var(--destructive));
+        color: hsl(var(--destructive-foreground));
+    }
+
+    /* Select dropdown styling */
+    select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
     }
 </style>
 
@@ -292,7 +421,32 @@
             startDateInput.value = today;
         }
         
-        // Django messages will be shown automatically by base.html
+        // Set end date to 30 days from start date if empty
+        const endDateInput = document.getElementById('{{ form.end_date.id_for_label }}');
+        if (endDateInput && !endDateInput.value && !{{ object|yesno:"true,false" }}) {
+            const today = new Date();
+            const futureDate = new Date(today);
+            futureDate.setDate(today.getDate() + 30);
+            endDateInput.value = futureDate.toISOString().split('T')[0];
+        }
+
+        // Set default spent budget to 0 if empty
+        const spentBudgetInput = document.getElementById('{{ form.spent_budget.id_for_label }}');
+        if (spentBudgetInput && !spentBudgetInput.value) {
+            spentBudgetInput.value = '0.00';
+        }
+
+        // Set default total budget to 0 if empty
+        const totalBudgetInput = document.getElementById('{{ form.total_budget.id_for_label }}');
+        if (totalBudgetInput && !totalBudgetInput.value) {
+            totalBudgetInput.value = '0.00';
+        }
+
+        // Auto-check is_active by default for new projects
+        const isActiveInput = document.getElementById('{{ form.is_active.id_for_label }}');
+        if (isActiveInput && !{{ object|yesno:"true,false" }}) {
+            isActiveInput.checked = true;
+        }
     });
 </script>
 {% endblock %}
