@@ -1,0 +1,298 @@
+{% load i18n %}
+
+<div class="form-group">
+    {% if field.field.widget.input_type == 'text' or field.field.widget.input_type == 'email' or field.field.widget.input_type == 'password' or field.field.widget.input_type == 'number' %}
+        <!-- Text, Email, Password, Number Input -->
+        <div class="relative group">
+            <input type="{{ field.field.widget.input_type }}" 
+                id="{{ field.id_for_label }}" 
+                name="{{ field.name }}"
+                class="peer w-full px-4 py-3 rounded-lg border-2 border-[hsl(var(--border))] bg-[hsl(var(--background))] text-[hsl(var(--foreground))] transition-all duration-200 focus:outline-none focus:border-[hsl(var(--primary))] focus:ring-2 focus:ring-[hsl(var(--primary)/0.2)] focus:bg-[hsl(var(--card))] placeholder-transparent {% if is_disabled %}cursor-not-allowed opacity-70{% endif %} {% if field.errors %}border-[hsl(var(--destructive))] focus:border-[hsl(var(--destructive))] focus:ring-[hsl(var(--destructive)/0.2)]{% endif %}" 
+                placeholder="{{ field.label }}"
+                value="{{ field.value|default:'' }}"
+                {% if field.field.required %}required{% endif %}
+                {% if field.field.widget.attrs.min %}min="{{ field.field.widget.attrs.min }}"{% endif %}
+                {% if field.field.widget.attrs.max %}max="{{ field.field.widget.attrs.max }}"{% endif %}
+                {% if field.field.widget.attrs.step %}step="{{ field.field.widget.attrs.step }}"{% endif %}
+                {% if is_disabled %}disabled{% endif %}>
+            <label for="{{ field.id_for_label }}" 
+                class="absolute left-4 -top-2.5 px-2 text-sm font-medium transition-all duration-200 bg-[hsl(var(--background))] text-[hsl(var(--muted-foreground))] peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-[hsl(var(--primary))] peer-focus:font-semibold peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-base peer-placeholder-shown:font-normal {% if field.errors %}text-[hsl(var(--destructive))] peer-focus:text-[hsl(var(--destructive))]{% endif %}">
+                {{ field.label }}{% if field.field.required %}<span class="text-[hsl(var(--destructive))] ml-1">*</span>{% endif %}
+            </label>
+            <!-- Field icon (optional enhancement) -->
+            <div class="absolute right-3 top-3.5 text-[hsl(var(--muted-foreground))] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                </svg>
+            </div>
+        </div>
+
+    {% elif field.field.widget.input_type == 'datetime-local' %}
+        <!-- Datetime Input -->
+        <div class="relative group">
+            <input type="datetime-local" 
+                id="{{ field.id_for_label }}" 
+                name="{{ field.name }}"
+                class="peer w-full px-4 py-3 rounded-lg border-2 border-[hsl(var(--border))] bg-[hsl(var(--background))] text-[hsl(var(--foreground))] transition-all duration-200 focus:outline-none focus:border-[hsl(var(--primary))] focus:ring-2 focus:ring-[hsl(var(--primary)/0.2)] focus:bg-[hsl(var(--card))] {% if is_disabled %}cursor-not-allowed opacity-70{% endif %} {% if field.errors %}border-[hsl(var(--destructive))]{% endif %}" 
+                value="{% if field.value %}{{ field.value|date:'Y-m-d' }}T{{ field.value|time:'H:i' }}{% endif %}"
+                {% if field.field.required %}required{% endif %}
+                {% if is_disabled %}disabled{% endif %}>
+            <label for="{{ field.id_for_label }}" 
+                class="absolute left-4 -top-2.5 px-2 text-sm font-medium bg-[hsl(var(--background))] text-[hsl(var(--muted-foreground))] peer-focus:text-[hsl(var(--primary))] peer-focus:font-semibold {% if field.errors %}text-[hsl(var(--destructive))]{% endif %}">
+                {{ field.label }}{% if field.field.required %}<span class="text-[hsl(var(--destructive))] ml-1">*</span>{% endif %}
+            </label>
+        </div>
+
+    {% elif field.field.widget.input_type == 'date' %}
+        <!-- Date Input -->
+        <div class="relative group">
+            <input type="date" 
+                id="{{ field.id_for_label }}" 
+                name="{{ field.name }}"
+                class="peer w-full px-4 py-3 rounded-lg border-2 border-[hsl(var(--border))] bg-[hsl(var(--background))] text-[hsl(var(--foreground))] transition-all duration-200 focus:outline-none focus:border-[hsl(var(--primary))] focus:ring-2 focus:ring-[hsl(var(--primary)/0.2)] focus:bg-[hsl(var(--card))] {% if is_disabled %}cursor-not-allowed opacity-70{% endif %} {% if field.errors %}border-[hsl(var(--destructive))]{% endif %}" 
+                value="{{ field.value|date:'Y-m-d'|default:'' }}"
+                {% if field.field.required %}required{% endif %}
+                {% if is_disabled %}disabled{% endif %}>
+            <label for="{{ field.id_for_label }}" 
+                class="absolute left-4 -top-2.5 px-2 text-sm font-medium bg-[hsl(var(--background))] text-[hsl(var(--muted-foreground))] peer-focus:text-[hsl(var(--primary))] peer-focus:font-semibold {% if field.errors %}text-[hsl(var(--destructive))]{% endif %}">
+                {{ field.label }}{% if field.field.required %}<span class="text-[hsl(var(--destructive))] ml-1">*</span>{% endif %}
+            </label>
+        </div>
+
+    {% elif field.field.widget.input_type == 'url' %}
+        <!-- URL Input -->
+        <div class="relative group">
+            <input type="url" 
+                id="{{ field.id_for_label }}" 
+                name="{{ field.name }}" 
+                value="{{ field.value|default:'' }}"
+                class="peer w-full px-4 py-3 rounded-lg border-2 border-[hsl(var(--border))] bg-[hsl(var(--background))] text-[hsl(var(--foreground))] transition-all duration-200 focus:outline-none focus:border-[hsl(var(--primary))] focus:ring-2 focus:ring-[hsl(var(--primary)/0.2)] focus:bg-[hsl(var(--card))] placeholder-transparent {% if is_disabled %}cursor-not-allowed opacity-70{% endif %} {% if field.errors %}border-[hsl(var(--destructive))]{% endif %}"
+                placeholder="{{ field.label }}"
+                {% if field.field.required %}required{% endif %}
+                {% if is_disabled %}disabled{% endif %}>
+            <label for="{{ field.id_for_label }}" 
+                class="absolute left-4 -top-2.5 px-2 text-sm font-medium bg-[hsl(var(--background))] text-[hsl(var(--muted-foreground))] peer-focus:text-[hsl(var(--primary))] peer-focus:font-semibold peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-base {% if field.errors %}text-[hsl(var(--destructive))]{% endif %}">
+                {{ field.label }}{% if field.field.required %}<span class="text-[hsl(var(--destructive))] ml-1">*</span>{% endif %}
+            </label>
+        </div>
+
+    {% elif field.field.widget.input_type == 'time' %}
+        <!-- Time Input -->
+        <div class="relative group">
+            <input type="time" 
+                id="{{ field.id_for_label }}" 
+                name="{{ field.name }}"
+                class="peer w-full px-4 py-3 rounded-lg border-2 border-[hsl(var(--border))] bg-[hsl(var(--background))] text-[hsl(var(--foreground))] transition-all duration-200 focus:outline-none focus:border-[hsl(var(--primary))] focus:ring-2 focus:ring-[hsl(var(--primary)/0.2)] focus:bg-[hsl(var(--card))] {% if is_disabled %}cursor-not-allowed opacity-70{% endif %} {% if field.errors %}border-[hsl(var(--destructive))]{% endif %}" 
+                value="{{ field.value|time:'H:i'|default:'' }}"
+                {% if field.field.required %}required{% endif %}
+                {% if is_disabled %}disabled{% endif %}>
+            <label for="{{ field.id_for_label }}" 
+                class="absolute left-4 -top-2.5 px-2 text-sm font-medium bg-[hsl(var(--background))] text-[hsl(var(--muted-foreground))] peer-focus:text-[hsl(var(--primary))] peer-focus:font-semibold {% if field.errors %}text-[hsl(var(--destructive))]{% endif %}">
+                {{ field.label }}{% if field.field.required %}<span class="text-[hsl(var(--destructive))] ml-1">*</span>{% endif %}
+            </label>
+        </div>
+
+    {% elif field.field.widget.input_type == 'color' %}
+        <!-- Color Input -->
+        <div class="relative">
+            <input type="color" 
+                id="{{ field.id_for_label }}" 
+                name="{{ field.name }}"
+                class="peer w-full h-10 px-1 py-1 rounded-md border-2 border-[hsl(var(--border))] bg-transparent text-[hsl(var(--foreground))] transition-all duration-200 focus:outline-none focus:border-[hsl(var(--primary))] focus:ring-1 focus:ring-[hsl(var(--primary))] cursor-pointer {% if is_disabled %}cursor-not-allowed opacity-70{% endif %}"
+                value="{{ field.value|default:'#000000' }}"
+                {% if field.field.required %}required{% endif %}
+                {% if is_disabled %}disabled{% endif %}>
+            <label for="{{ field.id_for_label }}" 
+                class="absolute left-3 -top-2.5 px-1 text-sm transition-all duration-300 bg-[hsl(var(--background))] text-[hsl(var(--muted-foreground))] peer-focus:text-[hsl(var(--primary))]">
+                {{ field.label }}{% if field.field.required %}<span class="text-red-500">*</span>{% endif %}
+            </label>
+        </div>
+
+    {% elif field.field.widget.input_type == 'range' %}
+        <!-- Range Input -->
+        <div>
+            <input type="range" 
+                id="{{ field.id_for_label }}" 
+                name="{{ field.name }}"
+                min="{{ field.field.widget.attrs.min|default:0 }}" 
+                max="{{ field.field.widget.attrs.max|default:100 }}"
+                value="{{ field.value|default:0 }}"
+                class="w-full h-2 bg-[hsl(var(--secondary))] rounded-full appearance-none cursor-pointer focus:outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[hsl(var(--primary))] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-all [&::-webkit-slider-thumb]:duration-200 [&::-webkit-slider-thumb]:hover:scale-110 {% if is_disabled %}cursor-not-allowed opacity-70{% endif %}"
+                {% if field.field.required %}required{% endif %}
+                {% if is_disabled %}disabled{% endif %}>
+            <div class="flex justify-between text-xs text-muted-foreground mt-1">
+                <span>{{ field.field.widget.attrs.min|default:0 }}</span>
+                <span id="{{ field.id_for_label }}-value">{{ field.value|default:0 }}</span>
+                <span>{{ field.field.widget.attrs.max|default:100 }}</span>
+            </div>
+        </div>
+
+    {% elif field.field.widget.input_type == 'select' %}
+        <!-- Select Input -->
+        <div class="relative">
+            <select id="{{ field.id_for_label }}" 
+                name="{{ field.name }}"
+                class="peer w-full px-3 py-2 rounded-md border-2 border-[hsl(var(--border))] bg-transparent text-[hsl(var(--foreground))] transition-all duration-200 focus:outline-none focus:border-[hsl(var(--primary))] focus:ring-1 focus:ring-[hsl(var(--primary))] focus:bg-[hsl(var(--accent))] appearance-none {% if is_disabled %}cursor-not-allowed opacity-70{% endif %}"
+                {% if field.field.required %}required{% endif %}
+                {% if is_disabled %}disabled{% endif %}>
+                <option value="" disabled {% if not field.value %}selected{% endif %}></option>
+                {% for choice in field.field.choices %}
+                    <option value="{{ choice.0 }}" 
+                        {% if field.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
+                        {{ choice.1 }}
+                    </option>
+                {% endfor %}
+            </select>
+            <label for="{{ field.id_for_label }}" 
+                class="absolute left-3 -top-2.5 px-1 text-sm transition-all duration-300 bg-[hsl(var(--background))] text-[hsl(var(--muted-foreground))] peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-[hsl(var(--primary))] peer-placeholder-shown:top-3 peer-placeholder-shown:text-base">
+                {{ field.label }}{% if field.field.required %}<span class="text-red-500">*</span>{% endif %}
+            </label>
+            <svg class="absolute right-3 top-3.5 w-5 h-5 pointer-events-none text-[hsl(var(--muted-foreground))]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+
+    {% elif field.field.widget.input_type == 'select-multiple' %}
+        <!-- Multiple Select -->
+        <div class="relative">
+            <select id="{{ field.id_for_label }}" 
+                name="{{ field.name }}" 
+                multiple 
+                size="3"
+                class="peer w-full px-3 py-2 rounded-md border-2 border-[hsl(var(--border))] bg-transparent text-[hsl(var(--foreground))] transition-all duration-200 focus:outline-none focus:border-[hsl(var(--primary))] focus:ring-1 focus:ring-[hsl(var(--primary))] focus:bg-[hsl(var(--accent))] {% if is_disabled %}cursor-not-allowed opacity-70{% endif %}"
+                {% if field.field.required %}required{% endif %}
+                {% if is_disabled %}disabled{% endif %}>
+                {% for choice in field.field.choices %}
+                    <option value="{{ choice.0 }}" 
+                        {% if choice.0 in field.value %}selected{% endif %}>
+                        {{ choice.1 }}
+                    </option>
+                {% endfor %}
+            </select>
+            <label for="{{ field.id_for_label }}" 
+                class="absolute left-3 -top-2.5 px-1 text-sm transition-all duration-300 bg-[hsl(var(--background))] text-[hsl(var(--muted-foreground))] peer-focus:text-[hsl(var(--primary))]">
+                {{ field.label }}{% if field.field.required %}<span class="text-red-500">*</span>{% endif %}
+            </label>
+        </div>
+
+    {% elif field.field.widget.input_type == 'radio' %}
+        <!-- Radio Buttons -->
+        <fieldset class="space-y-2 bg-gradient-to-br from-[hsl(var(--background))] to-[hsl(var(--muted))] rounded-md p-4 border border-[hsl(var(--border))]">
+            <legend class="text-sm font-medium px-2 -ml-1">{{ field.label }}{% if field.field.required %}<span class="text-red-500">*</span>{% endif %}</legend>
+            {% for choice in field.field.choices %}
+                <div class="flex items-center gap-2">
+                    <input type="radio" 
+                        id="{{ field.id_for_label }}_{{ forloop.counter }}" 
+                        name="{{ field.name }}" 
+                        value="{{ choice.0 }}"
+                        class="appearance-none w-5 h-5 rounded-full border-2 border-[hsl(var(--border))] checked:border-[hsl(var(--primary))] relative cursor-pointer transition-all duration-200 after:content-[''] after:absolute after:opacity-0 after:w-2.5 after:h-2.5 after:bg-[hsl(var(--primary))] after:rounded-full after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 checked:after:opacity-100 {% if is_disabled %}cursor-not-allowed opacity-70{% endif %}"
+                        {% if field.value|stringformat:"s" == choice.0|stringformat:"s" %}checked{% endif %}
+                        {% if field.field.required %}required{% endif %}
+                        {% if is_disabled %}disabled{% endif %}>
+                    <label for="{{ field.id_for_label }}_{{ forloop.counter }}" class="text-[hsl(var(--foreground))] cursor-pointer">{{ choice.1 }}</label>
+                </div>
+            {% endfor %}
+        </fieldset>
+
+    {% elif field.field.widget.input_type == 'checkbox' %}
+        {% if field.field.choices %}
+            <!-- Checkbox Group -->
+            <fieldset class="space-y-2 bg-gradient-to-br from-[hsl(var(--background))] to-[hsl(var(--muted))] rounded-md p-4 border border-[hsl(var(--border))]">
+                <legend class="text-sm font-medium px-2 -ml-1">{{ field.label }}{% if field.field.required %}<span class="text-red-500">*</span>{% endif %}</legend>
+                {% for choice in field.field.choices %}
+                    <div class="flex items-center p-2 rounded-md border border-[hsl(var(--border))] hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--accent))] transition-all duration-200">
+                        <input type="checkbox" 
+                            id="{{ field.id_for_label }}_{{ forloop.counter }}" 
+                            name="{{ field.name }}" 
+                            value="{{ choice.0 }}"
+                            class="appearance-none w-6 h-6 rounded-md border-2 border-[hsl(var(--border))] checked:bg-[hsl(var(--primary))] checked:border-[hsl(var(--primary))] relative cursor-pointer transition-all duration-200 after:content-[''] after:absolute after:opacity-0 after:w-1 after:h-2 after:border-r-2 after:border-b-2 after:border-[hsl(var(--primary-foreground))] after:rotate-45 after:top-1/2 after:left-1/2 after:-translate-y-[60%] after:-translate-x-1/2 checked:after:opacity-100 mr-3 {% if is_disabled %}cursor-not-allowed opacity-70{% endif %}"
+                            {% if choice.0 in field.value %}checked{% endif %}
+                            {% if is_disabled %}disabled{% endif %}>
+                        <label for="{{ field.id_for_label }}_{{ forloop.counter }}" class="text-[hsl(var(--foreground))] cursor-pointer">{{ choice.1 }}</label>
+                    </div>
+                {% endfor %}
+            </fieldset>
+        {% else %}
+            <!-- Single Checkbox / Toggle -->
+            <div class="flex items-center gap-2 bg-gradient-to-br from-[hsl(var(--background))] to-[hsl(var(--muted))] rounded-md p-4 border border-[hsl(var(--border))]">
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" 
+                        id="{{ field.id_for_label }}" 
+                        name="{{ field.name }}" 
+                        class="sr-only peer"
+                        {% if field.value %}checked{% endif %}
+                        {% if field.field.required %}required{% endif %}
+                        {% if is_disabled %}disabled{% endif %}>
+                    <div class="w-11 h-6 bg-[hsl(var(--muted))] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[hsl(var(--primary))] {% if is_disabled %}cursor-not-allowed opacity-70{% endif %}"></div>
+                    <span class="ml-3 text-sm font-medium">{{ field.label }}{% if field.field.required %}<span class="text-red-500">*</span>{% endif %}</span>
+                </label>
+            </div>
+        {% endif %}
+
+    {% elif field.field.widget.input_type == 'file' %}
+        <!-- File Input -->
+        <div class="relative">
+            <input type="file" 
+                id="{{ field.id_for_label }}" 
+                name="{{ field.name }}"
+                class="peer w-full px-3 py-2 rounded-md border-2 border-[hsl(var(--border))] bg-transparent text-[hsl(var(--foreground))] transition-all duration-200 focus:outline-none focus:border-[hsl(var(--primary))] focus:ring-1 focus:ring-[hsl(var(--primary))] file:bg-[hsl(var(--secondary))] file:text-[hsl(var(--secondary-foreground))] file:border-0 file:px-4 file:py-2 file:mr-4 file:rounded-md file:cursor-pointer file:hover:bg-[hsl(var(--accent))] file:transition-all {% if is_disabled %}cursor-not-allowed opacity-70 file:cursor-not-allowed{% endif %}"
+                {% if field.field.required %}required{% endif %}
+                {% if is_disabled %}disabled{% endif %}>
+            {% if field.value %}
+            <div class="mt-2 flex items-center">
+                <span class="text-sm text-[hsl(var(--muted-foreground))]">Current: {{ field.value }}</span>
+            </div>
+            {% endif %}
+            <label for="{{ field.id_for_label }}" 
+                class="absolute left-3 -top-2.5 px-1 text-sm transition-all duration-300 bg-[hsl(var(--background))] text-[hsl(var(--muted-foreground))] peer-focus:text-[hsl(var(--primary))]">
+                {{ field.label }}{% if field.field.required %}<span class="text-red-500">*</span>{% endif %}
+            </label>
+        </div>
+
+    {% elif field.field.widget.input_type == 'textarea' %}
+        <!-- Textarea -->
+        <div class="relative">
+            <textarea id="{{ field.id_for_label }}" 
+                name="{{ field.name }}" 
+                rows="4" 
+                class="peer w-full px-3 py-2 rounded-md border-2 border-[hsl(var(--border))] bg-transparent text-[hsl(var(--foreground))] transition-all duration-200 focus:outline-none focus:border-[hsl(var(--primary))] focus:ring-1 focus:ring-[hsl(var(--primary))] focus:bg-[hsl(var(--accent))] placeholder-transparent {% if is_disabled %}cursor-not-allowed opacity-70{% endif %}" 
+                placeholder="{{ field.label }}"
+                {% if field.field.required %}required{% endif %}
+                {% if is_disabled %}disabled{% endif %}>{{ field.value|default:'' }}</textarea>
+            <label for="{{ field.id_for_label }}" 
+                class="absolute left-3 -top-2.5 px-1 text-sm transition-all duration-300 bg-[hsl(var(--background))] text-[hsl(var(--muted-foreground))] peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-[hsl(var(--primary))] peer-placeholder-shown:top-3 peer-placeholder-shown:text-base">
+                {{ field.label }}{% if field.field.required %}<span class="text-red-500">*</span>{% endif %}
+            </label>
+        </div>
+
+    {% else %}
+        <!-- Fallback for any other field types -->
+        <div class="relative">
+            {{ field }}
+            <label for="{{ field.id_for_label }}" class="block text-sm font-medium mb-1">
+                {{ field.label }}{% if field.field.required %}<span class="text-red-500">*</span>{% endif %}
+            </label>
+        </div>
+    {% endif %}
+
+    <!-- Field Errors -->
+    {% if field.errors %}
+        <div class="text-red-500 text-xs mt-1">
+            {% for error in field.errors %}
+                <p class="flex items-center">
+                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    {{ error }}
+                </p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Field Help Text -->
+    {% if field.help_text %}
+        <div class="text-xs text-muted-foreground mt-1">
+            {{ field.help_text }}
+        </div>
+    {% endif %}
+</div>

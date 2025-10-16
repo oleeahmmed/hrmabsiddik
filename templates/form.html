@@ -1,0 +1,429 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if object %}Edit {{ model_name|title }} - {{ object }}{% else %}Add New {{ model_name|title }}{% endif %}
+{% endblock %}
+
+{% block page_title %}
+    {% if object %}Edit {{ model_name|title }}{% else %}Add New {{ model_name|title }}{% endif %}
+{% endblock %}
+
+{% block page_subtitle %}
+    {% if object %}Update details for {{ object }}{% else %}Create a new {{ model_name }}{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ===============================================
+   PREMIUM FORM & FIELDSET STYLES
+=============================================== */
+
+/* Enhanced Fieldset Container */
+.fieldset-card {
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card)) 100%);
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.05),
+        0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Fieldset animated top border */
+.fieldset-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, hsl(var(--primary) / 0.5), hsl(var(--primary)), hsl(var(--primary) / 0.5));
+    animation: fieldsetPulse 3s ease-in-out infinite;
+}
+
+/* Fieldset gradient overlay */
+.fieldset-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 10% 20%, hsl(var(--primary) / 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 90% 80%, hsl(var(--primary) / 0.02) 0%, transparent 50%);
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+.dark .fieldset-card::after {
+    background: 
+        radial-gradient(circle at 10% 20%, hsl(var(--primary) / 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 90% 80%, hsl(var(--primary) / 0.03) 0%, transparent 50%);
+}
+
+/* Hover effect for fieldset */
+.fieldset-card:hover {
+    border-color: hsl(var(--primary) / 0.3);
+    box-shadow: 
+        0 10px 15px -3px rgba(0, 0, 0, 0.08),
+        0 4px 6px -2px rgba(0, 0, 0, 0.04);
+    transform: translateY(-2px);
+}
+
+/* Fieldset Header */
+.fieldset-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid hsl(var(--border) / 0.5);
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.fieldset-header::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, hsl(var(--primary)), transparent);
+    animation: headerSlide 2s ease-in-out infinite;
+}
+
+.fieldset-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.1), hsl(var(--primary) / 0.05));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: hsl(var(--primary));
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px hsl(var(--primary) / 0.2);
+}
+
+.fieldset-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.fieldset-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    margin: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.fieldset-description {
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+    margin-top: 0.25rem;
+}
+
+/* Form Grid Enhancement */
+.form-grid {
+    display: grid;
+    gap: 1.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* Animations */
+@keyframes fieldsetPulse {
+    0%, 100% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes headerSlide {
+    0%, 100% {
+        width: 60px;
+        opacity: 0.8;
+    }
+    50% {
+        width: 120px;
+        opacity: 1;
+    }
+}
+
+@keyframes fieldsetShimmer {
+    0% {
+        left: -100%;
+    }
+    50%, 100% {
+        left: 200%;
+    }
+}
+
+/* Form without fieldsets - simpler styling */
+.simple-form-container {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .fieldset-card {
+        padding: 1.5rem;
+    }
+    
+    .fieldset-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .fieldset-icon {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .fieldset-title {
+        font-size: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Form Card -->
+    <div class="card">
+        <!-- Card Header -->
+        <div class="card-header">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-semibold text-foreground">{{ model_name|title }} Information</h3>
+                    <p class="text-muted-foreground text-sm mt-1">
+                        {% if object %}
+                            Update the details for this {{ model_name }}
+                        {% else %}
+                            Fill in the information to create a new {{ model_name }}
+                        {% endif %}
+                    </p>
+                </div>
+                <a href="{% if back_url %}{{ back_url }}{% else %}{% url 'core:main_dashboard' %}{% endif %}" 
+                   class="btn btn-outline">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Back to {{ back_text|default:"Dashboard" }}
+                </a>
+            </div>
+        </div>
+        
+        <!-- Card Body -->
+        <div class="card-body">
+            <form method="post" id="dynamic-form" {% if form.is_multipart %}enctype="multipart/form-data"{% endif %}>
+                {% csrf_token %}
+                
+                <!-- Form Errors Alert -->
+                {% if form.non_field_errors %}
+                <div class="card p-4 bg-destructive-light border-destructive/30 animate-slide-in mb-6">
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0">
+                            <svg class="w-5 h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-sm font-semibold text-destructive mb-2">Please correct the following errors:</h4>
+                            <ul class="list-disc list-inside space-y-1 text-sm text-destructive">
+                                {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Dynamic Form Fields with Fieldset Support -->
+                {% if form_fieldsets %}
+                    <!-- Render fields using fieldsets configuration -->
+                    {% for fieldset in form_fieldsets %}
+                    <div class="fieldset-card animate-fade-in" style="animation-delay: {{ forloop.counter0|add:'0.1' }}s">
+                        {% if fieldset.name %}
+                        <div class="fieldset-header">
+                            {% if fieldset.icon %}
+                            <div class="fieldset-icon">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    {{ fieldset.icon|safe }}
+                                </svg>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <h4 class="fieldset-title">{{ fieldset.name }}</h4>
+                                {% if fieldset.description %}
+                                <p class="fieldset-description">{{ fieldset.description }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="form-grid grid grid-cols-1 {% if fieldset.columns %}{{ fieldset.columns }}{% else %}md:grid-cols-2 lg:grid-cols-3{% endif %} gap-6">
+                            {% for field_name in fieldset.fields %}
+                                {% for field in form %}
+                                    {% if field.name == field_name %}
+                                    <div class="form-group {% if field.field.widget.input_type == 'checkbox' and not field.field.choices %}col-span-full{% endif %} {% if field.field.widget.input_type == 'textarea' %}col-span-full{% endif %}">
+                                        {% include 'includes/form_field.html' with field=field is_disabled=is_disabled %}
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- Default rendering without fieldsets -->
+                    <div class="simple-form-container">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {% for field in form %}
+                            {% if not field.is_hidden %}
+                            <div class="form-group {% if field.field.widget.input_type == 'checkbox' and not field.field.choices %}col-span-full{% endif %} {% if field.field.widget.input_type == 'textarea' %}col-span-full{% endif %}">
+                                {% include 'includes/form_field.html' with field=field is_disabled=is_disabled %}
+                            </div>
+                            {% else %}
+                                {{ field }}
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Card Footer -->
+        <div class="card-footer">
+            <div class="flex items-center justify-between">
+                <div class="text-sm text-muted-foreground">
+                    {% if object %}
+                        <span class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Last updated: {{ object.updated_at|date:"M d, Y H:i" }}
+                        </span>
+                    {% else %}
+                        <span class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Creating new {{ model_name }}
+                        </span>
+                    {% endif %}
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="{% if back_url %}{{ back_url }}{% else %}{% url 'core:main_dashboard' %}{% endif %}" 
+                       class="btn btn-outline">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        Cancel
+                    </a>
+                    <button type="submit" form="dynamic-form" class="btn btn-primary">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        {% if object %}Update {{ model_name|title }}{% else %}Create {{ model_name|title }}{% endif %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Card (Optional) -->
+    {% if help_text %}
+    <div class="card mt-6 animate-fade-in">
+        <div class="card-header info-header">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold">Help & Guidelines</h3>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="space-y-3 text-sm text-muted-foreground">
+                {{ help_text|safe }}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Range input value display
+    const rangeInputs = document.querySelectorAll('input[type="range"]');
+    rangeInputs.forEach(range => {
+        const valueDisplay = document.getElementById(`${range.id}-value`);
+        if (valueDisplay) {
+            range.addEventListener('input', function() {
+                valueDisplay.textContent = this.value;
+            });
+            valueDisplay.textContent = range.value;
+        }
+    });
+
+    // Form validation
+    const form = document.getElementById('dynamic-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const requiredFields = this.querySelectorAll('[required]');
+            let isValid = true;
+
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.classList.add('error');
+                    
+                    if (!field.nextElementSibling?.classList.contains('form-error')) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'form-error';
+                        errorDiv.textContent = 'This field is required';
+                        field.parentNode.appendChild(errorDiv);
+                    }
+                } else {
+                    field.classList.remove('error');
+                    const errorMsg = field.parentNode.querySelector('.form-error');
+                    if (errorMsg) {
+                        errorMsg.remove();
+                    }
+                }
+            });
+
+            if (!isValid) {
+                e.preventDefault();
+                showToast('Please fill in all required fields', 'error', 'Validation Error');
+            }
+        });
+    }
+
+    // Add animation delays to fieldset cards
+    const fieldsetCards = document.querySelectorAll('.fieldset-card');
+    fieldsetCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.classList.add('animate-slide-in');
+    });
+});
+</script>
+{% endblock %}

@@ -1,71 +1,97 @@
 from django.urls import path
-from . import views
+
+# Import all views directly from their files
+from .views.dashboard_views import MainDashboardView, ProjectDashboardView, MyTasksView, MyProjectsView
+from .views.company_views import (
+    CompanyListView, CompanyListAllView, CompanyCreateView,
+    CompanyDetailView, CompanyUpdateView, CompanyDeleteView, CompanyPrintView
+)
+from .views.userprofile_views import (
+    UserProfileListView, UserProfileListAllView, UserProfileCreateView,
+    UserProfileDetailView, UserProfileUpdateView, UserProfileDeleteView, UserProfilePrintView,
+    MyProfileView, MyProfileUpdateView
+)
+from .views.project_views import (
+    ProjectListView, ProjectListAllView, ProjectCreateView,
+    ProjectDetailView, ProjectUpdateView, ProjectDeleteView, ProjectPrintView
+)
+from .views.task_views import (
+    TaskListView, TaskListAllView, TaskCreateView,
+    TaskDetailView, TaskUpdateView, TaskDeleteView, TaskPrintView
+)
+from .views.taskcomment_views import (
+    TaskCommentListView, TaskCommentListAllView, TaskCommentCreateView,
+    TaskCommentDetailView, TaskCommentUpdateView, TaskCommentDeleteView
+)
+
+from .views.project_reports import (
+    project_report_dashboard,
+    project_detailed_report,
+    task_performance_report
+)
+
 
 app_name = 'core'
 
 urlpatterns = [
-    # Main Dashboard
-    path('', views.MainDashboardView.as_view(), name='main_dashboard'),
+    # ==================== DASHBOARD URLs ====================
+    path('', MainDashboardView.as_view(), name='main_dashboard'),
+    path('project-dashboard/', ProjectDashboardView.as_view(), name='project_dashboard'),
+    path('my-tasks/', MyTasksView.as_view(), name='my_tasks'),
+    path('my-projects/', MyProjectsView.as_view(), name='my_projects'),
     
-    # User Profile URLs
-    path('profiles/', views.UserProfileListView.as_view(), name='userprofile_list'),
-    path('profiles/create/', views.UserProfileCreateView.as_view(), name='userprofile_create'),
-    path('profiles/<int:pk>/', views.UserProfileDetailView.as_view(), name='userprofile_detail'),
-    path('profiles/<int:pk>/update/', views.UserProfileUpdateView.as_view(), name='userprofile_update'),
-    path('profiles/<int:pk>/delete/', views.UserProfileDeleteView.as_view(), name='userprofile_delete'),
-    path('my-profile/', views.MyProfileView.as_view(), name='my_profile'),
-    path('my-profile/update/', views.MyProfileUpdateView.as_view(), name='my_profile_update'),
+    # ==================== COMPANY URLs ====================
+    path('companies/', CompanyListView.as_view(), name='company_list'),
+    path('companies/all/', CompanyListAllView.as_view(), name='company_list_all'),
+    path('companies/create/', CompanyCreateView.as_view(), name='company_create'),
+    path('companies/<int:pk>/', CompanyDetailView.as_view(), name='company_detail'),
+    path('companies/<int:pk>/update/', CompanyUpdateView.as_view(), name='company_update'),
+    path('companies/<int:pk>/delete/', CompanyDeleteView.as_view(), name='company_delete'),
+    path('companies/<int:pk>/print/', CompanyPrintView.as_view(), name='company_print'),
     
-    # Company URLs
-    path('companies/', views.CompanyListView.as_view(), name='company_list'),
-    path('companies/create/', views.CompanyCreateView.as_view(), name='company_create'),
-    path('companies/<int:pk>/', views.CompanyDetailView.as_view(), name='company_detail'),
-    path('companies/<int:pk>/update/', views.CompanyUpdateView.as_view(), name='company_update'),
-    path('companies/<int:pk>/delete/', views.CompanyDeleteView.as_view(), name='company_delete'),
+    # ==================== USER PROFILE URLs ====================
+    path('profiles/', UserProfileListView.as_view(), name='userprofile_list'),
+    path('profiles/all/', UserProfileListAllView.as_view(), name='userprofile_list_all'),
+    path('profiles/create/', UserProfileCreateView.as_view(), name='userprofile_create'),
+    path('profiles/<int:pk>/', UserProfileDetailView.as_view(), name='userprofile_detail'),
+    path('profiles/<int:pk>/update/', UserProfileUpdateView.as_view(), name='userprofile_update'),
+    path('profiles/<int:pk>/delete/', UserProfileDeleteView.as_view(), name='userprofile_delete'),
+    path('profiles/<int:pk>/print/', UserProfilePrintView.as_view(), name='userprofile_print'),
     
-    # Project Role URLs
-    path('project-roles/', views.ProjectRoleListView.as_view(), name='projectrole_list'),
-    path('project-roles/create/', views.ProjectRoleCreateView.as_view(), name='projectrole_create'),
-    path('project-roles/<int:pk>/', views.ProjectRoleDetailView.as_view(), name='projectrole_detail'),
-    path('project-roles/<int:pk>/update/', views.ProjectRoleUpdateView.as_view(), name='projectrole_update'),
-    path('project-roles/<int:pk>/delete/', views.ProjectRoleDeleteView.as_view(), name='projectrole_delete'),
+    # ==================== MY PROFILE URLs ====================
+    path('my-profile/', MyProfileView.as_view(), name='my_profile'),
+    path('my-profile/update/', MyProfileUpdateView.as_view(), name='my_profile_update'),
     
-    # Project URLs
-    path('projects/', views.ProjectListView.as_view(), name='project_list'),
-    path('projects/create/', views.ProjectCreateView.as_view(), name='project_create'),
-    path('projects/<int:pk>/', views.ProjectDetailView.as_view(), name='project_detail'),
-    path('projects/<int:pk>/update/', views.ProjectUpdateView.as_view(), name='project_update'),
-    path('projects/<int:pk>/delete/', views.ProjectDeleteView.as_view(), name='project_delete'),
-    path('projects/<int:pk>/dashboard/', views.ProjectDetailDashboardView.as_view(), name='project_dashboard'),
-    path('projects/<int:pk>/export/', views.ExportProjectReportView.as_view(), name='project_export'),
+    # ==================== PROJECT URLs ====================
+    path('projects/', ProjectListView.as_view(), name='project_list'),
+    path('projects/all/', ProjectListAllView.as_view(), name='project_list_all'),
+    path('projects/create/', ProjectCreateView.as_view(), name='project_create'),
+    path('projects/<int:pk>/', ProjectDetailView.as_view(), name='project_detail'),
+    path('projects/<int:pk>/update/', ProjectUpdateView.as_view(), name='project_update'),
+    path('projects/<int:pk>/delete/', ProjectDeleteView.as_view(), name='project_delete'),
+    path('projects/<int:pk>/print/', ProjectPrintView.as_view(), name='project_print'),
     
-    # Task URLs
-    path('tasks/', views.TaskListView.as_view(), name='task_list'),
-    path('tasks/create/', views.TaskCreateView.as_view(), name='task_create'),
-    path('tasks/<int:pk>/', views.TaskDetailView.as_view(), name='task_detail'),
-    path('tasks/<int:pk>/update/', views.TaskUpdateView.as_view(), name='task_update'),
-    path('tasks/<int:pk>/delete/', views.TaskDeleteView.as_view(), name='task_delete'),
-    path('tasks/<int:pk>/quick-update/', views.TaskQuickUpdateView.as_view(), name='task_quick_update'),
+    # ==================== TASK URLs ====================
+    path('tasks/', TaskListView.as_view(), name='task_list'),
+    path('tasks/all/', TaskListAllView.as_view(), name='task_list_all'),
+    path('tasks/create/', TaskCreateView.as_view(), name='task_create'),
+    path('tasks/<int:pk>/', TaskDetailView.as_view(), name='task_detail'),
+    path('tasks/<int:pk>/update/', TaskUpdateView.as_view(), name='task_update'),
+    path('tasks/<int:pk>/delete/', TaskDeleteView.as_view(), name='task_delete'),
+    path('tasks/<int:pk>/print/', TaskPrintView.as_view(), name='task_print'),
     
-    # Task Comment URLs
-    path('task-comments/', views.TaskCommentListView.as_view(), name='taskcomment_list'),
-    path('task-comments/create/', views.TaskCommentCreateView.as_view(), name='taskcomment_create'),
-    path('task-comments/<int:pk>/', views.TaskCommentDetailView.as_view(), name='taskcomment_detail'),
-    path('task-comments/<int:pk>/update/', views.TaskCommentUpdateView.as_view(), name='taskcomment_update'),
-    path('task-comments/<int:pk>/delete/', views.TaskCommentDeleteView.as_view(), name='taskcomment_delete'),
-    
-    
-    # ==================== TASK CHECKLIST URLs ====================
-    path('task-checklists/', views.TaskChecklistListView.as_view(), name='taskchecklist_list'),
-    path('task-checklists/create/', views.TaskChecklistCreateView.as_view(), name='taskchecklist_create'),
-    path('task-checklists/<int:pk>/', views.TaskChecklistDetailView.as_view(), name='taskchecklist_detail'),
-    path('task-checklists/<int:pk>/edit/', views.TaskChecklistUpdateView.as_view(), name='taskchecklist_update'),
-    path('task-checklists/<int:pk>/delete/', views.TaskChecklistDeleteView.as_view(), name='taskchecklist_delete'),
+    # ==================== TASK COMMENT URLs ====================
+    path('task-comments/', TaskCommentListView.as_view(), name='taskcomment_list'),
+    path('task-comments/all/', TaskCommentListAllView.as_view(), name='taskcomment_list_all'),
+    path('task-comments/create/', TaskCommentCreateView.as_view(), name='taskcomment_create'),
+    path('task-comments/<int:pk>/', TaskCommentDetailView.as_view(), name='taskcomment_detail'),
+    path('task-comments/<int:pk>/update/', TaskCommentUpdateView.as_view(), name='taskcomment_update'),
+    path('task-comments/<int:pk>/delete/', TaskCommentDeleteView.as_view(), name='taskcomment_delete'),
 
-    # ==================== DAILY TIME LOG URLs ====================
-    path('time-logs/', views.DailyTimeLogListView.as_view(), name='dailytimelog_list'),
-    path('time-logs/create/', views.DailyTimeLogCreateView.as_view(), name='dailytimelog_create'),
-    path('time-logs/<int:pk>/', views.DailyTimeLogDetailView.as_view(), name='dailytimelog_detail'),
-    path('time-logs/<int:pk>/edit/', views.DailyTimeLogUpdateView.as_view(), name='dailytimelog_update'),
-    path('time-logs/<int:pk>/delete/', views.DailyTimeLogDeleteView.as_view(), name='dailytimelog_delete'),
-]
+
+    # Project Reports URLs - core/ prefix সহ
+    path('project-reports/dashboard/', project_report_dashboard, name='project_report_dashboard'),
+    path('project-reports/detailed/', project_detailed_report, name='project_detailed_report'),
+    path('project-reports/task-performance/', task_performance_report, name='task_performance_report'),
+    
+    ]

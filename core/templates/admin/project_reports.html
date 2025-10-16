@@ -1,0 +1,215 @@
+<!-- core/templates/admin/project_reports.html -->
+{% extends "unfold/layouts/base_simple.html" %}
+{% load i18n static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <style>
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 4px solid #3b82f6;
+        }
+        .stat-card h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 0.875rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        .progress-bar {
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            height: 8px;
+            margin-top: 0.5rem;
+        }
+        .progress-fill {
+            background: #10b981;
+            height: 100%;
+        }
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+    </style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    &rsaquo; 
+    <a href="{% url 'core:project_report_dashboard' %}">Project Reports</a>
+    &rsaquo; {{ title }}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-900">{{ title }}</h1>
+        <p class="text-gray-600">Real-time project analytics and performance metrics</p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <h3>Total Projects</h3>
+            <div class="value">{{ total_projects }}</div>
+        </div>
+        <div class="stat-card" style="border-left-color: #10b981;">
+            <h3>Active Projects</h3>
+            <div class="value">{{ active_projects }}</div>
+        </div>
+        <div class="stat-card" style="border-left-color: #f59e0b;">
+            <h3>Completed Projects</h3>
+            <div class="value">{{ completed_projects }}</div>
+        </div>
+        <div class="stat-card" style="border-left-color: #ef4444;">
+            <h3>Overdue Projects</h3>
+            <div class="value">{{ overdue_projects }}</div>
+        </div>
+    </div>
+
+    <!-- Budget Statistics -->
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <h3>Total Budget</h3>
+            <div class="value">৳{{ budget_stats.total_budget|default:0|floatformat:2 }}</div>
+        </div>
+        <div class="stat-card">
+            <h3>Spent Budget</h3>
+            <div class="value">৳{{ budget_stats.spent_budget|default:0|floatformat:2 }}</div>
+        </div>
+        <div class="stat-card">
+            <h3>Average Budget</h3>
+            <div class="value">৳{{ budget_stats.avg_budget|default:0|floatformat:2 }}</div>
+        </div>
+    </div>
+
+    <!-- Two Column Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+        <!-- Recent Projects -->
+        <div class="table-container">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Recent Projects</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for project in recent_projects %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ project.name }}</div>
+                                <div class="text-sm text-gray-500">{{ project.company.name }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    {% if project.status == 'completed' %}bg-green-100 text-green-800
+                                    {% elif project.status == 'in_progress' %}bg-blue-100 text-blue-800
+                                    {% elif project.status == 'on_hold' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ project.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ project.get_progress_percentage }}%</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: {{ project.get_progress_percentage }}%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">
+                                No projects found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Company Statistics -->
+        <div class="table-container">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Projects by Company</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Projects</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Active</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for company in company_stats %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {{ company.name }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ company.project_count }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ company.active_projects }}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">
+                                No company data found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mt-8 flex space-x-4">
+        <a href="{% url 'core:project_detailed_report' %}" 
+           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+            Detailed Report
+        </a>
+        <a href="{% url 'core:task_performance_report' %}" 
+           class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+            Task Performance
+        </a>
+        <a href="/admin/core/project/" 
+           class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+            Manage Projects
+        </a>
+    </div>
+</div>
+{% endblock %}

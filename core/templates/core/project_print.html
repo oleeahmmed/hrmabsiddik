@@ -1,0 +1,507 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Project Report - {{ project.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/print-js/1.6.0/print.min.css">
+<style>
+    @media print {
+        @page {
+            size: A4 landscape;
+            margin: 0.5cm;
+        }
+        
+        body {
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+            background: white !important;
+            color: black !important;
+            font-size: 11pt;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .no-print {
+            display: none !important;
+        }
+        
+        .print-only {
+            display: block !important;
+        }
+        
+        .bg-white {
+            background: white !important;
+        }
+        
+        .border {
+            border: 1px solid #ddd !important;
+        }
+        
+        .shadow-sm {
+            box-shadow: none !important;
+        }
+        
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 9pt;
+            margin-top: 10px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f8f9fa !important;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .grid {
+            display: grid !important;
+        }
+        
+        .grid-cols-4 {
+            grid-template-columns: repeat(4, 1fr) !important;
+        }
+        
+        .gap-4 {
+            gap: 16px !important;
+        }
+        
+        .text-primary { color: #2563eb !important; }
+        .text-green-600 { color: #059669 !important; }
+        .text-red-600 { color: #dc2626 !important; }
+        .text-blue-600 { color: #2563eb !important; }
+        .text-yellow-600 { color: #d97706 !important; }
+        .text-purple-600 { color: #7c3aed !important; }
+        
+        .bg-green-100 { background-color: #d1fae5 !important; }
+        .bg-red-100 { background-color: #fee2e2 !important; }
+        .bg-blue-100 { background-color: #dbeafe !important; }
+        .bg-yellow-100 { background-color: #fef3c7 !important; }
+        .bg-purple-100 { background-color: #e9d5ff !important; }
+        .bg-gray-200 { background-color: #e5e7eb !important; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6 no-print">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Project Report</h1>
+            <p class="text-gray-600 mt-1">Detailed project information and analytics</p>
+        </div>
+        <button onclick="printReport()" class="btn btn-primary flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+            </svg>
+            Print Report
+        </button>
+    </div>
+</div>
+
+<!-- Printable Content -->
+<div id="printable-area">
+    <!-- Company Header -->
+    <div class="print-only hidden bg-white border-b border-gray-200 pb-4 mb-6">
+        <div class="text-center mb-4">
+            <h1 class="text-2xl font-bold text-gray-900">{{ project.company.name }}</h1>
+            {% if project.company.address_line1 %}
+            <p class="text-sm text-gray-600">{{ project.company.address_line1 }}</p>
+            {% endif %}
+            {% if project.company.address_line2 %}
+            <p class="text-sm text-gray-600">{{ project.company.address_line2 }}</p>
+            {% endif %}
+            {% if project.company.city or project.company.state %}
+            <p class="text-sm text-gray-600">
+                {{ project.company.city }}{% if project.company.city and project.company.state %}, {% endif %}{{ project.company.state }}
+                {% if project.company.zip_code %} - {{ project.company.zip_code }}{% endif %}
+            </p>
+            {% endif %}
+            {% if project.company.phone_number %}
+            <p class="text-sm text-gray-600">Phone: {{ project.company.phone_number }}</p>
+            {% endif %}
+            {% if project.company.email %}
+            <p class="text-sm text-gray-600">Email: {{ project.company.email }}</p>
+            {% endif %}
+        </div>
+        
+        <div class="text-center">
+            <h2 class="text-xl font-semibold text-gray-800">PROJECT REPORT</h2>
+            <h3 class="text-lg font-medium text-gray-700">{{ project.name }}</h3>
+            <p class="text-sm text-gray-600">Generated on: {{ print_date|date:"F j, Y" }}</p>
+        </div>
+    </div>
+
+    <!-- Project Description -->
+    <div class="print-only hidden bg-white border border-gray-200 p-4 mb-6">
+        <h4 class="text-lg font-semibold text-gray-800 mb-2">Project Description</h4>
+        {% if project.description %}
+        <p class="text-sm text-gray-700 leading-relaxed">{{ project.description }}</p>
+        {% else %}
+        <p class="text-sm text-gray-500 italic">No description available for this project.</p>
+        {% endif %}
+    </div>
+
+    <!-- Statistics Grid -->
+    <div class="print-only hidden grid grid-cols-4 gap-4 mb-6">
+        <!-- Total Tasks -->
+        <div class="bg-white border border-gray-200 p-4 text-center">
+            <div class="text-2xl font-bold text-blue-600">{{ task_distribution.total }}</div>
+            <div class="text-sm font-medium text-gray-600 mt-1">Total Tasks</div>
+        </div>
+
+        <!-- Completed Tasks -->
+        <div class="bg-white border border-gray-200 p-4 text-center">
+            <div class="text-2xl font-bold text-green-600">{{ task_distribution.completed }}</div>
+            <div class="text-sm font-medium text-gray-600 mt-1">Completed</div>
+        </div>
+
+        <!-- In Progress -->
+        <div class="bg-white border border-gray-200 p-4 text-center">
+            <div class="text-2xl font-bold text-yellow-600">{{ task_distribution.in_progress }}</div>
+            <div class="text-sm font-medium text-gray-600 mt-1">In Progress</div>
+        </div>
+
+        <!-- Overdue -->
+        <div class="bg-white border border-gray-200 p-4 text-center">
+            <div class="text-2xl font-bold text-red-600">{{ overdue_tasks }}</div>
+            <div class="text-sm font-medium text-gray-600 mt-1">Overdue</div>
+        </div>
+    </div>
+
+    <!-- Progress & Budget Grid -->
+    <div class="print-only hidden grid grid-cols-2 gap-4 mb-6">
+        <!-- Progress -->
+        <div class="bg-white border border-gray-200 p-4">
+            <h4 class="text-lg font-semibold text-gray-800 mb-3">Project Progress</h4>
+            <div class="flex justify-between text-sm mb-2">
+                <span class="font-medium text-gray-600">Overall Progress</span>
+                <span class="font-bold text-gray-900">{{ progress }}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3 mb-3">
+                <div class="bg-green-600 h-3 rounded-full" style="width: {{ progress }}%"></div>
+            </div>
+            <div class="text-sm text-gray-600">
+                <div class="flex justify-between">
+                    <span>Total Hours Worked:</span>
+                    <span class="font-medium">{{ total_hours|floatformat:1 }} hrs</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Budget -->
+        {% if project.total_budget %}
+        <div class="bg-white border border-gray-200 p-4">
+            <h4 class="text-lg font-semibold text-gray-800 mb-3">Budget Overview</h4>
+            <div class="space-y-2">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Total Budget:</span>
+                    <span class="font-medium">${{ project.total_budget }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Spent Budget:</span>
+                    <span class="font-medium text-orange-600">${{ project.spent_budget }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Remaining:</span>
+                    <span class="font-medium {% if budget_status.remaining >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                        ${{ budget_status.remaining|default:0 }}
+                    </span>
+                </div>
+            </div>
+            {% if budget_status.percentage_used %}
+            <div class="mt-3">
+                <div class="flex justify-between text-sm mb-1">
+                    <span class="font-medium text-gray-600">Budget Usage</span>
+                    <span class="font-bold text-gray-900">{{ budget_status.percentage_used }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-600 h-2 rounded-full" style="width: {{ budget_status.percentage_used }}%"></div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Task Distribution Table -->
+    <div class="print-only hidden bg-white border border-gray-200 p-4 mb-6">
+        <h4 class="text-lg font-semibold text-gray-800 mb-4">Task Distribution</h4>
+        <table class="w-full">
+            <thead>
+                <tr>
+                    <th class="text-left p-2 font-semibold text-gray-700">Status</th>
+                    <th class="text-left p-2 font-semibold text-gray-700">Count</th>
+                    <th class="text-left p-2 font-semibold text-gray-700">Percentage</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="p-2 text-sm text-gray-700">Completed</td>
+                    <td class="p-2 text-sm font-medium text-green-600">{{ task_distribution.completed }}</td>
+                    <td class="p-2 text-sm text-gray-600">
+                        {% if task_distribution.total > 0 %}
+                            {{ task_distribution.completed|floatformat:0 }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="p-2 text-sm text-gray-700">In Progress</td>
+                    <td class="p-2 text-sm font-medium text-blue-600">{{ task_distribution.in_progress }}</td>
+                    <td class="p-2 text-sm text-gray-600">
+                        {% if task_distribution.total > 0 %}
+                            {{ task_distribution.in_progress|floatformat:0 }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="p-2 text-sm text-gray-700">To Do</td>
+                    <td class="p-2 text-sm font-medium text-yellow-600">{{ task_distribution.todo }}</td>
+                    <td class="p-2 text-sm text-gray-600">
+                        {% if task_distribution.total > 0 %}
+                            {{ task_distribution.todo|floatformat:0 }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="p-2 text-sm text-gray-700">On Hold</td>
+                    <td class="p-2 text-sm font-medium text-orange-600">{{ task_distribution.on_hold }}</td>
+                    <td class="p-2 text-sm text-gray-600">
+                        {% if task_distribution.total > 0 %}
+                            {{ task_distribution.on_hold|floatformat:0 }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr class="border-t border-gray-200">
+                    <td class="p-2 text-sm font-semibold text-gray-800">Total</td>
+                    <td class="p-2 text-sm font-semibold text-gray-800">{{ task_distribution.total }}</td>
+                    <td class="p-2 text-sm font-semibold text-gray-800">100%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Recent Tasks Table -->
+    <div class="print-only hidden bg-white border border-gray-200 p-4">
+        <h4 class="text-lg font-semibold text-gray-800 mb-4">Recent Tasks</h4>
+        {% if recent_tasks %}
+        <table class="w-full">
+            <thead>
+                <tr>
+                    <th class="text-left p-2 font-semibold text-gray-700">Task Title</th>
+                    <th class="text-left p-2 font-semibold text-gray-700">Assigned To</th>
+                    <th class="text-left p-2 font-semibold text-gray-700">Status</th>
+                    <th class="text-left p-2 font-semibold text-gray-700">Priority</th>
+                    <th class="text-left p-2 font-semibold text-gray-700">Due Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in recent_tasks %}
+                <tr>
+                    <td class="p-2 text-sm text-gray-700">{{ task.title }}</td>
+                    <td class="p-2 text-sm text-gray-600">
+                        {% if task.assigned_to %}
+                            {{ task.assigned_to.get_full_name|default:task.assigned_to.username }}
+                        {% else %}
+                            <span class="text-gray-400">Unassigned</span>
+                        {% endif %}
+                    </td>
+                    <td class="p-2 text-sm">
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium 
+                            {% if task.status == 'completed' %}bg-green-100 text-green-800
+                            {% elif task.status == 'in_progress' %}bg-blue-100 text-blue-800
+                            {% elif task.status == 'on_hold' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ task.get_status_display }}
+                        </span>
+                    </td>
+                    <td class="p-2 text-sm">
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium 
+                            {% if task.priority == 'high' or task.priority == 'critical' %}bg-red-100 text-red-800
+                            {% elif task.priority == 'medium' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-blue-100 text-blue-800{% endif %}">
+                            {{ task.get_priority_display }}
+                        </span>
+                    </td>
+                    <td class="p-2 text-sm text-gray-600">{{ task.due_date|date:"M d, Y" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-gray-500 text-center py-4">No tasks found for this project.</p>
+        {% endif %}
+    </div>
+
+    <!-- Print Footer -->
+    <div class="print-only hidden mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
+        <p>Confidential Document - Generated by HRM System</p>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/print-js/1.6.0/print.min.js"></script>
+
+<script>
+function printReport() {
+    // Show all print-only elements
+    document.querySelectorAll('.print-only').forEach(el => {
+        el.classList.remove('hidden');
+    });
+
+    printJS({
+        printable: 'printable-area',
+        type: 'html',
+        css: [
+            'https://cdn.tailwindcss.com'
+        ],
+        style: `
+            @page { 
+                size: A4 landscape;
+                margin: 0.5cm;
+            }
+            body { 
+                font-family: 'Arial', sans-serif;
+                background: white !important;
+                color: black !important;
+                font-size: 11pt;
+                line-height: 1.4;
+            }
+            .print-only { 
+                display: block !important; 
+            }
+            .no-print { 
+                display: none !important; 
+            }
+            .bg-white { 
+                background: white !important; 
+            }
+            .border { 
+                border: 1px solid #ddd !important; 
+            }
+            .border-gray-200 { 
+                border-color: #e5e7eb !important; 
+            }
+            .border-b { 
+                border-bottom: 1px solid #e5e7eb !important; 
+            }
+            .border-t { 
+                border-top: 1px solid #e5e7eb !important; 
+            }
+            .shadow-sm { 
+                box-shadow: none !important; 
+            }
+            table { 
+                border-collapse: collapse; 
+                width: 100%; 
+                font-size: 9pt;
+                margin-top: 10px;
+            }
+            th, td { 
+                border: 1px solid #ddd; 
+                padding: 6px 8px; 
+                text-align: left; 
+            }
+            th { 
+                background-color: #f8f9fa !important; 
+                font-weight: 600;
+                color: #374151;
+            }
+            .grid { 
+                display: grid !important; 
+            }
+            .grid-cols-4 { 
+                grid-template-columns: repeat(4, 1fr) !important; 
+            }
+            .grid-cols-2 { 
+                grid-template-columns: repeat(2, 1fr) !important; 
+            }
+            .gap-4 { 
+                gap: 16px !important; 
+            }
+            .text-center { text-align: center !important; }
+            .text-left { text-align: left !important; }
+            .text-2xl { font-size: 24px !important; }
+            .text-xl { font-size: 20px !important; }
+            .text-lg { font-size: 18px !important; }
+            .text-sm { font-size: 14px !important; }
+            .text-xs { font-size: 12px !important; }
+            .font-bold { font-weight: 700 !important; }
+            .font-semibold { font-weight: 600 !important; }
+            .font-medium { font-weight: 500 !important; }
+            .text-primary { color: #2563eb !important; }
+            .text-green-600 { color: #059669 !important; }
+            .text-red-600 { color: #dc2626 !important; }
+            .text-blue-600 { color: #2563eb !important; }
+            .text-yellow-600 { color: #d97706 !important; }
+            .text-purple-600 { color: #7c3aed !important; }
+            .text-gray-600 { color: #6b7280 !important; }
+            .text-gray-700 { color: #374151 !important; }
+            .text-gray-800 { color: #1f2937 !important; }
+            .text-gray-900 { color: #111827 !important; }
+            .bg-green-100 { background-color: #d1fae5 !important; }
+            .bg-red-100 { background-color: #fee2e2 !important; }
+            .bg-blue-100 { background-color: #dbeafe !important; }
+            .bg-yellow-100 { background-color: #fef3c7 !important; }
+            .bg-purple-100 { background-color: #e9d5ff !important; }
+            .bg-gray-200 { background-color: #e5e7eb !important; }
+            .bg-green-600 { background-color: #059669 !important; }
+            .bg-blue-600 { background-color: #2563eb !important; }
+            .p-2 { padding: 8px !important; }
+            .p-4 { padding: 16px !important; }
+            .px-2 { padding-left: 8px !important; padding-right: 8px !important; }
+            .py-1 { padding-top: 4px !important; padding-bottom: 4px !important; }
+            .mb-2 { margin-bottom: 8px !important; }
+            .mb-3 { margin-bottom: 12px !important; }
+            .mb-4 { margin-bottom: 16px !important; }
+            .mb-6 { margin-bottom: 24px !important; }
+            .mt-1 { margin-top: 4px !important; }
+            .mt-3 { margin-top: 12px !important; }
+            .mt-8 { margin-top: 32px !important; }
+            .pb-4 { padding-bottom: 16px !important; }
+            .pt-4 { padding-top: 16px !important; }
+            .w-full { width: 100% !important; }
+            .h-2 { height: 8px !important; }
+            .h-3 { height: 12px !important; }
+            .rounded { border-radius: 4px !important; }
+            .rounded-full { border-radius: 9999px !important; }
+            .inline-flex { display: inline-flex !important; }
+            .items-center { align-items: center !important; }
+            .flex { display: flex !important; }
+            .justify-between { justify-content: space-between !important; }
+            .space-y-2 > * + * { margin-top: 8px !important; }
+            .leading-relaxed { line-height: 1.625 !important; }
+        `,
+        scanStyles: false,
+        onPrintDialogClose: function() {
+            // Hide print-only elements after printing
+            document.querySelectorAll('.print-only').forEach(el => {
+                el.classList.add('hidden');
+            });
+        }
+    });
+}
+
+// Add keyboard shortcut for printing (Ctrl + P)
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+        e.preventDefault();
+        printReport();
+    }
+});
+</script>
+{% endblock %}

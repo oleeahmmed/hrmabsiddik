@@ -88,12 +88,7 @@ def get_navigation_for_user(request):
                     "link": admin_changelist("core", "task"),
                     "permission": lambda request: request.user.has_perm("core.view_task"),
                 },
-                {
-                    "title": _("Task Checklists"),
-                    "icon": "checklist",
-                    "link": admin_changelist("core", "taskchecklist"),
-                    "permission": lambda request: request.user.has_perm("core.view_taskchecklist"),
-                },
+
                 {
                     "title": _("Task Comments"),
                     "icon": "comment",
@@ -101,23 +96,14 @@ def get_navigation_for_user(request):
                     "permission": lambda request: request.user.has_perm("core.view_taskcomment"),
                 },
                 {
-                    "title": _("Project Members"),
-                    "icon": "group",
-                    "link": admin_changelist("core", "projectmember"),
-                    "permission": lambda request: request.user.has_perm("core.view_projectmember"),
+                    "title": _("📊 Project Dashboard"),
+                    "icon": "dashboard",
+                    "link": "/core/project-reports/dashboard/",  # 🔥 CHANGE
+                    "permission": lambda request: request.user.is_authenticated,
                 },
-                {
-                    "title": _("Project Reports"),
-                    "icon": "assessment",
-                    "link": admin_changelist("core", "projectreport"),
-                    "permission": lambda request: request.user.has_perm("core.view_projectreport"),
-                },
-                {
-                    "title": _("Daily Time Logs"),
-                    "icon": "access_time",
-                    "link": admin_changelist("core", "dailytimelog"),
-                    "permission": lambda request: request.user.has_perm("core.view_dailytimelog"),
-                },
+
+
+
             ],
         },
 
