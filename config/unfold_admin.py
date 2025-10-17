@@ -70,12 +70,7 @@ def get_navigation_for_user(request):
                     "link": admin_changelist("core", "company"),
                     "permission": lambda request: request.user.has_perm("core.view_company"),
                 },
-                {
-                    "title": _("Project Roles"),
-                    "icon": "admin_panel_settings",
-                    "link": admin_changelist("core", "projectrole"),
-                    "permission": lambda request: request.user.has_perm("core.view_projectrole"),
-                },
+
                 {
                     "title": _("Projects"),
                     "icon": "folder_special",

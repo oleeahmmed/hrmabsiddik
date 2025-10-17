@@ -14,7 +14,6 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-
 class ProjectFilterForm(forms.Form):
     """Filter form for Projects"""
     search = forms.CharField(
@@ -37,14 +36,14 @@ class ProjectFilterForm(forms.Form):
 
 
 class ProjectForm(forms.ModelForm):
-    """Form for Project with auto-assignment"""
+    """Form for Project with auto-assignment - MODIFIED VERSION"""
     
     class Meta:
         model = Project
         fields = [
             'name', 'description', 'status', 'priority',
             'start_date', 'end_date', 'total_budget', 'spent_budget',
-            'technical_lead', 'project_manager', 'is_active'
+            'technical_lead', 'project_manager', 'supervisor', 'is_active'
         ]
         widgets = {
             'name': forms.TextInput(attrs={
@@ -68,6 +67,7 @@ class ProjectForm(forms.ModelForm):
             }),
             'technical_lead': forms.Select(attrs={'class': 'input'}),
             'project_manager': forms.Select(attrs={'class': 'input'}),
+            'supervisor': forms.Select(attrs={'class': 'input'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'checkbox'}),
         }
     
@@ -85,9 +85,170 @@ class ProjectForm(forms.ModelForm):
                 is_active=True
             )
             
+            # Set queryset for all leadership fields
             self.fields['technical_lead'].queryset = company_users
             self.fields['project_manager'].queryset = company_users
+            self.fields['supervisor'].queryset = company_users
 
+    def clean(self):
+        """FIXED: Remove company validation for leadership fields"""
+        cleaned_data = super().clean()
+        
+        # Remove company validation for leadership fields
+        # The company will be set from the user's profile in form_valid
+        
+        # Keep date validation
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+        
+        if start_date and end_date and end_date < start_date:
+            raise forms.ValidationError({
+                'end_date': 'End date cannot be before start date.'
+            })
+        
+        # Keep budget validation
+        total_budget = cleaned_data.get('total_budget')
+        spent_budget = cleaned_data.get('spent_budget')
+        
+        if total_budget and spent_budget and spent_budget > total_budget:
+            raise forms.ValidationError({
+                'spent_budget': 'Spent budget cannot exceed total budget.'
+            })
+        
+        return cleaned_data
+
+
+class ProjectCreateView(PermissionRequiredMixin, CompanyRequiredMixin, CommonContextMixin, CreateView):
+    """
+    Create a new project - MODIFIED VERSION
+    Permission: core.add_project
+    """
+    model = Project
+    form_class = ProjectForm
+    template_name = 'core/project_form.html'
+    success_url = reverse_lazy('core:project_list')
+    permission_required = 'core.add_project'
+    
+    def handle_no_permission(self):
+        messages.error(self.request, 'You do not have permission to create projects.')
+        return redirect('core:project_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+    
+    def form_valid(self, form):
+        # CRITICAL FIX: Set owner and company BEFORE saving
+        form.instance.owner = self.request.user  # This sets the Admin
+        
+        # Set company from user's profile
+        if hasattr(self.request.user, 'profile') and self.request.user.profile.company:
+            form.instance.company = self.request.user.profile.company
+        
+        # Save the instance first to get an ID
+        response = super().form_valid(form)
+        
+        messages.success(
+            self.request,
+            f'Project "{form.instance.name}" created successfully!'
+        )
+        return response
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'model_name': 'project',
+            'back_url': reverse_lazy('core:project_list'),
+            'back_text': 'Projects',
+        })
+        return context
+
+
+class ProjectUpdateView(PermissionRequiredMixin, CompanyOwnershipMixin, CommonContextMixin, UpdateView):
+    """
+    Update a project - MODIFIED VERSION
+    Permission: core.change_project
+    """
+    model = Project
+    form_class = ProjectForm
+    template_name = 'core/project_form.html'
+    success_url = reverse_lazy('core:project_list')
+    permission_required = 'core.change_project'
+    
+    def handle_no_permission(self):
+        messages.error(self.request, 'You do not have permission to update projects.')
+        return redirect('core:project_list')
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'model_name': 'project',
+            'back_url': reverse_lazy('core:project_list'),
+            'back_text': 'Projects',
+        })
+        return context
+    
+    def form_valid(self, form):
+        messages.success(
+            self.request,
+            f'Project "{form.instance.name}" updated successfully!'
+        )
+        return super().form_valid(form)
+
+
+class ProjectDetailView(PermissionRequiredMixin, CompanyOwnershipMixin, CommonContextMixin, DetailView):
+    """
+    View project details using the form template (read-only) - MODIFIED VERSION
+    Permission: core.view_project
+    """
+    model = Project
+    template_name = 'core/project_form.html'  # Use form template for details
+    permission_required = 'core.view_project'
+    
+    def handle_no_permission(self):
+        messages.error(self.request, 'You do not have permission to view project details.')
+        return redirect('core:project_list')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        project = self.get_object()
+        
+        # Add project statistics for detail view
+        context['task_distribution'] = project.get_task_distribution()
+        context['budget_status'] = project.get_budget_status()
+        context['progress'] = project.get_progress_percentage()
+        context['total_hours'] = project.get_total_hours()
+        context['total_tasks'] = project.tasks.count()
+        context['completed_tasks'] = project.tasks.filter(status='completed').count()
+        context['pending_tasks'] = project.tasks.filter(status__in=['todo', 'in_progress']).count()
+        context['blocked_tasks'] = project.tasks.filter(is_blocked=True).count()
+        context['overdue_tasks'] = project.get_overdue_tasks()
+        
+        # Project team information
+        context['project_team'] = project.get_project_team()
+        
+        # Recent tasks
+        context['recent_tasks'] = project.tasks.select_related(
+            'assigned_to', 'assigned_by'
+        ).order_by('-created_at')[:5]
+        
+        # Task breakdown by status
+        context['todo_tasks'] = project.tasks.filter(status='todo').count()
+        context['in_progress_tasks'] = project.tasks.filter(status='in_progress').count()
+        context['on_hold_tasks'] = project.tasks.filter(status='on_hold').count()
+        context['cancelled_tasks'] = project.tasks.filter(status='cancelled').count()
+        
+        # Mark this as detail view (read-only)
+        context['is_detail_view'] = True
+        context['read_only'] = True
+        
+        return context
 
 class ProjectListView(PermissionRequiredMixin, CompanyFilterMixin, CommonContextMixin, ListView):
     """
@@ -215,133 +376,6 @@ class ProjectListAllView(PermissionRequiredMixin, CompanyFilterMixin, CommonCont
         context['active_projects'] = base_queryset.filter(is_active=True).count()
         context['planning_count'] = base_queryset.filter(status='planning').count()
         context['completed_count'] = base_queryset.filter(status='completed').count()
-        
-        return context
-
-
-class ProjectCreateView(PermissionRequiredMixin, CompanyRequiredMixin, CommonContextMixin, CreateView):
-    """
-    Create a new project
-    Permission: core.add_project
-    """
-    model = Project
-    form_class = ProjectForm
-    template_name = 'core/project_form.html'
-    success_url = reverse_lazy('core:project_list')
-    permission_required = 'core.add_project'
-    
-    def handle_no_permission(self):
-        messages.error(self.request, 'You do not have permission to create projects.')
-        return redirect('core:project_list')
-    
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['user'] = self.request.user
-        return kwargs
-    
-    def form_valid(self, form):
-        # CRITICAL FIX: Set owner and company BEFORE saving
-        form.instance.owner = self.request.user
-        
-        # Set company from user's profile
-        if hasattr(self.request.user, 'profile') and self.request.user.profile.company:
-            form.instance.company = self.request.user.profile.company
-        
-        messages.success(
-            self.request,
-            f'Project "{form.instance.name}" created successfully!'
-        )
-        return super().form_valid(form)
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({
-            'model_name': 'project',
-            'back_url': reverse_lazy('core:project_list'),
-            'back_text': 'Projects',
-        })
-        return context
-
-
-class ProjectUpdateView(PermissionRequiredMixin, CompanyOwnershipMixin, CommonContextMixin, UpdateView):
-    """
-    Update a project
-    Permission: core.change_project
-    """
-    model = Project
-    form_class = ProjectForm
-    template_name = 'core/project_form.html'
-    success_url = reverse_lazy('core:project_list')
-    permission_required = 'core.change_project'
-    
-    def handle_no_permission(self):
-        messages.error(self.request, 'You do not have permission to update projects.')
-        return redirect('core:project_list')
-    
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['user'] = self.request.user
-        return kwargs
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({
-            'model_name': 'project',
-            'back_url': reverse_lazy('core:project_list'),
-            'back_text': 'Projects',
-        })
-        return context
-    
-    def form_valid(self, form):
-        messages.success(
-            self.request,
-            f'Project "{form.instance.name}" updated successfully!'
-        )
-        return super().form_valid(form)
-
-
-class ProjectDetailView(PermissionRequiredMixin, CompanyOwnershipMixin, CommonContextMixin, DetailView):
-    """
-    View project details using the form template (read-only)
-    Permission: core.view_project
-    """
-    model = Project
-    template_name = 'core/project_form.html'  # Use form template for details
-    permission_required = 'core.view_project'
-    
-    def handle_no_permission(self):
-        messages.error(self.request, 'You do not have permission to view project details.')
-        return redirect('core:project_list')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        project = self.get_object()
-        
-        # Add project statistics for detail view
-        context['task_distribution'] = project.get_task_distribution()
-        context['budget_status'] = project.get_budget_status()
-        context['progress'] = project.get_progress_percentage()
-        context['total_hours'] = project.get_total_hours()
-        context['total_tasks'] = project.tasks.count()
-        context['completed_tasks'] = project.tasks.filter(status='completed').count()
-        context['pending_tasks'] = project.tasks.filter(status__in=['todo', 'in_progress']).count()
-        context['blocked_tasks'] = project.tasks.filter(is_blocked=True).count()
-        context['overdue_tasks'] = project.get_overdue_tasks()
-        
-        # Recent tasks
-        context['recent_tasks'] = project.tasks.select_related(
-            'assigned_to', 'assigned_by'
-        ).order_by('-created_at')[:5]
-        
-        # Task breakdown by status
-        context['todo_tasks'] = project.tasks.filter(status='todo').count()
-        context['in_progress_tasks'] = project.tasks.filter(status='in_progress').count()
-        context['on_hold_tasks'] = project.tasks.filter(status='on_hold').count()
-        context['cancelled_tasks'] = project.tasks.filter(status='cancelled').count()
-        
-        # Mark this as detail view (read-only)
-        context['is_detail_view'] = True
-        context['read_only'] = True
         
         return context
 

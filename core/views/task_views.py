@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.utils import timezone
+from django.core.exceptions import PermissionDenied
 from .base_views import CompanyFilterMixin, CompanyRequiredMixin, CompanyOwnershipMixin, AutoAssignOwnerMixin, CommonContextMixin
 from ..models import Task, Project
 from django.contrib.auth import get_user_model
@@ -97,11 +98,15 @@ class TaskForm(forms.ModelForm):
                 is_active=True
             )
             self.fields['assigned_to'].queryset = company_users
+            
+            # AUTO-SET: Set assigned_to to current user by default
+            if self.user and self.user in company_users:
+                self.fields['assigned_to'].initial = self.user
 
 
 class TaskCreateView(PermissionRequiredMixin, AutoAssignOwnerMixin, CompanyRequiredMixin, CommonContextMixin, CreateView):
     """
-    Create a new task - FIXED with AutoAssignOwnerMixin
+    Create a new task - MODIFIED: Only project leadership can create tasks
     Permission: core.add_task
     """
     model = Task
@@ -109,6 +114,46 @@ class TaskCreateView(PermissionRequiredMixin, AutoAssignOwnerMixin, CompanyRequi
     template_name = 'core/task_form.html'
     success_url = reverse_lazy('core:task_list')
     permission_required = 'core.add_task'
+    
+    def dispatch(self, request, *args, **kwargs):
+        """Check if user has permission to create tasks in any project"""
+        # Get user's company
+        if not hasattr(request.user, 'profile') or not request.user.profile.company:
+            messages.error(request, 'You must be associated with a company to create tasks.')
+            return redirect('core:task_list')
+        
+        user_company = request.user.profile.company
+        company_ids = [c.id for c in user_company.get_all_subsidiaries(include_self=True)]
+        
+        # Check if user is project leadership in any project
+        user_projects = Project.objects.filter(
+            company__id__in=company_ids,
+            is_active=True
+        )
+        
+        has_permission = False
+        for project in user_projects:
+            if self._is_project_leadership(request.user, project):
+                has_permission = True
+                break
+        
+        if not has_permission:
+            messages.error(
+                request, 
+                'You can only create tasks for projects where you are Admin, Technical Lead, Project Manager, or Supervisor.'
+            )
+            return redirect('core:task_list')
+        
+        return super().dispatch(request, *args, **kwargs)
+    
+    def _is_project_leadership(self, user, project):
+        """Check if user is project leadership (Admin, Technical Lead, Project Manager, Supervisor)"""
+        return (
+            project.owner == user or
+            project.technical_lead == user or
+            project.project_manager == user or
+            project.supervisor == user
+        )
     
     def handle_no_permission(self):
         messages.error(self.request, 'You do not have permission to create tasks.')
@@ -128,6 +173,8 @@ class TaskCreateView(PermissionRequiredMixin, AutoAssignOwnerMixin, CompanyRequi
         initial['due_date'] = timezone.now().date()
         initial['estimated_hours'] = Decimal('0.00')
         initial['actual_hours'] = Decimal('0.00')
+        # AUTO-SET: Set assigned_to to current user by default
+        initial['assigned_to'] = self.request.user
         return initial
     
     def form_valid(self, form):
@@ -137,8 +184,20 @@ class TaskCreateView(PermissionRequiredMixin, AutoAssignOwnerMixin, CompanyRequi
         # Auto-assign company from project if selected, otherwise from user profile
         if form.cleaned_data.get('project'):
             form.instance.company = form.cleaned_data['project'].company
+            
+            # Verify user has permission to create task for this specific project
+            if not self._is_project_leadership(self.request.user, form.cleaned_data['project']):
+                messages.error(
+                    self.request,
+                    'You do not have permission to create tasks for this project.'
+                )
+                return self.form_invalid(form)
         elif hasattr(self.request.user, 'profile') and self.request.user.profile.company:
             form.instance.company = self.request.user.profile.company
+        
+        # If assigned_to is not set, set it to current user
+        if not form.instance.assigned_to:
+            form.instance.assigned_to = self.request.user
         
         messages.success(
             self.request,
@@ -158,7 +217,7 @@ class TaskCreateView(PermissionRequiredMixin, AutoAssignOwnerMixin, CompanyRequi
 
 class TaskUpdateView(PermissionRequiredMixin, CompanyOwnershipMixin, CommonContextMixin, UpdateView):
     """
-    Update a task
+    Update a task - MODIFIED: Only task owner can update
     Permission: core.change_task
     """
     model = Task
@@ -166,6 +225,20 @@ class TaskUpdateView(PermissionRequiredMixin, CompanyOwnershipMixin, CommonConte
     template_name = 'core/task_form.html'
     success_url = reverse_lazy('core:task_list')
     permission_required = 'core.change_task'
+    
+    def dispatch(self, request, *args, **kwargs):
+        """Check if user is task owner before allowing update"""
+        task = self.get_object()
+        
+        # Check if user is task owner
+        if task.owner != request.user:
+            messages.error(
+                request, 
+                'You can only edit tasks that you own.'
+            )
+            return redirect('core:task_list')
+        
+        return super().dispatch(request, *args, **kwargs)
     
     def handle_no_permission(self):
         messages.error(self.request, 'You do not have permission to update tasks.')
@@ -264,16 +337,35 @@ class TaskListView(PermissionRequiredMixin, CompanyFilterMixin, CommonContextMix
         ).count()
         context['blocked_tasks'] = base_queryset.filter(is_blocked=True).count()
         
-        # Set project choices for filter form
+        # Check if user can create tasks (is project leadership in any project)
         if hasattr(self.request.user, 'profile') and self.request.user.profile.company:
-            company = self.request.user.profile.company
-            company_ids = [c.id for c in company.get_all_subsidiaries(include_self=True)]
+            user_company = self.request.user.profile.company
+            company_ids = [c.id for c in user_company.get_all_subsidiaries(include_self=True)]
+            
+            user_projects = Project.objects.filter(
+                company__id__in=company_ids,
+                is_active=True
+            )
+            
+            can_create_tasks = False
+            for project in user_projects:
+                if (project.owner == self.request.user or
+                    project.technical_lead == self.request.user or
+                    project.project_manager == self.request.user or
+                    project.supervisor == self.request.user):
+                    can_create_tasks = True
+                    break
+            
+            context['can_create_tasks'] = can_create_tasks
+            
+            # Set project choices for filter form
             context['filter_form'] = TaskFilterForm(self.request.GET)
             context['filter_form'].fields['project'].queryset = Project.objects.filter(
                 company__id__in=company_ids,
                 is_active=True
             )
         else:
+            context['can_create_tasks'] = False
             context['filter_form'] = TaskFilterForm()
         
         return context
@@ -300,6 +392,9 @@ class TaskDetailView(PermissionRequiredMixin, CompanyOwnershipMixin, CommonConte
         context['is_overdue'] = task.is_overdue()
         context['days_until_due'] = task.get_days_until_due()
         
+        # Check if user is task owner (for edit/delete permissions)
+        context['is_task_owner'] = task.owner == self.request.user
+        
         # Mark this as detail view (read-only)
         context['is_detail_view'] = True
         context['read_only'] = True
@@ -309,13 +404,27 @@ class TaskDetailView(PermissionRequiredMixin, CompanyOwnershipMixin, CommonConte
 
 class TaskDeleteView(PermissionRequiredMixin, CompanyOwnershipMixin, CommonContextMixin, DeleteView):
     """
-    Delete a task
+    Delete a task - MODIFIED: Only task owner can delete
     Permission: core.delete_task
     """
     model = Task
     template_name = 'core/task_confirm_delete.html'
     success_url = reverse_lazy('core:task_list')
     permission_required = 'core.delete_task'
+    
+    def dispatch(self, request, *args, **kwargs):
+        """Check if user is task owner before allowing deletion"""
+        task = self.get_object()
+        
+        # Check if user is task owner
+        if task.owner != request.user:
+            messages.error(
+                request, 
+                'You can only delete tasks that you own.'
+            )
+            return redirect('core:task_list')
+        
+        return super().dispatch(request, *args, **kwargs)
     
     def handle_no_permission(self):
         messages.error(self.request, 'You do not have permission to delete tasks.')
@@ -324,12 +433,29 @@ class TaskDeleteView(PermissionRequiredMixin, CompanyOwnershipMixin, CommonConte
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         task = self.get_object()
-        context['comment_count'] = task.comments.count()
+        
+        # Add context for template
+        context.update({
+            'comment_count': task.comments.count(),
+            'is_task_owner': task.owner == self.request.user,
+            'back_url': reverse_lazy('core:task_list'),
+            'back_text': 'Back to Tasks',
+            'title': f'Delete Task: {task.title}',
+        })
         return context
     
     def delete(self, request, *args, **kwargs):
         task = self.get_object()
         task_title = task.title
+        
+        # Double check permission before deletion
+        if task.owner != request.user:
+            messages.error(
+                request, 
+                'You can only delete tasks that you own.'
+            )
+            return redirect('core:task_list')
+        
         messages.success(
             request,
             f'Task "{task_title}" deleted successfully!'

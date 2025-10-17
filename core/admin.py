@@ -5,7 +5,7 @@ from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import display
 from django.http import HttpResponseRedirect
 from .models import (
-    Company, UserProfile, ProjectRole, Project, Task, TaskComment
+    Company, UserProfile, Project, Task, TaskComment
 )
 
 
@@ -122,19 +122,6 @@ class UserProfileAdmin(ModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('user', 'company')
 
-
-# ==================== PROJECT ROLE ADMIN ====================
-
-@admin.register(ProjectRole)
-class ProjectRoleAdmin(ModelAdmin):
-    list_display = ['role', 'hierarchy_level', 'description_preview']
-    list_filter = ['hierarchy_level']
-    search_fields = ['role', 'description']
-    ordering = ['hierarchy_level']
-    
-    def description_preview(self, obj):
-        return obj.description[:50] + '...' if len(obj.description) > 50 else obj.description
-    description_preview.short_description = _('Description Preview')
 
 
 # ==================== TASK INLINE ====================

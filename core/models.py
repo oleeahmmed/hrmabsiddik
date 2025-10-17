@@ -363,45 +363,12 @@ class UserProfile(TimeStampedModel):
         return ", ".join(filter(None, address_parts))   
 
 
-# ==================== PROJECT ROLE MODEL ====================
-
-class ProjectRole(models.Model):
-    """Project Roles - Hierarchy based"""
-    ROLE_CHOICES = [
-        ('admin', _('Admin')),
-        ('technical_lead', _('Technical Lead')),
-        ('project_manager', _('Project Manager')),
-        ('supervisor', _('Supervisor')),
-        ('employee', _('Employee')),
-    ]
-    
-    role = models.CharField(
-        _("Role"),
-        max_length=20,
-        choices=ROLE_CHOICES,
-        unique=True
-    )
-    hierarchy_level = models.IntegerField(
-        _("Hierarchy Level"),
-        default=0,
-        validators=[MinValueValidator(0)],
-        help_text=_("0=Admin, 1=Tech Lead, 2=PM, 3=Supervisor, 4=Employee")
-    )
-    description = models.TextField(_("Description"), blank=True)
-    
-    class Meta:
-        ordering = ['hierarchy_level']
-        verbose_name = _("Project Role")
-        verbose_name_plural = _("Project Roles")
-    
-    def __str__(self):
-        return f"{self.get_role_display()} (Level {self.hierarchy_level})"
 
 
 # ==================== PROJECT MODEL ====================
 
 class Project(OwnedModel, TimeStampedModel):
-    """Project Management with Company Ownership"""
+    """Project Management with Company Ownership - MODIFIED VERSION"""
     STATUS_CHOICES = [
         ('planning', _('Planning')),
         ('in_progress', _('In Progress')),
@@ -417,7 +384,8 @@ class Project(OwnedModel, TimeStampedModel):
         ('critical', _('Critical')),
     ]
     
-    # Leadership
+    # Project Leadership Team - MODIFIED
+    # Owner field is already in OwnedModel (acts as Admin)
     technical_lead = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -433,6 +401,14 @@ class Project(OwnedModel, TimeStampedModel):
         blank=True,
         related_name='managed_projects',
         verbose_name=_("Project Manager")
+    )
+    supervisor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='supervised_projects',
+        verbose_name=_("Supervisor")
     )
     
     # Basic Information
@@ -490,7 +466,7 @@ class Project(OwnedModel, TimeStampedModel):
         return f"{self.name} ({self.get_status_display()})"
     
     def clean(self):
-        """Validate project data"""
+        """Validate project data - MODIFIED VERSION"""
         super().clean()
         
         # Validate dates
@@ -507,20 +483,32 @@ class Project(OwnedModel, TimeStampedModel):
                     'spent_budget': _('Spent budget cannot exceed total budget.')
                 })
         
-        # Validate leadership belongs to company
-        if self.technical_lead and self.company:
-            if not hasattr(self.technical_lead, 'profile') or \
-               self.technical_lead.profile.company != self.company:
-                raise ValidationError({
-                    'technical_lead': _('Technical Lead must belong to the same company.')
-                })
-        
-        if self.project_manager and self.company:
-            if not hasattr(self.project_manager, 'profile') or \
-               self.project_manager.profile.company != self.company:
-                raise ValidationError({
-                    'project_manager': _('Project Manager must belong to the same company.')
-                })
+        # Validate leadership belongs to company if company is set
+        if self.pk and self.company:
+            leadership_fields = [
+                ('technical_lead', 'Technical Lead'),
+                ('project_manager', 'Project Manager'),
+                ('supervisor', 'Supervisor')
+            ]
+            
+            for field_name, field_label in leadership_fields:
+                field_value = getattr(self, field_name)
+                if field_value:
+                    if not hasattr(field_value, 'profile') or \
+                       field_value.profile.company != self.company:
+                        raise ValidationError({
+                            field_name: _(f'{field_label} must belong to the same company.')
+                        })
+    
+    def get_project_team(self):
+        """Get the complete project team"""
+        team = {
+            'admin': self.owner,
+            'technical_lead': self.technical_lead,
+            'project_manager': self.project_manager,
+            'supervisor': self.supervisor,
+        }
+        return team
     
     def get_progress_percentage(self):
         """Calculate project progress"""
@@ -594,9 +582,8 @@ class Project(OwnedModel, TimeStampedModel):
             'budget_status': budget_status,
             'overdue_tasks': self.get_overdue_tasks(),
             'upcoming_tasks': self.get_upcoming_tasks().count(),
+            'project_team': self.get_project_team(),
         }
-
-
 # ==================== TASK MODEL ====================
 
 class Task(OwnedModel, TimeStampedModel):
