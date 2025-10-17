@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Overtime - {{ block.super }}{% endblock %}
+{% block page_title %}Delete Overtime Request{% endblock %}
+{% block page_subtitle %}Confirm deletion of overtime request{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="card-lg border-2 border-destructive/20 bg-gradient-to-r from-destructive/5 to-destructive/10 dark:from-destructive/10 dark:to-destructive/5 rounded-xl shadow-lg">
+        <!-- Card Header -->
+        <div class="card-header border-b-0 bg-transparent">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-foreground">Confirm Deletion</h3>
+                    <p class="text-sm text-muted-foreground">This action cannot be undone</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Warning Content -->
+        <div class="p-6">
+            <div class="alert alert-warning mb-6">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                    <div>
+                        <h4 class="font-semibold">Warning: Irreversible Action</h4>
+                        <p class="text-sm mt-1">You are about to permanently delete this overtime request. This action cannot be undone.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overtime Details -->
+            <div class="bg-accent/30 rounded-lg p-4 mb-6">
+                <h4 class="font-semibold text-foreground mb-3">Overtime Request Details</h4>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-muted-foreground">Employee:</span>
+                        <span class="font-medium">{{ overtime.employee.name }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-muted-foreground">Date:</span>
+                        <span class="font-medium">{{ overtime.date|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-muted-foreground">Time:</span>
+                        <span class="font-medium">{{ overtime.start_time|time:"g:i A" }} - {{ overtime.end_time|time:"g:i A" }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-muted-foreground">Hours:</span>
+                        <span class="font-medium text-primary">{{ overtime.hours }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-muted-foreground">Status:</span>
+                        <span class="font-medium">
+                            {% if overtime.status == 'approved' %}
+                            <span class="text-green-600">Approved</span>
+                            {% elif overtime.status == 'rejected' %}
+                            <span class="text-red-600">Rejected</span>
+                            {% elif overtime.status == 'cancelled' %}
+                            <span class="text-gray-600">Cancelled</span>
+                            {% else %}
+                            <span class="text-yellow-600">Pending</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deletion Form -->
+            <form method="post">
+                {% csrf_token %}
+                <div class="flex items-center justify-between pt-4 border-t border-border">
+                    <a href="{% url 'zkteco:overtime_detail' overtime.pk %}" class="btn btn-outline">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        Delete Overtime Request
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Edit{% else %}Create{% endif %} Overtime - {{ block.super }}{% endblock %}
+{% block page_title %}{% if object %}Edit{% else %}Request{% endif %} Overtime{% endblock %}
+{% block page_subtitle %}{% if object %}Modify existing overtime request{% else %}Submit new overtime request{% endif %}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="card-lg border-2 border-transparent bg-gradient-to-r from-primary/5 to-primary/3 dark:from-primary/10 dark:to-primary/5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 animate-pulse-border">
+        <!-- Card Header -->
+        <div class="card-header border-b-0 bg-transparent">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-foreground">
+                        {% if object %}Edit Overtime Request{% else %}New Overtime Request{% endif %}
+                    </h3>
+                    <p class="text-sm text-muted-foreground">
+                        {% if object %}Update your overtime request details{% else %}Fill in the details below to submit an overtime request{% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Content -->
+        <div class="p-6">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                <div class="alert alert-error">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>{{ form.non_field_errors.0 }}</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Employee Field -->
+                    <div class="space-y-2">
+                        <label class="form-label">Employee</label>
+                        {{ form.employee }}
+                        {% if form.employee.errors %}
+                        <div class="text-sm text-destructive flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            {{ form.employee.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Date Field -->
+                    <div class="space-y-2">
+                        <label class="form-label">Overtime Date</label>
+                        {{ form.date }}
+                        {% if form.date.errors %}
+                        <div class="text-sm text-destructive flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            {{ form.date.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Start Time Field -->
+                    <div class="space-y-2">
+                        <label class="form-label">Start Time</label>
+                        {{ form.start_time }}
+                        {% if form.start_time.errors %}
+                        <div class="text-sm text-destructive flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            {{ form.start_time.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- End Time Field -->
+                    <div class="space-y-2">
+                        <label class="form-label">End Time</label>
+                        {{ form.end_time }}
+                        {% if form.end_time.errors %}
+                        <div class="text-sm text-destructive flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            {{ form.end_time.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Reason Field -->
+                <div class="space-y-2">
+                    <label class="form-label">Reason for Overtime</label>
+                    {{ form.reason }}
+                    {% if form.reason.errors %}
+                    <div class="text-sm text-destructive flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        {{ form.reason.errors.0 }}
+                    </div>
+                    {% endif %}
+                    <p class="text-sm text-muted-foreground">Please provide a detailed reason for your overtime request</p>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex items-center justify-between pt-6 border-t border-border">
+                    <a href="{% url 'zkteco:overtime_list' %}" class="btn btn-outline">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                        Back to List
+                    </a>
+                    <div class="flex items-center gap-3">
+                        {% if object %}
+                        <a href="{% url 'zkteco:overtime_detail' object.pk %}" class="btn btn-outline">
+                            Cancel
+                        </a>
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary">
+                            {% if object %}
+                            Update Request
+                            {% else %}
+                            Submit Request
+                            {% endif %}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

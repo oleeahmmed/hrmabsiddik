@@ -11,18 +11,17 @@ from .views import employee_document_views
 from .views import leave_views
 from .views import attendance_config_views
 from .views import attendance_reports
-from .views import attendance_log_reports
 
 from .views import hourly_attendance
 from .views import device_views
 from .views import attendance_views
-from .views import payroll_views
-from .views import payroll_advanced_views
-from .views import payroll_generation_views
+
 from .views import shift_views
 from .views import roster_views
 from .views import holiday_views
 from .views import complaint_views
+from .views import overtime_views
+
 app_name = 'zkteco'
 
 urlpatterns = [
@@ -78,33 +77,6 @@ urlpatterns = [
     path('reports/employee-monthly/', attendance_reports.employee_monthly_attendance, name='employee_monthly_attendance'),
     path('reports/payroll-summary/', attendance_reports.payroll_summary_report, name='payroll_summary_report'),
 
-    # ==================== ATTENDANCE LOG REPORTS (Enhanced Views) ====================
-
-
-    # Daily Attendance Report from AttendanceLog
-    # path('log-reports/daily/', 
-    #     attendance_log_reports.DailyAttendanceLogReportView.as_view(), 
-    #     name='daily_attendance_log_report'),
-
-    # # Monthly Attendance Report from AttendanceLog
-    # path('log-reports/monthly/', 
-    #     attendance_log_reports.MonthlyAttendanceLogReportView.as_view(), 
-    #     name='monthly_attendance_log_report'),
-
-    # # Employee Monthly Detail Report
-    # path('log-reports/employee-detail/', 
-    #     attendance_log_reports.EmployeeMonthlyDetailReportView.as_view(), 
-    #     name='employee_monthly_detail_report'),
-
-    # # Payroll Summary Report
-    # path('log-reports/payroll-summary/', 
-    #     attendance_log_reports.EmployeePayrollSummaryReportView.as_view(), 
-    #     name='payroll_summary_report'),
-
-    # # Export Reports
-    # path('log-reports/export/', 
-    #     attendance_log_reports.ExportAttendanceReportView.as_view(), 
-    #     name='export_attendance_report'),
     # Shift Management URLs
     path('shifts/', shift_views.ShiftListView.as_view(), name='shift_list'),
     path('shifts/create/', shift_views.ShiftCreateView.as_view(), name='shift_create'),
@@ -117,7 +89,16 @@ urlpatterns = [
     path('roster/<int:pk>/', roster_views.RosterDetailView.as_view(), name='roster_detail'),
     path('roster/<int:pk>/update/', roster_views.RosterUpdateView.as_view(), name='roster_update'),
     path('roster/<int:pk>/delete/', roster_views.RosterDeleteView.as_view(), name='roster_delete'),
+    # ==================== OVERTIME MANAGEMENT ====================
+    path('overtime/', overtime_views.OvertimeListView.as_view(), name='overtime_list'),
+    path('overtime/create/', overtime_views.OvertimeCreateView.as_view(), name='overtime_create'),
+    path('overtime/<int:pk>/', overtime_views.OvertimeDetailView.as_view(), name='overtime_detail'),
+    path('overtime/<int:pk>/update/', overtime_views.OvertimeUpdateView.as_view(), name='overtime_update'),
+    path('overtime/<int:pk>/delete/', overtime_views.OvertimeDeleteView.as_view(), name='overtime_delete'),
+    path('overtime/<int:pk>/status/', overtime_views.OvertimeStatusChangeView.as_view(), name='overtime_status_change'),
 
+    # Overtime Status Change API
+path('api/overtime/<int:pk>/change-status/', overtime_views.OvertimeStatusChangeView.as_view(), name='overtime_change_status'),
     # ==================== HOLIDAY MANAGEMENT URLS ====================
     path('holidays/', holiday_views.HolidayListView.as_view(), name='holiday_list'),
     path('holidays/create/', holiday_views.HolidayCreateView.as_view(), name='holiday_create'),
@@ -204,84 +185,8 @@ urlpatterns = [
     path('complaints/<int:pk>/', complaint_views.ComplaintDetailView.as_view(), name='complaint_detail'),
     path('complaints/<int:pk>/update/', complaint_views.ComplaintUpdateView.as_view(), name='complaint_update'),
     path('complaints/<int:pk>/delete/', complaint_views.ComplaintDeleteView.as_view(), name='complaint_delete'),
-# # ==================== PAYROLL MANAGEMENT URLS ====================
-
-# # Payroll Dashboard
-# path('payroll/', payroll_views.PayrollDashboardView.as_view(), name='payroll_dashboard'),
-
-# # ==================== PAYROLL CYCLE URLS ====================
-# # List, Create, Detail, Update, Delete
-# path('payroll/cycles/', payroll_views.PayrollCycleListView.as_view(), name='payroll_cycle_list'),
-# path('payroll/cycles/create/', payroll_views.PayrollCycleCreateView.as_view(), name='payroll_cycle_create'),
-# path('payroll/cycles/<int:pk>/', payroll_views.PayrollCycleDetailView.as_view(), name='payroll_cycle_detail'),
-# path('payroll/cycles/<int:pk>/update/', payroll_views.PayrollCycleUpdateView.as_view(), name='payroll_cycle_update'),
-# path('payroll/cycles/<int:pk>/delete/', payroll_views.PayrollCycleDeleteView.as_view(), name='payroll_cycle_delete'),
-
-# # Cycle Actions
-# path('payroll/cycles/<int:cycle_id>/approve/', payroll_views.payroll_cycle_approve, name='payroll_cycle_approve'),
-# path('payroll/cycles/<int:cycle_id>/export/', payroll_views.payroll_export_csv, name='payroll_export_csv'),
-# path('payroll/cycles/<int:cycle_id>/export-bank/', payroll_views.payroll_export_bank_format, name='payroll_export_bank'),
-# path('payroll/cycles/<int:cycle_id>/validate/', payroll_advanced_views.payroll_validate_cycle, name='payroll_validate_cycle'),
-
-# # ==================== PAYROLL RECORD URLS ====================
-# path('payroll/records/<int:pk>/', payroll_views.PayrollRecordDetailView.as_view(), name='payroll_record_detail'),
-# path('payroll/records/<int:pk>/update/', payroll_views.PayrollRecordUpdateView.as_view(), name='payroll_record_update'),
-
-# # Record Payment Actions
-# path('payroll/records/<int:record_id>/mark-paid/', payroll_views.payroll_mark_paid, name='payroll_mark_paid'),
-# path('payroll/records/bulk-mark-paid/', payroll_views.payroll_bulk_mark_paid, name='payroll_bulk_mark_paid'),
-
-# # Salary Slip
-# path('payroll/records/<int:record_id>/salary-slip/', payroll_advanced_views.PayrollSalarySlipView.as_view(), name='payroll_salary_slip'),
-# path('payroll/records/<int:record_id>/send-email/', payroll_advanced_views.payroll_send_salary_slip_email, name='payroll_send_salary_slip'),
-# path('payroll/salary-slips/bulk-generate/', payroll_advanced_views.BulkSalarySlipGenerateView.as_view(), name='payroll_bulk_salary_slips'),
-# path('payroll/salary-slips/bulk-send/', payroll_advanced_views.payroll_bulk_send_salary_slips, name='payroll_bulk_send_slips'),
-
-# # ==================== PAYROLL TEMPLATE URLS ====================
-# path('payroll/templates/', payroll_views.PayrollTemplateListView.as_view(), name='payroll_template_list'),
-# path('payroll/templates/create/', payroll_views.PayrollTemplateCreateView.as_view(), name='payroll_template_create'),
-# path('payroll/templates/<int:pk>/update/', payroll_views.PayrollTemplateUpdateView.as_view(), name='payroll_template_update'),
-# path('payroll/templates/<int:pk>/delete/', payroll_views.PayrollTemplateDeleteView.as_view(), name='payroll_template_delete'),
-
-# # ==================== PAYROLL ADJUSTMENT URLS ====================
-# path('payroll/adjustments/add/<int:record_id>/', payroll_views.payroll_add_adjustment, name='payroll_add_adjustment'),
-# path('payroll/adjustments/<int:adjustment_id>/delete/', payroll_views.payroll_delete_adjustment, name='payroll_delete_adjustment'),
-
-# # ==================== PAYROLL PAYMENT URLS ====================
-# path('payroll/payments/', payroll_views.PayrollPaymentListView.as_view(), name='payroll_payment_list'),
-
-# # ==================== PAYROLL GENERATION URLS ====================
-# path('payroll/preview/', payroll_views.payroll_preview, name='payroll_preview'),
-# path('payroll/generate/', payroll_views.payroll_generate_records, name='payroll_generate_records'),
-
-# # ==================== PAYROLL REPORTS & ANALYTICS URLS ====================
-# path('payroll/reports/', payroll_views.PayrollReportsView.as_view(), name='payroll_reports'),
-# path('payroll/comparison/', payroll_advanced_views.PayrollComparisonView.as_view(), name='payroll_comparison'),
-# path('payroll/budget/', payroll_advanced_views.PayrollBudgetView.as_view(), name='payroll_budget'),
-# path('payroll/audit-log/', payroll_advanced_views.PayrollAuditLogView.as_view(), name='payroll_audit_log'),
-
-# # ==================== EMPLOYEE PAYROLL HISTORY ====================
-# path('payroll/employee/<int:employee_id>/history/', payroll_advanced_views.EmployeePayrollHistoryView.as_view(), name='employee_payroll_history'),
-
-# # ==================== PAYROLL CALCULATION APIS ====================
-# path('api/payroll/calculate-tax/', payroll_advanced_views.payroll_calculate_tax, name='payroll_calculate_tax'),
-# path('api/payroll/calculate-pf/', payroll_advanced_views.payroll_calculate_provident_fund, name='payroll_calculate_pf'),
-# path('api/payroll/calculate-bonus/', payroll_advanced_views.payroll_calculate_bonus, name='payroll_calculate_bonus'),
-# path('api/payroll/statistics/', payroll_advanced_views.payroll_get_statistics, name='payroll_get_statistics'),
 
 
 
-    # ==================== PAYROLL MANAGEMENT ====================
-    path('payroll/', payroll_generation_views.payroll_generation_dashboard, name='payroll_dashboard'),
-    path('payroll/preview/', payroll_generation_views.payroll_preview, name='payroll_preview'),
-    path('payroll/generate/', payroll_generation_views.payroll_generate_records, name='payroll_generate_records'),
-    
-    # Payroll Cycles
-    path('payroll/cycles/', payroll_generation_views.payroll_cycle_list, name='payroll_cycle_list'),
-    path('payroll/cycles/<int:cycle_id>/', payroll_generation_views.payroll_cycle_detail, name='payroll_cycle_detail'),
-    path('payroll/cycles/<int:cycle_id>/export/', payroll_generation_views.payroll_export_csv, name='payroll_export_csv'),
-    
-    # Payroll Record Management
-    path('payroll/records/<int:record_id>/mark-paid/', payroll_generation_views.payroll_mark_paid, name='payroll_mark_paid'),
 
 ]

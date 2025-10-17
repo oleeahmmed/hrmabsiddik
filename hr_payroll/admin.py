@@ -14,9 +14,10 @@ import logging
 from django.contrib.admin.views.decorators import staff_member_required
 from .zkteco_device_manager import ZKTecoDeviceManager
 
-from .models import (
+from unfold.admin import TabularInline
+from .models import (AttendanceProcessorConfiguration,
     Department, Designation, Shift, Employee,
-    EmployeeSeparation, Roster, RosterAssignment, RosterDay,
+    EmployeeSeparation, Roster, RosterAssignment, RosterDay,Location, UserLocation,
     Holiday, LeaveType, LeaveBalance, LeaveApplication,
     ZkDevice, AttendanceLog, Attendance,    Notice, Recruitment, JobApplication, Training, TrainingEnrollment,
     Performance, PerformanceGoal, EmployeeDocument, Overtime,
@@ -69,6 +70,7 @@ class LeaveApplicationInline(admin.TabularInline):
     verbose_name_plural = _("Leave Applications")
 
 
+
 @admin.register(Department)
 class DepartmentAdmin(CustomModelAdmin):
     list_display = ('name', 'code', 'company', 'created_at')
@@ -78,12 +80,13 @@ class DepartmentAdmin(CustomModelAdmin):
     list_select_related = ('company',)
     
     fieldsets = (
-        (None, {
-            'fields': ('company', 'name', 'code')
+        (_("📋 Required Fields"), {
+            'fields': ('company', 'name', 'code'),
+            'classes': ('tab',)
         }),
-        (_("Additional Information"), {
+        (_("📝 Optional Fields"), {
             'fields': ('description',),
-            'classes': ('collapse',)
+            'classes': ('tab', 'collapse')
         }),
     )
 
@@ -97,12 +100,13 @@ class DesignationAdmin(CustomModelAdmin):
     list_select_related = ('company', 'department')
     
     fieldsets = (
-        (None, {
-            'fields': ('company', 'department', 'name', 'code')
+        (_("📋 Required Fields"), {
+            'fields': ('company', 'department', 'name', 'code'),
+            'classes': ('tab',)
         }),
-        (_("Additional Information"), {
+        (_("📝 Optional Fields"), {
             'fields': ('description',),
-            'classes': ('collapse',)
+            'classes': ('tab', 'collapse')
         }),
     )
 
@@ -116,11 +120,13 @@ class ShiftAdmin(CustomModelAdmin):
     list_select_related = ('company',)
     
     fieldsets = (
-        (None, {
-            'fields': ('company', 'name')
+        (_("📋 Required Fields"), {
+            'fields': ('company', 'name', 'start_time', 'end_time'),
+            'classes': ('tab',)
         }),
-        (_("Time Settings"), {
-            'fields': ('start_time', 'end_time', 'break_time', 'grace_time')
+        (_("⚙️ Optional Settings"), {
+            'fields': ('break_time', 'grace_time'),
+            'classes': ('tab', 'collapse')
         }),
     )
 
@@ -141,31 +147,23 @@ class EmployeeAdmin(CustomModelAdmin):
     list_select_related = ('company', 'department', 'designation', 'default_shift')
     
     fieldsets = (
+        (_("📋 Required Fields"), {
+            'fields': (
+                'employee_id',
+                'name',
+                'is_active',
+            ),
+            'classes': ('tab',)
+        }),
         (_("🏢 Organization"), {
             'fields': (
-                'company',
                 'department',
                 'designation',
                 'default_shift',
-                'employee_id',
                 'zkteco_id',
                 'joining_date',
-                'is_active',
             ),
-            'classes': ('tab', 'col2'),
-        }),
-        (_("👤 Personal Info"), {
-            'fields': (
-                'user',
-                'name',
-                'first_name', 
-                'last_name',
-                'contact_number',
-                'date_of_birth',
-                'marital_status',
-                'nid',
-            ),
-            'classes': ('tab', 'col2'),
+            'classes': ('tab',)
         }),
         (_("💰 Salary Structure"), {
             'fields': (
@@ -175,7 +173,7 @@ class EmployeeAdmin(CustomModelAdmin):
                 'overtime_rate',
                 'overtime_grace_minutes',
             ),
-            'classes': ('tab', 'col2'),
+            'classes': ('tab',)
         }),
         (_("💵 Allowances"), {
             'fields': (
@@ -186,7 +184,7 @@ class EmployeeAdmin(CustomModelAdmin):
                 'attendance_bonus',
                 'festival_bonus',
             ),
-            'classes': ('tab', 'col2'),
+            'classes': ('tab', 'collapse')
         }),
         (_("📉 Deductions"), {
             'fields': (
@@ -194,14 +192,55 @@ class EmployeeAdmin(CustomModelAdmin):
                 'tax_deduction',
                 'loan_deduction',
             ),
-            'classes': ('tab', 'col2'),
+            'classes': ('tab', 'collapse')
+        }),
+        (_("👤 Personal Info"), {
+            'fields': (
+                'user',
+                'first_name', 
+                'last_name',
+                'contact_number',
+                'date_of_birth',
+                'marital_status',
+                'nid',
+                'gender',
+                'blood_group',
+                'passport_no',
+                'email',
+            ),
+            'classes': ('tab', 'collapse')
+        }),
+        (_("🏠 Address & Contacts"), {
+            'fields': (
+                'emergency_contact',
+                'emergency_contact_name',
+                'emergency_contact_relation',
+                'present_address',
+                'permanent_address',
+            ),
+            'classes': ('tab', 'collapse')
         }),
         (_("🏦 Banking"), {
             'fields': (
                 'bank_account_no',
                 'payment_method',
+                'bank_name',
+                'bank_branch',
             ),
-            'classes': ('tab', 'col2'),
+            'classes': ('tab', 'collapse')
+        }),
+        (_("📋 Additional Info"), {
+            'fields': (
+                'job_type',
+                'employment_status',
+                'highest_education',
+                'university',
+                'passing_year',
+                'bio',
+                'skills',
+                'experience',
+            ),
+            'classes': ('tab', 'collapse')
         }),
     )
     
@@ -210,6 +249,105 @@ class EmployeeAdmin(CustomModelAdmin):
             'company', 'department', 'designation', 'default_shift', 'user'
         )
 
+    def get_readonly_fields(self, request, obj=None):
+        """Make company readonly if user has limited permissions"""
+        readonly_fields = super().get_readonly_fields(request, obj)
+        if not request.user.is_superuser:
+            return readonly_fields + ('company',)
+        return readonly_fields
+
+    def get_form(self, request, obj=None, **kwargs):
+        """Set the company field based on user's profile"""
+        form = super().get_form(request, obj, **kwargs)
+        
+        # If user has a profile with company, set it as default
+        try:
+            from core.models import UserProfile  # Adjust import based on your app structure
+            user_profile = UserProfile.objects.get(user=request.user)
+            if user_profile.company:
+                form.base_fields['company'].initial = user_profile.company
+                
+                # If user is not superuser, limit company choices to their company only
+                if not request.user.is_superuser:
+                    form.base_fields['company'].queryset = Company.objects.filter(id=user_profile.company.id)
+                    form.base_fields['company'].empty_label = None
+                    
+        except (UserProfile.DoesNotExist, ImportError):
+            pass
+            
+        return form
+
+    def save_model(self, request, obj, form, change):
+        """Automatically set company from user profile if not set"""
+        if not obj.company_id:
+            try:
+                from core.models import UserProfile
+                user_profile = UserProfile.objects.get(user=request.user)
+                if user_profile.company:
+                    obj.company = user_profile.company
+            except (UserProfile.DoesNotExist, ImportError):
+                pass
+        
+        # Set created_by if it's a new object
+        if not obj.pk:
+            obj.created_by = request.user
+            
+        super().save_model(request, obj, form, change)
+
+    def get_fieldsets(self, request, obj=None):
+        """Remove company field from display if user has limited permissions"""
+        fieldsets = super().get_fieldsets(request, obj)
+        
+        # If user has a company in their profile and is not superuser, hide company field
+        try:
+            from core.models import UserProfile
+            user_profile = UserProfile.objects.get(user=request.user)
+            if user_profile.company and not request.user.is_superuser:
+                # Remove company field from all fieldsets
+                modified_fieldsets = []
+                for name, data in fieldsets:
+                    if 'fields' in data:
+                        # Filter out company field
+                        filtered_fields = tuple(
+                            field for field in data['fields'] 
+                            if field != 'company'
+                        )
+                        modified_fieldsets.append((name, {
+                            'fields': filtered_fields,
+                            'classes': data.get('classes', ())
+                        }))
+                    else:
+                        modified_fieldsets.append((name, data))
+                return modified_fieldsets
+                
+        except (UserProfile.DoesNotExist, ImportError):
+            pass
+            
+        return fieldsets
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """Filter foreign key choices based on user's company"""
+        # If user has a company in profile and is not superuser, filter related objects
+        try:
+            from core.models import UserProfile
+            user_profile = UserProfile.objects.get(user=request.user)
+            if user_profile.company and not request.user.is_superuser:
+                company = user_profile.company
+                
+                if db_field.name == "department":
+                    kwargs["queryset"] = Department.objects.filter(company=company)
+                elif db_field.name == "designation":
+                    kwargs["queryset"] = Designation.objects.filter(company=company)
+                elif db_field.name == "default_shift":
+                    kwargs["queryset"] = Shift.objects.filter(company=company)
+                elif db_field.name == "user":
+                    # Optionally filter users by company if you have that relation
+                    pass
+                    
+        except (UserProfile.DoesNotExist, ImportError):
+            pass
+            
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 @admin.register(EmployeeSeparation)
 class EmployeeSeparationAdmin(CustomModelAdmin):
     list_display = ('employee', 'separation_date', 'is_voluntary', 'created_at')
@@ -219,12 +357,13 @@ class EmployeeSeparationAdmin(CustomModelAdmin):
     list_select_related = ('employee',)
     
     fieldsets = (
-        (None, {
-            'fields': ('employee', 'separation_date', 'is_voluntary')
+        (_("📋 Required Fields"), {
+            'fields': ('employee', 'separation_date', 'is_voluntary'),
+            'classes': ('tab',)
         }),
-        (_("Separation Details"), {
+        (_("📝 Optional Fields"), {
             'fields': ('reason',),
-            'classes': ('collapse',)
+            'classes': ('tab', 'collapse')
         }),
     )
 
@@ -239,12 +378,13 @@ class RosterAdmin(CustomModelAdmin):
     list_select_related = ('company',)
     
     fieldsets = (
-        (None, {
-            'fields': ('company', 'name', 'start_date', 'end_date')
+        (_("📋 Required Fields"), {
+            'fields': ('company', 'name', 'start_date', 'end_date'),
+            'classes': ('tab',)
         }),
-        (_("Description"), {
+        (_("📝 Optional Fields"), {
             'fields': ('description',),
-            'classes': ('collapse',)
+            'classes': ('tab', 'collapse')
         }),
     )
     
@@ -265,6 +405,13 @@ class RosterAssignmentAdmin(CustomModelAdmin):
     inlines = [RosterDayInline]
     list_select_related = ('employee', 'roster', 'shift')
     
+    fieldsets = (
+        (_("📋 Required Fields"), {
+            'fields': ('roster', 'employee', 'shift'),
+            'classes': ('tab',)
+        }),
+    )
+    
     def days_count(self, obj):
         return obj.roster_days.count()
     days_count.short_description = _("Scheduled Days")
@@ -281,6 +428,13 @@ class RosterDayAdmin(CustomModelAdmin):
     )
     ordering = ('-date',)
     list_select_related = ('roster_assignment__employee', 'shift', 'roster_assignment__roster')
+    
+    fieldsets = (
+        (_("📋 Required Fields"), {
+            'fields': ('roster_assignment', 'date', 'shift'),
+            'classes': ('tab',)
+        }),
+    )
     
     def employee_name(self, obj):
         return obj.roster_assignment.employee.name
@@ -302,12 +456,13 @@ class HolidayAdmin(CustomModelAdmin):
     list_select_related = ('company',)
     
     fieldsets = (
-        (None, {
-            'fields': ('company', 'name', 'date')
+        (_("📋 Required Fields"), {
+            'fields': ('company', 'name', 'date'),
+            'classes': ('tab',)
         }),
-        (_("Description"), {
+        (_("📝 Optional Fields"), {
             'fields': ('description',),
-            'classes': ('collapse',)
+            'classes': ('tab', 'collapse')
         }),
     )
 
@@ -321,11 +476,13 @@ class LeaveTypeAdmin(CustomModelAdmin):
     list_select_related = ('company',)
     
     fieldsets = (
-        (None, {
-            'fields': ('company', 'name', 'code')
+        (_("📋 Required Fields"), {
+            'fields': ('company', 'name', 'code'),
+            'classes': ('tab',)
         }),
-        (_("Leave Policy"), {
-            'fields': ('max_days', 'paid', 'carry_forward', 'max_carry_forward_days')
+        (_("⚙️ Leave Policy"), {
+            'fields': ('max_days', 'paid', 'carry_forward', 'max_carry_forward_days'),
+            'classes': ('tab',)
         }),
     )
 
@@ -343,11 +500,13 @@ class LeaveBalanceAdmin(CustomModelAdmin):
     readonly_fields = ('remaining_days',)
     
     fieldsets = (
-        (None, {
-            'fields': ('employee', 'leave_type')
+        (_("📋 Required Fields"), {
+            'fields': ('employee', 'leave_type'),
+            'classes': ('tab',)
         }),
-        (_("Balance Information"), {
-            'fields': ('entitled_days', 'used_days', 'remaining_days')
+        (_("📊 Balance Information"), {
+            'fields': ('entitled_days', 'used_days', 'remaining_days'),
+            'classes': ('tab',)
         }),
     )
 
@@ -364,15 +523,17 @@ class LeaveApplicationAdmin(CustomModelAdmin):
     list_select_related = ('employee', 'leave_type', 'approved_by')
     
     fieldsets = (
-        (None, {
-            'fields': ('employee', 'leave_type', 'status', 'approved_by')
+        (_("📋 Required Fields"), {
+            'fields': ('employee', 'leave_type', 'start_date', 'end_date', 'status'),
+            'classes': ('tab',)
         }),
-        (_("Leave Period"), {
-            'fields': ('start_date', 'end_date')
+        (_("👤 Approval"), {
+            'fields': ('approved_by',),
+            'classes': ('tab', 'collapse')
         }),
-        (_("Reason"), {
+        (_("📝 Reason"), {
             'fields': ('reason',),
-            'classes': ('collapse',)
+            'classes': ('tab', 'collapse')
         }),
     )
     
@@ -931,7 +1092,6 @@ class AttendanceLogAdmin(CustomModelAdmin):
         return render(request, 'admin/mobile_attendance_admin.html', context)
 
 
-
 @admin.register(Attendance)
 class AttendanceAdmin(CustomModelAdmin):
     list_display = (
@@ -949,47 +1109,74 @@ class AttendanceAdmin(CustomModelAdmin):
     readonly_fields = ('work_hours',)
     
     fieldsets = (
-        (None, {
-            'fields': ('employee', 'date', 'shift', 'status')
+        (_("📋 Required Fields"), {
+            'fields': ('employee', 'date', 'status'),
+            'classes': ('tab',)
         }),
-        (_("Time Records"), {
-            'fields': ('check_in_time', 'check_out_time', 'work_hours')
+        (_("⏰ Time Records"), {
+            'fields': ('shift', 'check_in_time', 'check_out_time', 'work_hours'),
+            'classes': ('tab',)
         }),
-        (_("Overtime"), {
+        (_("⚡ Overtime"), {
             'fields': ('overtime_hours',),
-            'classes': ('collapse',)
+            'classes': ('tab', 'collapse')
         }),
     )
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        # Filter attendance by user's company if not superuser
+        if not request.user.is_superuser:
+            try:
+                from core.models import UserProfile
+                user_profile = UserProfile.objects.get(user=request.user)
+                if user_profile.company:
+                    qs = qs.filter(employee__company=user_profile.company)
+            except (UserProfile.DoesNotExist, ImportError):
+                pass
+        return qs.select_related('employee', 'shift')
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """Filter foreign key choices based on user's company"""
+        try:
+            from core.models import UserProfile
+            user_profile = UserProfile.objects.get(user=request.user)
+            if user_profile.company and not request.user.is_superuser:
+                company = user_profile.company
+                
+                if db_field.name == "employee":
+                    kwargs["queryset"] = Employee.objects.filter(company=company)
+                elif db_field.name == "shift":
+                    kwargs["queryset"] = Shift.objects.filter(company=company)
+                    
+        except (UserProfile.DoesNotExist, ImportError):
+            pass
+            
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-from django.contrib import admin
-from django.utils.translation import gettext_lazy as _
-from unfold.admin import ModelAdmin
-from .models import AttendanceProcessorConfiguration
 
 @admin.register(AttendanceProcessorConfiguration)
-class AttendanceProcessorConfigurationAdmin(ModelAdmin):
+class AttendanceProcessorConfigurationAdmin(CustomModelAdmin):
     list_display = ['name', 'company', 'is_active', 'weekend_display', 'created_at']
     list_filter = ['is_active', 'company', 'created_at']
     search_fields = ['name', 'company__name']
     readonly_fields = ['created_at', 'updated_at']
 
     fieldsets = (
-        (_("General Info"), {
-            "fields": ("company", "name", "is_active", "created_by"),
-            "classes": ("tab", "col2"),
+        (_("📋 Required Fields"), {
+            "fields": ("company", "name", "is_active"),
+            "classes": ("tab",)
         }),
-        (_("Basic Attendance"), {
+        (_("⚙️ Basic Settings"), {
             "fields": (
                 "grace_minutes",
                 "early_out_threshold_minutes",
                 "overtime_start_after_minutes",
                 "minimum_overtime_minutes",
             ),
-            "classes": ("tab", "col2"),
+            "classes": ("tab",)
         }),
-        (_("Weekend & Breaks"), {
+        (_("📅 Weekend & Breaks"), {
             "fields": (
                 ("weekend_monday", "weekend_tuesday", "weekend_wednesday", "weekend_thursday"),
                 ("weekend_friday", "weekend_saturday", "weekend_sunday"),
@@ -997,9 +1184,13 @@ class AttendanceProcessorConfigurationAdmin(ModelAdmin):
                 "use_shift_break_time",
                 "break_deduction_method",
             ),
-            "classes": ("tab", "col2"),
+            "classes": ("tab",)
         }),
-        (_("Minimum & Half Day Rules"), {
+        (_("👤 User Info"), {
+            "fields": ("created_by",),
+            "classes": ("tab", "collapse")
+        }),
+        (_("📊 Minimum & Half Day Rules"), {
             "fields": (
                 "enable_minimum_working_hours_rule",
                 "minimum_working_hours_for_present",
@@ -1007,17 +1198,17 @@ class AttendanceProcessorConfigurationAdmin(ModelAdmin):
                 "half_day_minimum_hours",
                 "half_day_maximum_hours",
             ),
-            "classes": ("tab", "col2"),
+            "classes": ("tab", "collapse")
         }),
-        (_("In/Out & Max Hours Rules"), {
+        (_("⏰ In/Out & Max Hours Rules"), {
             "fields": (
                 "require_both_in_and_out",
                 "enable_maximum_working_hours_rule",
                 "maximum_allowable_working_hours",
             ),
-            "classes": ("tab", "col2"),
+            "classes": ("tab", "collapse")
         }),
-        (_("Shift Management"), {
+        (_("🔄 Shift Management"), {
             "fields": (
                 "enable_dynamic_shift_detection",
                 "dynamic_shift_tolerance_minutes",
@@ -1026,9 +1217,9 @@ class AttendanceProcessorConfigurationAdmin(ModelAdmin):
                 "dynamic_shift_fallback_shift",
                 "use_shift_grace_time",
             ),
-            "classes": ("tab", "col2"),
+            "classes": ("tab", "collapse")
         }),
-        (_("Absence & Early Out"), {
+        (_("⚠️ Absence & Early Out"), {
             "fields": (
                 "enable_consecutive_absence_flagging",
                 "consecutive_absence_termination_risk_days",
@@ -1036,9 +1227,9 @@ class AttendanceProcessorConfigurationAdmin(ModelAdmin):
                 "max_early_out_threshold_minutes",
                 "max_early_out_occurrences",
             ),
-            "classes": ("tab", "col2"),
+            "classes": ("tab", "collapse")
         }),
-        (_("Overtime Settings"), {
+        (_("💰 Overtime Settings"), {
             "fields": (
                 "overtime_calculation_method",
                 "holiday_overtime_full_day",
@@ -1046,17 +1237,17 @@ class AttendanceProcessorConfigurationAdmin(ModelAdmin):
                 "late_affects_overtime",
                 "separate_ot_break_time",
             ),
-            "classes": ("tab", "col2"),
+            "classes": ("tab", "collapse")
         }),
-        (_("Employee Specific"), {
+        (_("👤 Employee Specific"), {
             "fields": (
                 "use_employee_specific_grace",
                 "use_employee_specific_overtime",
                 "use_employee_expected_hours",
             ),
-            "classes": ("tab", "col2"),
+            "classes": ("tab", "collapse")
         }),
-        (_("Advanced Rules"), {
+        (_("⚡ Advanced Rules"), {
             "fields": (
                 "late_to_absent_days",
                 "holiday_before_after_absent",
@@ -1065,20 +1256,20 @@ class AttendanceProcessorConfigurationAdmin(ModelAdmin):
                 "include_holiday_analysis",
                 "holiday_buffer_days",
             ),
-            "classes": ("tab", "col2"),
+            "classes": ("tab", "collapse")
         }),
-        (_("Display Options"), {
+        (_("👀 Display Options"), {
             "fields": (
                 "show_absent_employees",
                 "show_leave_employees",
                 "show_holiday_status",
                 "include_roster_info",
             ),
-            "classes": ("tab", "col2"),
+            "classes": ("tab", "collapse")
         }),
-        (_("Metadata"), {
+        (_("📝 Metadata"), {
             "fields": ("created_at", "updated_at"),
-            "classes": ("tab", "col2"),
+            "classes": ("tab", "collapse")
         }),
     )
 
@@ -1095,19 +1286,16 @@ class AttendanceProcessorConfigurationAdmin(ModelAdmin):
     weekend_display.short_description = 'Weekend Days'
 
 
-from .models import Location, UserLocation
-
-from unfold.admin import TabularInline
-
-class UserLocationInline(TabularInline):
+class UserLocationInline(admin.TabularInline):
     model = UserLocation
     extra = 1
     fields = ('user', 'is_primary')
     verbose_name = _("User Location Assignment")
     verbose_name_plural = _("User Location Assignments")
 
+
 @admin.register(Location)
-class LocationAdmin(ModelAdmin):
+class LocationAdmin(CustomModelAdmin):
     list_display = (
         'name', 'address_short', 'latitude', 'longitude', 
         'radius', 'is_active', 'user_count', 'created_at'
@@ -1116,26 +1304,16 @@ class LocationAdmin(ModelAdmin):
     search_fields = ('name', 'address')
     ordering = ('name',)
     
-    # Add custom change form template
-    change_form_template = 'admin/location_change_form.html'
-    
     fieldsets = (
-        (None, {
-            'fields': ('name', 'address', 'is_active')
+        (_("📋 Required Fields"), {
+            'fields': ('name', 'address', 'is_active'),
+            'classes': ('tab',)
         }),
-        (_("Geographic Coordinates"), {
+        (_("📍 Geographic Coordinates"), {
             'fields': ('latitude', 'longitude', 'radius'),
-            'description': _('Set coordinates manually or use the map below to select location')
+            'classes': ('tab',)
         }),
     )
-    
-    class Media:
-        css = {
-            'all': ('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',)
-        }
-        js = (
-            'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
-        )
     
     def address_short(self, obj):
         """Display truncated address"""
@@ -1147,8 +1325,9 @@ class LocationAdmin(ModelAdmin):
         return obj.user_locations.count()
     user_count.short_description = _("Assigned Users")
 
+
 @admin.register(UserLocation)
-class UserLocationAdmin(ModelAdmin):
+class UserLocationAdmin(CustomModelAdmin):
     list_display = (
         'user', 'location', 'is_primary', 'created_at'
     )
@@ -1158,278 +1337,18 @@ class UserLocationAdmin(ModelAdmin):
     list_select_related = ('user', 'location')
     
     fieldsets = (
-        (None, {
-            'fields': ('user', 'location', 'is_primary')
+        (_("📋 Required Fields"), {
+            'fields': ('user', 'location', 'is_primary'),
+            'classes': ('tab',)
         }),
     )
     
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('user', 'location')
-    
 
-class MobileAttendanceAdmin:
-    
-    def get_urls(self):
-        urls = super().get_urls()
-        custom_urls = [
-            path('mobile-attendance/', 
-                 self.admin_site.admin_view(self.mobile_attendance_view), 
-                 name='mobile_attendance_admin'),
-        ]
-        return custom_urls + urls
-    
-    def mobile_attendance_view(self, request):
-        """Admin mobile attendance view"""
-        from ..models import AttendanceLog, Location
-        from django.utils import timezone
-        from django.db.models import Count
-        
-        # Get stats for the admin view
-        today = timezone.now().date()
-        
-        context = {
-            'title': 'Mobile Attendance Admin',
-            'subtitle': 'Manage mobile attendance tracking',
-            'mobile_logs_count': AttendanceLog.objects.filter(source_type='MB').count(),
-            'today_logs_count': AttendanceLog.objects.filter(
-                source_type='MB', 
-                timestamp__date=today
-            ).count(),
-            'active_locations_count': Location.objects.filter(is_active=True).count(),
-            'opts': self.model._meta,
-        }
-        
-        return render(request, 'admin/mobile_attendance_admin.html', context)
-
-# Register the custom admin view
-admin.site.register_view = lambda *args, **kwargs: None  # Placeholder
-
-
-# admin.py
-
-from django.contrib import admin
-from unfold.admin import ModelAdmin, TabularInline   # <-- Unfold
-from .models import (
-    PayrollCycle, PayrollRecord, PayrollAdjustment,
-    PayrollPayment, PayrollTemplate
-)
-
-# ---------- PayrollCycle ----------
-@admin.register(PayrollCycle)
-class PayrollCycleAdmin(ModelAdmin):
-    list_display = [
-        'name', 'company', 'start_date', 'end_date', 'status',
-        'total_employees', 'total_net_salary', 'generated_at'
-    ]
-    list_filter = ['status', 'company', 'cycle_type', 'start_date']
-    search_fields = ['name', 'company__name']
-    readonly_fields = [
-        'total_gross_salary', 'total_deductions', 'total_net_salary',
-        'total_overtime_amount', 'generated_at', 'approved_at'
-    ]
-
-    fieldsets = (
-        ('মূল তথ্য', {
-            'fields': ('company', 'name', 'cycle_type', 'status')
-        }),
-        ('সময়কাল', {
-            'fields': ('start_date', 'end_date', 'payment_date')
-        }),
-        ('আর্থিক সারাংশ', {
-            'fields': (
-                'total_gross_salary', 'total_deductions',
-                'total_net_salary', 'total_overtime_amount'
-            )
-        }),
-        ('মেটাডেটা', {
-            'fields': ('generated_at', 'generated_by', 'approved_at', 'approved_by', 'notes')
-        }),
-    )
-
-    def total_employees(self, obj):
-        return obj.total_employees
-    total_employees.short_description = 'মোট কর্মচারী'
-
-
-# ---------- PayrollRecord ----------
-class PayrollAdjustmentInline(TabularInline):  # <-- Unfold TabularInline
-    model = PayrollAdjustment
-    extra = 0
-    fields = ['adjustment_type', 'title', 'amount', 'description']
-    readonly_fields = ['created_by', 'created_at']
-
-
-@admin.register(PayrollRecord)
-class PayrollRecordAdmin(ModelAdmin):
-    list_display = [
-        'employee', 'payroll_cycle', 'present_days', 'working_days',
-        'gross_salary', 'net_salary', 'payment_status', 'payment_date'
-    ]
-    list_filter = ['payment_status', 'payroll_cycle', 'payment_method', 'payment_date']
-    search_fields = ['employee__employee_id', 'employee__name', 'payroll_cycle__name']
-    readonly_fields = [
-        'total_allowances', 'total_deductions', 'gross_salary',
-        'net_salary', 'overtime_amount', 'hourly_wage_amount'
-    ]
-    inlines = [PayrollAdjustmentInline]
-
-    fieldsets = (
-        ('মূল তথ্য', {
-            'fields': ('payroll_cycle', 'employee')
-        }),
-        ('বেতন উপাদান', {
-            'fields': (
-                'basic_salary', 'house_rent_allowance', 'medical_allowance',
-                'conveyance_allowance', 'food_allowance', 'attendance_bonus',
-                'festival_bonus', 'other_allowances', 'total_allowances'
-            )
-        }),
-        ('ওভারটাইম ও ঘণ্টাভিত্তিক', {
-            'fields': (
-                'overtime_hours', 'overtime_rate', 'overtime_amount',
-                'working_hours', 'hourly_rate', 'hourly_wage_amount'
-            )
-        }),
-        ('কর্তন', {
-            'fields': (
-                'provident_fund', 'tax_deduction', 'loan_deduction',
-                'absence_deduction', 'other_deductions', 'total_deductions'
-            )
-        }),
-        ('উপস্থিতি তথ্য', {
-            'fields': (
-                'working_days', 'present_days', 'absent_days', 'leave_days',
-                'half_days', 'late_arrivals', 'early_departures'
-            )
-        }),
-        ('মোট হিসাব', {
-            'fields': ('gross_salary', 'net_salary')
-        }),
-        ('পেমেন্ট তথ্য', {
-            'fields': (
-                'payment_status', 'payment_method', 'payment_date',
-                'payment_reference', 'bank_name', 'bank_account'
-            )
-        }),
-        ('অতিরিক্ত', {
-            'fields': ('remarks',)
-        }),
-    )
-
-    actions = ['mark_as_paid', 'mark_as_pending', 'export_selected']
-
-    def mark_as_paid(self, request, queryset):
-        updated = queryset.update(payment_status='paid')
-        self.message_user(request, f'{updated} টি রেকর্ড পরিশোধিত হিসেবে চিহ্নিত করা হয়েছে।')
-    mark_as_paid.short_description = 'পরিশোধিত হিসেবে চিহ্নিত করুন'
-
-    def mark_as_pending(self, request, queryset):
-        updated = queryset.update(payment_status='pending')
-        self.message_user(request, f'{updated} টি রেকর্ড বকেয়া হিসেবে চিহ্নিত করা হয়েছে।')
-    mark_as_pending.short_description = 'বকেয়া হিসেবে চিহ্নিত করুন'
-
-
-# ---------- PayrollAdjustment ----------
-@admin.register(PayrollAdjustment)
-class PayrollAdjustmentAdmin(ModelAdmin):
-    list_display = ['title', 'payroll_record', 'adjustment_type', 'amount', 'created_by', 'created_at']
-    list_filter = ['adjustment_type', 'created_at']
-    search_fields = ['title', 'payroll_record__employee__name']
-    readonly_fields = ['created_by', 'created_at']
-
-    fieldsets = (
-        ('মূল তথ্য', {
-            'fields': ('payroll_record', 'adjustment_type', 'title', 'amount')
-        }),
-        ('বিস্তারিত', {
-            'fields': ('description',)
-        }),
-        ('মেটাডেটা', {
-            'fields': ('created_by', 'created_at')
-        }),
-    )
-
-
-# ---------- PayrollPayment ----------
-@admin.register(PayrollPayment)
-class PayrollPaymentAdmin(ModelAdmin):
-    list_display = ['payroll_record', 'amount', 'payment_date', 'payment_method', 'status', 'reference_number']
-    list_filter = ['status', 'payment_method', 'payment_date']
-    search_fields = ['payroll_record__employee__name', 'reference_number', 'transaction_id']
-    readonly_fields = ['created_at', 'updated_at']
-
-    fieldsets = (
-        ('মূল তথ্য', {
-            'fields': ('payroll_record', 'amount', 'payment_date', 'payment_method')
-        }),
-        ('রেফারেন্স', {
-            'fields': ('reference_number', 'transaction_id')
-        }),
-        ('স্ট্যাটাস', {
-            'fields': ('status', 'notes')
-        }),
-        ('প্রসেসিং', {
-            'fields': ('processed_by', 'created_at', 'updated_at')
-        }),
-    )
-
-
-# ---------- PayrollTemplate ----------
-@admin.register(PayrollTemplate)
-class PayrollTemplateAdmin(ModelAdmin):
-    list_display = ['name', 'company', 'default_cycle_type', 'payment_day', 'is_active', 'created_at']
-    list_filter = ['is_active', 'default_cycle_type', 'company']
-    search_fields = ['name', 'company__name']
-
-    fieldsets = (
-        ('মূল তথ্য', {
-            'fields': ('company', 'name', 'description', 'is_active')
-        }),
-        ('ডিফল্ট সেটিংস', {
-            'fields': ('default_cycle_type', 'payment_day')
-        }),
-        ('স্বয়ংক্রিয় গণনা', {
-            'fields': ('auto_calculate_overtime', 'auto_calculate_deductions', 'auto_calculate_bonuses')
-        }),
-        ('বোনাস নিয়ম', {
-            'fields': ('perfect_attendance_bonus', 'minimum_attendance_for_bonus')
-        }),
-        ('কর্তন নিয়ম', {
-            'fields': ('per_day_absence_deduction_rate', 'late_arrival_penalty')
-        }),
-    )
-
-    actions = ['duplicate_template', 'activate_template', 'deactivate_template']
-
-    def duplicate_template(self, request, queryset):
-        count = 0
-        for template in queryset:
-            # make a shallow copy
-            original_pk = template.pk
-            template.pk = None
-            template.name = f"{template.name} (কপি)"
-            template.is_active = False
-            template.save()
-            count += 1
-        self.message_user(request, f'{count} টি টেমপ্লেট কপি করা হয়েছে।')
-    duplicate_template.short_description = 'টেমপ্লেট কপি করুন'
-
-    def activate_template(self, request, queryset):
-        updated = queryset.update(is_active=True)
-        self.message_user(request, f'{updated} টি টেমপ্লেট সক্রিয় করা হয়েছে।')
-    activate_template.short_description = 'সক্রিয় করুন'
-
-    def deactivate_template(self, request, queryset):
-        updated = queryset.update(is_active=False)
-        self.message_user(request, f'{updated} টি টেমপ্লেট নিষ্ক্রিয় করা হয়েছে।')
-    deactivate_template.short_description = 'নিষ্ক্রিয় করুন'
-
-
-
-# ==================== NOTICE & ANNOUNCEMENTS ====================
 
 @admin.register(Notice)
-class NoticeAdmin(ModelAdmin):
+class NoticeAdmin(CustomModelAdmin):
     list_display = ('title', 'company', 'priority', 'published_date', 'expiry_date', 'is_active', 'created_at')
     list_filter = ('company', 'priority', 'is_active', 'published_date')
     search_fields = ('title', 'description', 'company__name')
@@ -1437,25 +1356,26 @@ class NoticeAdmin(ModelAdmin):
     list_select_related = ('company', 'created_by')
     
     fieldsets = (
-        (None, {
-            'fields': ('company', 'title', 'priority', 'is_active')
+        (_("📋 Required Fields"), {
+            'fields': ('company', 'title', 'priority', 'is_active', 'published_date'),
+            'classes': ('tab',)
         }),
-        (_("Content"), {
-            'fields': ('description',)
+        (_("📝 Content"), {
+            'fields': ('description',),
+            'classes': ('tab',)
         }),
-        (_("Dates"), {
-            'fields': ('published_date', 'expiry_date')
+        (_("📅 Optional Dates"), {
+            'fields': ('expiry_date',),
+            'classes': ('tab', 'collapse')
         }),
-        (_("Metadata"), {
+        (_("👤 Optional Metadata"), {
             'fields': ('created_by',),
-            'classes': ('collapse',)
+            'classes': ('tab', 'collapse')
         }),
     )
 
 
-# ==================== RECRUITMENT ====================
-
-class JobApplicationInline(TabularInline):
+class JobApplicationInline(admin.TabularInline):
     model = JobApplication
     extra = 0
     fields = ('applicant_name', 'email', 'phone', 'status', 'applied_date')
@@ -1464,7 +1384,7 @@ class JobApplicationInline(TabularInline):
 
 
 @admin.register(Recruitment)
-class RecruitmentAdmin(ModelAdmin):
+class RecruitmentAdmin(CustomModelAdmin):
     list_display = ('job_title', 'company', 'department', 'designation', 'vacancies', 'status', 'posted_date', 'closing_date')
     list_filter = ('company', 'department', 'designation', 'status', 'posted_date')
     search_fields = ('job_title', 'company__name', 'department__name')
@@ -1473,24 +1393,27 @@ class RecruitmentAdmin(ModelAdmin):
     inlines = [JobApplicationInline]
     
     fieldsets = (
-        (_("Basic Information"), {
-            'fields': ('company', 'department', 'designation', 'job_title', 'vacancies')
+        (_("📋 Required Fields"), {
+            'fields': ('company', 'job_title', 'vacancies', 'status', 'posted_date', 'closing_date'),
+            'classes': ('tab',)
         }),
-        (_("Job Details"), {
-            'fields': ('job_description', 'requirements')
+        (_("📝 Job Details"), {
+            'fields': ('job_description', 'requirements'),
+            'classes': ('tab',)
         }),
-        (_("Status & Dates"), {
-            'fields': ('status', 'posted_date', 'closing_date')
+        (_("🏢 Department Info"), {
+            'fields': ('department', 'designation'),
+            'classes': ('tab', 'collapse')
         }),
-        (_("Metadata"), {
+        (_("👤 Optional Metadata"), {
             'fields': ('created_by',),
-            'classes': ('collapse',)
+            'classes': ('tab', 'collapse')
         }),
     )
 
 
 @admin.register(JobApplication)
-class JobApplicationAdmin(ModelAdmin):
+class JobApplicationAdmin(CustomModelAdmin):
     list_display = ('applicant_name', 'recruitment_title', 'email', 'phone', 'status', 'applied_date')
     list_filter = ('status', 'applied_date', 'recruitment__company')
     search_fields = ('applicant_name', 'email', 'phone', 'recruitment__job_title')
@@ -1498,18 +1421,17 @@ class JobApplicationAdmin(ModelAdmin):
     list_select_related = ('recruitment',)
     
     fieldsets = (
-        (_("Recruitment"), {
-            'fields': ('recruitment', 'status')
+        (_("📋 Required Fields"), {
+            'fields': ('recruitment', 'applicant_name', 'email', 'phone', 'status'),
+            'classes': ('tab',)
         }),
-        (_("Applicant Information"), {
-            'fields': ('applicant_name', 'email', 'phone')
+        (_("📄 Application Details"), {
+            'fields': ('resume', 'cover_letter'),
+            'classes': ('tab', 'collapse')
         }),
-        (_("Application Details"), {
-            'fields': ('resume', 'cover_letter')
-        }),
-        (_("Notes"), {
+        (_("📝 Optional Notes"), {
             'fields': ('notes',),
-            'classes': ('collapse',)
+            'classes': ('tab', 'collapse')
         }),
     )
     
@@ -1519,9 +1441,7 @@ class JobApplicationAdmin(ModelAdmin):
     recruitment_title.admin_order_field = 'recruitment__job_title'
 
 
-# ==================== TRAINING ====================
-
-class TrainingEnrollmentInline(TabularInline):
+class TrainingEnrollmentInline(admin.TabularInline):
     model = TrainingEnrollment
     extra = 1
     fields = ('employee', 'status', 'enrollment_date', 'completion_date', 'score')
@@ -1529,7 +1449,7 @@ class TrainingEnrollmentInline(TabularInline):
 
 
 @admin.register(Training)
-class TrainingAdmin(ModelAdmin):
+class TrainingAdmin(CustomModelAdmin):
     list_display = ('title', 'company', 'trainer', 'start_date', 'end_date', 'duration_hours', 'status', 'enrollment_count')
     list_filter = ('company', 'status', 'start_date')
     search_fields = ('title', 'trainer', 'company__name')
@@ -1538,18 +1458,17 @@ class TrainingAdmin(ModelAdmin):
     inlines = [TrainingEnrollmentInline]
     
     fieldsets = (
-        (_("Basic Information"), {
-            'fields': ('company', 'title', 'trainer', 'status')
+        (_("📋 Required Fields"), {
+            'fields': ('company', 'title', 'trainer', 'status', 'start_date', 'end_date'),
+            'classes': ('tab',)
         }),
-        (_("Training Details"), {
-            'fields': ('description', 'duration_hours')
+        (_("📝 Training Details"), {
+            'fields': ('description', 'duration_hours'),
+            'classes': ('tab',)
         }),
-        (_("Schedule"), {
-            'fields': ('start_date', 'end_date')
-        }),
-        (_("Metadata"), {
+        (_("👤 Optional Metadata"), {
             'fields': ('created_by',),
-            'classes': ('collapse',)
+            'classes': ('tab', 'collapse')
         }),
     )
     
@@ -1559,7 +1478,7 @@ class TrainingAdmin(ModelAdmin):
 
 
 @admin.register(TrainingEnrollment)
-class TrainingEnrollmentAdmin(ModelAdmin):
+class TrainingEnrollmentAdmin(CustomModelAdmin):
     list_display = ('employee', 'training', 'status', 'enrollment_date', 'completion_date', 'score')
     list_filter = ('status', 'enrollment_date', 'training__company')
     search_fields = ('employee__name', 'employee__employee_id', 'training__title')
@@ -1567,29 +1486,29 @@ class TrainingEnrollmentAdmin(ModelAdmin):
     list_select_related = ('employee', 'training')
     
     fieldsets = (
-        (_("Enrollment Information"), {
-            'fields': ('training', 'employee', 'status')
+        (_("📋 Required Fields"), {
+            'fields': ('training', 'employee', 'status'),
+            'classes': ('tab',)
         }),
-        (_("Progress"), {
-            'fields': ('enrollment_date', 'completion_date', 'score')
+        (_("📊 Progress"), {
+            'fields': ('enrollment_date', 'completion_date', 'score'),
+            'classes': ('tab', 'collapse')
         }),
-        (_("Feedback"), {
+        (_("💬 Optional Feedback"), {
             'fields': ('feedback',),
-            'classes': ('collapse',)
+            'classes': ('tab', 'collapse')
         }),
     )
 
 
-# ==================== PERFORMANCE ====================
-
-class PerformanceGoalInline(TabularInline):
+class PerformanceGoalInline(admin.TabularInline):
     model = PerformanceGoal
     extra = 1
     fields = ('goal_title', 'target_date', 'status', 'completion_date')
 
 
 @admin.register(Performance)
-class PerformanceAdmin(ModelAdmin):
+class PerformanceAdmin(CustomModelAdmin):
     list_display = ('employee', 'review_period_display', 'overall_rating', 'status', 'reviewer', 'review_date')
     list_filter = ('status', 'overall_rating', 'review_period_start', 'review_period_end')
     search_fields = ('employee__name', 'employee__employee_id', 'reviewer__username')
@@ -1598,14 +1517,17 @@ class PerformanceAdmin(ModelAdmin):
     inlines = [PerformanceGoalInline]
     
     fieldsets = (
-        (_("Review Information"), {
-            'fields': ('employee', 'reviewer', 'status')
+        (_("📋 Required Fields"), {
+            'fields': ('employee', 'review_period_start', 'review_period_end', 'status'),
+            'classes': ('tab',)
         }),
-        (_("Review Period"), {
-            'fields': ('review_period_start', 'review_period_end', 'review_date')
+        (_("📊 Review Information"), {
+            'fields': ('reviewer', 'review_date', 'overall_rating'),
+            'classes': ('tab',)
         }),
-        (_("Rating & Feedback"), {
-            'fields': ('overall_rating', 'strengths', 'weaknesses', 'comments')
+        (_("💬 Feedback"), {
+            'fields': ('strengths', 'weaknesses', 'comments'),
+            'classes': ('tab',)
         }),
     )
     
@@ -1615,7 +1537,7 @@ class PerformanceAdmin(ModelAdmin):
 
 
 @admin.register(PerformanceGoal)
-class PerformanceGoalAdmin(ModelAdmin):
+class PerformanceGoalAdmin(CustomModelAdmin):
     list_display = ('employee', 'goal_title', 'target_date', 'status', 'completion_date')
     list_filter = ('status', 'target_date', 'performance__employee__company')
     search_fields = ('employee__name', 'employee__employee_id', 'goal_title')
@@ -1623,30 +1545,42 @@ class PerformanceGoalAdmin(ModelAdmin):
     list_select_related = ('employee', 'performance')
     
     fieldsets = (
-        (_("Goal Information"), {
-            'fields': ('performance', 'employee', 'goal_title', 'status')
+        (_("📋 Required Fields"), {
+            'fields': ('performance', 'employee', 'goal_title', 'status', 'target_date'),
+            'classes': ('tab',)
         }),
-        (_("Description"), {
-            'fields': ('description',)
+        (_("📝 Description"), {
+            'fields': ('description',),
+            'classes': ('tab',)
         }),
-        (_("Timeline"), {
-            'fields': ('target_date', 'completion_date')
+        (_("📅 Optional Timeline"), {
+            'fields': ('completion_date',),
+            'classes': ('tab', 'collapse')
         }),
-        (_("Achievement"), {
+        (_("🏆 Optional Achievement"), {
             'fields': ('achievement',),
-            'classes': ('collapse',)
+            'classes': ('tab', 'collapse')
         }),
     )
 
 
-# ==================== DOCUMENTS ====================
-
 @admin.register(EmployeeDocument)
-class EmployeeDocumentAdmin(ModelAdmin):
+class EmployeeDocumentAdmin(CustomModelAdmin):
     list_display = ['title', 'employee', 'document_type', 'is_verified', 'uploaded_at', 'file_preview']
     list_filter = ['document_type', 'is_verified', 'uploaded_at']
     search_fields = ['title', 'employee__name', 'employee__employee_id']
     readonly_fields = ['uploaded_at', 'created_at', 'updated_at', 'file_preview']
+    
+    fieldsets = (
+        (_("📋 Required Fields"), {
+            'fields': ('employee', 'document_type', 'title', 'file'),
+            'classes': ('tab',)
+        }),
+        (_("📝 Optional Fields"), {
+            'fields': ('description', 'is_verified', 'uploaded_by'),
+            'classes': ('tab', 'collapse')
+        }),
+    )
     
     def file_preview(self, obj):
         if obj.file:
@@ -1654,14 +1588,10 @@ class EmployeeDocumentAdmin(ModelAdmin):
         return "No file"
     file_preview.allow_tags = True
     file_preview.short_description = "File Preview"
-    
 
-
-
-# ==================== OVERTIME ====================
 
 @admin.register(Overtime)
-class OvertimeAdmin(ModelAdmin):
+class OvertimeAdmin(CustomModelAdmin):
     list_display = ('employee', 'date', 'start_time', 'end_time', 'hours', 'status', 'approved_by')
     list_filter = ('status', 'date', 'employee__company')
     search_fields = ('employee__name', 'employee__employee_id', 'reason')
@@ -1669,18 +1599,17 @@ class OvertimeAdmin(ModelAdmin):
     list_select_related = ('employee', 'approved_by')
     
     fieldsets = (
-        (_("Overtime Request"), {
-            'fields': ('employee', 'date', 'status')
+        (_("📋 Required Fields"), {
+            'fields': ('employee', 'date', 'status', 'start_time', 'end_time', 'hours'),
+            'classes': ('tab',)
         }),
-        (_("Time Details"), {
-            'fields': ('start_time', 'end_time', 'hours')
+        (_("📝 Reason"), {
+            'fields': ('reason',),
+            'classes': ('tab',)
         }),
-        (_("Reason"), {
-            'fields': ('reason',)
-        }),
-        (_("Approval"), {
+        (_("👤 Approval"), {
             'fields': ('approved_by', 'approved_at', 'remarks'),
-            'classes': ('collapse',)
+            'classes': ('tab', 'collapse')
         }),
     )
     
@@ -1698,10 +1627,8 @@ class OvertimeAdmin(ModelAdmin):
     reject_overtime.short_description = _("Reject selected overtime requests")
 
 
-# ==================== RESIGNATION ====================
-
 @admin.register(Resignation)
-class ResignationAdmin(ModelAdmin):
+class ResignationAdmin(CustomModelAdmin):
     list_display = ('employee', 'resignation_date', 'last_working_date', 'status', 'approved_by')
     list_filter = ('status', 'resignation_date', 'employee__company')
     search_fields = ('employee__name', 'employee__employee_id', 'reason')
@@ -1709,18 +1636,17 @@ class ResignationAdmin(ModelAdmin):
     list_select_related = ('employee', 'approved_by')
     
     fieldsets = (
-        (_("Resignation Information"), {
-            'fields': ('employee', 'status')
+        (_("📋 Required Fields"), {
+            'fields': ('employee', 'resignation_date', 'last_working_date', 'status'),
+            'classes': ('tab',)
         }),
-        (_("Dates"), {
-            'fields': ('resignation_date', 'last_working_date')
+        (_("📝 Reason"), {
+            'fields': ('reason',),
+            'classes': ('tab',)
         }),
-        (_("Reason"), {
-            'fields': ('reason',)
-        }),
-        (_("Approval"), {
+        (_("👤 Approval"), {
             'fields': ('approved_by', 'approved_at', 'remarks'),
-            'classes': ('collapse',)
+            'classes': ('tab', 'collapse')
         }),
     )
     
@@ -1738,10 +1664,8 @@ class ResignationAdmin(ModelAdmin):
     reject_resignation.short_description = _("Reject selected resignations")
 
 
-# ==================== CLEARANCE ====================
-
 @admin.register(Clearance)
-class ClearanceAdmin(ModelAdmin):
+class ClearanceAdmin(CustomModelAdmin):
     list_display = (
         'employee', 'clearance_date', 'status', 'hr_status', 'finance_status', 
         'it_status', 'admin_status', 'final_settlement_amount'
@@ -1752,18 +1676,21 @@ class ClearanceAdmin(ModelAdmin):
     list_select_related = ('employee', 'resignation', 'cleared_by')
     
     fieldsets = (
-        (_("Clearance Information"), {
-            'fields': ('employee', 'resignation', 'clearance_date', 'status')
+        (_("📋 Required Fields"), {
+            'fields': ('employee', 'clearance_date', 'status'),
+            'classes': ('tab',)
         }),
-        (_("Department Clearances"), {
-            'fields': ('hr_clearance', 'finance_clearance', 'it_clearance', 'admin_clearance')
+        (_("🏢 Department Clearances"), {
+            'fields': ('hr_clearance', 'finance_clearance', 'it_clearance', 'admin_clearance'),
+            'classes': ('tab',)
         }),
-        (_("Settlement"), {
-            'fields': ('final_settlement_amount',)
+        (_("💰 Settlement"), {
+            'fields': ('final_settlement_amount',),
+            'classes': ('tab',)
         }),
-        (_("Additional Information"), {
-            'fields': ('remarks', 'cleared_by'),
-            'classes': ('collapse',)
+        (_("📝 Optional Fields"), {
+            'fields': ('resignation', 'remarks', 'cleared_by'),
+            'classes': ('tab', 'collapse')
         }),
     )
     
@@ -1789,10 +1716,8 @@ class ClearanceAdmin(ModelAdmin):
         return format_html('<span style="color: red;">✗</span>')
 
 
-# ==================== COMPLAINT ====================
-
 @admin.register(Complaint)
-class ComplaintAdmin(ModelAdmin):
+class ComplaintAdmin(CustomModelAdmin):
     list_display = ('employee', 'title', 'priority', 'status', 'submitted_date', 'assigned_to', 'resolved_date')
     list_filter = ('status', 'priority', 'submitted_date', 'employee__company')
     search_fields = ('employee__name', 'employee__employee_id', 'title', 'description')
@@ -1800,22 +1725,21 @@ class ComplaintAdmin(ModelAdmin):
     list_select_related = ('employee', 'assigned_to')
     
     fieldsets = (
-        (_("Complaint Information"), {
-            'fields': ('employee', 'title', 'priority', 'status')
+        (_("📋 Required Fields"), {
+            'fields': ('employee', 'title', 'priority', 'status'),
+            'classes': ('tab',)
         }),
-        (_("Description"), {
-            'fields': ('description',)
+        (_("📝 Description"), {
+            'fields': ('description',),
+            'classes': ('tab',)
         }),
-        (_("Assignment"), {
-            'fields': ('assigned_to',)
+        (_("👤 Assignment"), {
+            'fields': ('assigned_to',),
+            'classes': ('tab', 'collapse')
         }),
-        (_("Resolution"), {
-            'fields': ('resolution', 'resolved_date'),
-            'classes': ('collapse',)
-        }),
-        (_("Additional Notes"), {
-            'fields': ('remarks',),
-            'classes': ('collapse',)
+        (_("✅ Resolution"), {
+            'fields': ('resolution', 'resolved_date', 'remarks'),
+            'classes': ('tab', 'collapse')
         }),
     )
     
@@ -1830,4 +1754,4 @@ class ComplaintAdmin(ModelAdmin):
         from django.utils import timezone
         updated = queryset.update(status='resolved', resolved_date=timezone.now().date())
         self.message_user(request, f'{updated} complaints marked as resolved.')
-    mark_as_resolved.short_description = _("Mark as resolved")   
+    mark_as_resolved.short_description = _("Mark as resolved")

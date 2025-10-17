@@ -122,7 +122,8 @@ class UserProfileAdmin(ModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('user', 'company')
 
-
+from django.db import models
+from django.contrib.auth.models import User
 
 # ==================== TASK INLINE ====================
 
@@ -132,7 +133,76 @@ class TaskInline(TabularInline):
     fields = ['title', 'assigned_to', 'status', 'priority', 'due_date', 'is_blocked']
     readonly_fields = ['created_at']
     show_change_link = True
-
+    
+    def get_queryset(self, request):
+        """Filter tasks in inline based on user permissions"""
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        
+        # Regular users can only see tasks they have permission for
+        if hasattr(request.user, 'profile') and request.user.profile.company:
+            return qs.filter(
+                models.Q(project__owner=request.user) |
+                models.Q(project__technical_lead=request.user) |
+                models.Q(project__project_manager=request.user) |
+                models.Q(project__supervisor=request.user) |
+                models.Q(owner=request.user) |
+                models.Q(assigned_to=request.user)
+            ).distinct()
+        return qs.none()
+    
+    def has_add_permission(self, request, obj):
+        """Allow adding tasks in inline only if user has permission"""
+        if not obj:
+            return False
+            
+        if request.user.is_superuser:
+            return True
+            
+        # Check if user is linked to this project
+        return (
+            obj.owner == request.user or
+            obj.technical_lead == request.user or
+            obj.project_manager == request.user or
+            obj.supervisor == request.user
+        )
+    
+    def has_change_permission(self, request, obj=None):
+        """Allow changing tasks in inline based on permissions"""
+        if not obj:
+            return False
+            
+        if request.user.is_superuser:
+            return True
+            
+        # Check if user has permission to edit this task
+        if obj:
+            return (
+                obj.project.owner == request.user or
+                obj.owner == request.user or
+                obj.assigned_to == request.user or
+                obj.project.technical_lead == request.user or
+                obj.project.project_manager == request.user or
+                obj.project.supervisor == request.user
+            )
+        return False
+    
+    def has_delete_permission(self, request, obj=None):
+        """Allow deleting tasks in inline only for project/task owners"""
+        if not obj:
+            return False
+            
+        if request.user.is_superuser:
+            return True
+            
+        # Only project owner or task owner can delete
+        if obj:
+            return (
+                obj.project.owner == request.user or
+                obj.owner == request.user
+            )
+        return False
 
 # ==================== PROJECT ADMIN ====================
 
@@ -145,53 +215,133 @@ class ProjectAdmin(ModelAdmin):
     list_filter = ['company', 'status', 'priority', 'is_active', 'start_date']
     search_fields = ['name', 'description', 'company__name']
     readonly_fields = [
-        'created_at', 'updated_at', 'progress_percentage', 
+        'company', 'owner', 'created_at', 'updated_at', 'progress_percentage', 
         'task_distribution', 'total_hours', 'budget_status', 
         'overdue_tasks_count', 'auto_report_data'
     ]
     list_select_related = ['company', 'owner', 'technical_lead', 'project_manager']
-    autocomplete_fields = ['company', 'owner', 'technical_lead', 'project_manager']
+    autocomplete_fields = ['technical_lead', 'project_manager', 'supervisor']
     inlines = [TaskInline]
     
     fieldsets = (
-        (_('Basic Information'), {
+        (_('📋 Basic Information'), {
             'fields': (
-                'name', 'description', 'company', 'owner'
-            )
-        }),
-        (_('Leadership'), {
-            'fields': (
-                'technical_lead', 'project_manager'
-            )
-        }),
-        (_('Status & Priority'), {
-            'fields': (
+                'name', 'description', 
+                'technical_lead', 'project_manager', 'supervisor',
                 'status', 'priority', 'is_active'
-            )
+            ),
+            'classes': ('tab',),
         }),
-        (_('Timeline'), {
+        (_('📅 Timeline & Budget'), {
             'fields': (
-                'start_date', 'end_date'
-            )
-        }),
-        (_('Budget'), {
-            'fields': (
+                'start_date', 'end_date',
                 'total_budget', 'spent_budget'
-            )
+            ),
+            'classes': ('tab',),
         }),
-        (_('Project Analytics'), {
+        (_('📊 Analytics & Metadata'), {
             'fields': (
                 'progress_percentage', 'task_distribution', 
                 'total_hours', 'budget_status', 'overdue_tasks_count',
-                'auto_report_data'
-            )
-        }),
-        (_('Metadata'), {
-            'fields': (
-                'created_at', 'updated_at'
-            )
+                'auto_report_data', 'created_at', 'updated_at'
+            ),
+            'classes': ('tab',),
         }),
     )
+    
+    def get_readonly_fields(self, request, obj=None):
+        """Make company and owner readonly for existing objects"""
+        readonly_fields = list(super().get_readonly_fields(request, obj))
+        if obj:  # Editing existing object
+            if 'company' not in readonly_fields:
+                readonly_fields.append('company')
+            if 'owner' not in readonly_fields:
+                readonly_fields.append('owner')
+        return readonly_fields
+    
+    def has_module_permission(self, request):
+        """Allow access to project module"""
+        return True
+    
+    def has_view_permission(self, request, obj=None):
+        """Allow viewing projects"""
+        if request.user.is_superuser:
+            return True
+            
+        if hasattr(request.user, 'profile') and request.user.profile.company:
+            return True
+        return False
+    
+    def has_add_permission(self, request):
+        """Allow adding projects"""
+        if request.user.is_superuser:
+            return True
+            
+        # Regular users can add projects if they have a company profile
+        return hasattr(request.user, 'profile') and request.user.profile.company
+    
+    def has_change_permission(self, request, obj=None):
+        """Allow editing projects"""
+        if request.user.is_superuser:
+            return True
+            
+        if obj is None:
+            return True
+            
+        # Users can edit projects they own or are linked to
+        return (
+            obj.owner == request.user or
+            obj.technical_lead == request.user or
+            obj.project_manager == request.user or
+            obj.supervisor == request.user
+        )
+    
+    def has_delete_permission(self, request, obj=None):
+        """Allow deleting projects only for owners"""
+        if request.user.is_superuser:
+            return True
+            
+        if obj is None:
+            return True
+            
+        # Only project owner can delete
+        return obj.owner == request.user
+    
+    def save_model(self, request, obj, form, change):
+        """Auto-set company and owner from user's profile when creating"""
+        if not change:  # Only for new objects
+            if hasattr(request.user, 'profile'):
+                obj.company = request.user.profile.company
+                obj.owner = request.user
+        super().save_model(request, obj, form, change)
+    
+    def get_queryset(self, request):
+        """Filter projects by user's permissions"""
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs.select_related('company', 'owner', 'technical_lead', 'project_manager')
+        
+        # Filter by user's company and permissions
+        if hasattr(request.user, 'profile') and request.user.profile.company:
+            return qs.filter(
+                company=request.user.profile.company
+            ).filter(
+                models.Q(owner=request.user) |
+                models.Q(technical_lead=request.user) |
+                models.Q(project_manager=request.user) |
+                models.Q(supervisor=request.user)
+            ).distinct().select_related('company', 'owner', 'technical_lead', 'project_manager')
+        return qs.none()
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """Filter foreign key choices based on user's company"""
+        if db_field.name in ['technical_lead', 'project_manager', 'supervisor']:
+            # Only show users from the same company
+            if hasattr(request.user, 'profile') and request.user.profile.company:
+                kwargs["queryset"] = User.objects.filter(
+                    profile__company=request.user.profile.company
+                ).select_related('profile')
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
     
     def progress_percentage(self, obj):
         return f"{obj.get_progress_percentage()}%"
@@ -226,13 +376,6 @@ class ProjectAdmin(ModelAdmin):
         Overdue: {report_data['overdue_tasks']}
         """
     auto_report_data.short_description = _('Auto Report Summary')
-    
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related(
-            'company', 'owner', 'technical_lead', 'project_manager'
-        )
-
-
 # ==================== TASK COMMENT INLINE ====================
 
 class TaskCommentInline(TabularInline):
@@ -240,8 +383,6 @@ class TaskCommentInline(TabularInline):
     extra = 1
     fields = ['commented_by', 'comment', 'created_at']
     readonly_fields = ['created_at']
-
-
 # ==================== TASK ADMIN ====================
 
 @admin.register(Task)
@@ -250,80 +391,180 @@ class TaskAdmin(ModelAdmin):
         'title', 'project', 'assigned_to', 'status', 'priority', 
         'due_date', 'is_blocked', 'is_overdue', 'created_at'
     ]
-    list_filter = [
-        'company', 'project', 'status', 'priority', 'is_blocked', 
-        'due_date', 'created_at'
-    ]
-    search_fields = [
-        'title', 'description', 'project__name', 
-        'assigned_to__username', 'assigned_to__email'
-    ]
-    readonly_fields = [
-        'created_at', 'updated_at', 'completed_at', 
-        'is_overdue', 'days_until_due'
-    ]
-    list_select_related = [
-        'company', 'project', 'owner', 'assigned_by', 'assigned_to'
-    ]
-    autocomplete_fields = [
-        'company', 'project', 'owner', 'assigned_by', 'assigned_to'
-    ]
+    list_filter = ['company', 'project', 'status', 'priority', 'is_blocked']
+    search_fields = ['title', 'project__name', 'assigned_to__username']
+    readonly_fields = ['company', 'owner', 'created_at', 'updated_at', 'is_overdue_safe']
+    autocomplete_fields = ['project', 'assigned_to', 'assigned_by']
     inlines = [TaskCommentInline]
-    
+
     fieldsets = (
-        (_('Basic Information'), {
-            'fields': (
-                'title', 'description', 'project', 'company', 'owner'
-            )
+        (_('Required'), {
+            'fields': ['title', 'project', 'assigned_to', 'status', 'due_date'],
+            'classes': ('tab',),
         }),
-        (_('Assignment'), {
-            'fields': (
-                'assigned_by', 'assigned_to'
-            )
-        }),
-        (_('Status & Priority'), {
-            'fields': (
-                'status', 'priority', 'is_blocked', 'blocking_reason'
-            )
-        }),
-        (_('Timeline & Hours'), {
-            'fields': (
-                'due_date', 'estimated_hours', 'actual_hours'
-            )
-        }),
-        (_('Completion'), {
-            'fields': (
-                'completed_at',
-            )
-        }),
-        (_('Task Status'), {
-            'fields': (
-                'is_overdue', 'days_until_due'
-            )
+        (_('Optional'), {
+            'fields': ['description', 'assigned_by', 'estimated_hours', 'actual_hours', 'is_blocked', 'blocking_reason'],
+            'classes': ('tab',),
         }),
         (_('Metadata'), {
-            'fields': (
-                'created_at', 'updated_at'
-            )
+            'fields': ['company', 'owner', 'is_overdue_safe', 'created_at', 'updated_at'],
+            'classes': ('tab',),
         }),
     )
-    
-    def is_overdue(self, obj):
-        return obj.is_overdue()
-    is_overdue.boolean = True
-    is_overdue.short_description = _('Is Overdue')
-    
-    def days_until_due(self, obj):
-        return obj.get_days_until_due()
-    days_until_due.short_description = _('Days Until Due')
-    
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related(
-            'company', 'project', 'owner', 'assigned_by', 'assigned_to'
+
+    def get_readonly_fields(self, request, obj=None):
+        """Set readonly fields based on permissions"""
+        readonly_fields = list(super().get_readonly_fields(request, obj))
+        
+        if obj:  # Editing existing object
+            # Make company and owner readonly for existing tasks
+            if 'company' not in readonly_fields:
+                readonly_fields.append('company')
+            if 'owner' not in readonly_fields:
+                readonly_fields.append('owner')
+            
+            # Check if user has permission to edit/delete
+            if not self.has_change_permission(request, obj) and not request.user.is_superuser:
+                # Make all fields readonly if no permission
+                readonly_fields.extend([
+                    'title', 'description', 'project', 'assigned_to', 'status',
+                    'priority', 'due_date', 'estimated_hours', 'actual_hours',
+                    'is_blocked', 'blocking_reason', 'assigned_by'
+                ])
+        
+        return readonly_fields
+
+    def has_add_permission(self, request):
+        """Allow users to add tasks if they are linked to any project"""
+        if request.user.is_superuser:
+            return True
+        
+        # Check if user is linked to any project (technical_lead, project_manager, supervisor, or owner)
+        if hasattr(request.user, 'profile') and request.user.profile.company:
+            user_projects = Project.objects.filter(
+                company=request.user.profile.company
+            ).filter(
+                models.Q(technical_lead=request.user) |
+                models.Q(project_manager=request.user) |
+                models.Q(supervisor=request.user) |
+                models.Q(owner=request.user)
+            )
+            return user_projects.exists()
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        """Allow edit only for project owner or task owner"""
+        if request.user.is_superuser:
+            return True
+        
+        if obj is None:
+            return True
+        
+        # Check if user is project owner or task owner
+        is_project_owner = obj.project.owner == request.user
+        is_task_owner = obj.owner == request.user
+        is_assigned_to = obj.assigned_to == request.user
+        
+        # Allow project leadership team to edit tasks in their projects
+        is_project_leadership = (
+            obj.project.technical_lead == request.user or
+            obj.project.project_manager == request.user or
+            obj.project.supervisor == request.user
         )
+        
+        return is_project_owner or is_task_owner or is_assigned_to or is_project_leadership
+
+    def has_delete_permission(self, request, obj=None):
+        """Allow delete only for project owner or task owner"""
+        if request.user.is_superuser:
+            return True
+        
+        if obj is None:
+            return True
+        
+        # Only project owner or task owner can delete
+        is_project_owner = obj.project.owner == request.user
+        is_task_owner = obj.owner == request.user
+        
+        return is_project_owner or is_task_owner
+
+    def save_model(self, request, obj, form, change):
+        """Auto-set company, owner, and assigned_by when creating"""
+        if not change:  # Only for new objects
+            # Auto-set company from project
+            if obj.project and not obj.company:
+                obj.company = obj.project.company
+            
+            # Auto-set owner from current user
+            if not obj.owner:
+                obj.owner = request.user
+            
+            # Auto-set assigned_by from current user if not set
+            if not obj.assigned_by:
+                obj.assigned_by = request.user
+        
+        super().save_model(request, obj, form, change)
+
+    def get_queryset(self, request):
+        """Filter tasks based on user's permissions"""
+        qs = super().get_queryset(request)
+        
+        if request.user.is_superuser:
+            return qs.select_related('project', 'company', 'owner', 'assigned_to', 'assigned_by')
+        
+        # Regular users can only see tasks from their company
+        if hasattr(request.user, 'profile') and request.user.profile.company:
+            company_tasks = qs.filter(company=request.user.profile.company)
+            
+            # Users can see tasks where they are:
+            # - Project owner/leadership, OR
+            # - Task owner, OR  
+            # - Assigned to the task
+            user_visible_tasks = company_tasks.filter(
+                models.Q(project__owner=request.user) |
+                models.Q(project__technical_lead=request.user) |
+                models.Q(project__project_manager=request.user) |
+                models.Q(project__supervisor=request.user) |
+                models.Q(owner=request.user) |
+                models.Q(assigned_to=request.user)
+            ).distinct()
+            
+            return user_visible_tasks.select_related('project', 'company', 'owner', 'assigned_to', 'assigned_by')
+        
+        return qs.none()
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """Filter foreign key choices based on user's permissions"""
+        if db_field.name == 'project':
+            # Only show projects where user is linked
+            if hasattr(request.user, 'profile') and request.user.profile.company:
+                kwargs["queryset"] = Project.objects.filter(
+                    company=request.user.profile.company
+                ).filter(
+                    models.Q(technical_lead=request.user) |
+                    models.Q(project_manager=request.user) |
+                    models.Q(supervisor=request.user) |
+                    models.Q(owner=request.user)
+                )
+        
+        elif db_field.name in ['assigned_to', 'assigned_by']:
+            # Only show users from the same company
+            if hasattr(request.user, 'profile') and request.user.profile.company:
+                kwargs["queryset"] = User.objects.filter(
+                    profile__company=request.user.profile.company
+                ).select_related('profile')
+        
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def is_overdue_safe(self, obj):
+        try:
+            return obj.is_overdue()
+        except (TypeError, AttributeError):
+            return False
+    is_overdue_safe.boolean = True
+    is_overdue_safe.short_description = _('Is Overdue')
 
 
-# ==================== TASK COMMENT ADMIN ====================
 
 @admin.register(TaskComment)
 class TaskCommentAdmin(ModelAdmin):

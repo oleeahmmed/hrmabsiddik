@@ -77,96 +77,8 @@
         </svg>
         <span>Dashboard</span>
     </a>
-<!-- ==================== CORE APP DROPDOWN ==================== -->
-<div class="nav-item-dropdown">
-    <div class="nav-item {% if 'company' in request.resolver_match.url_name or 'project' in request.resolver_match.url_name or 'task' in request.resolver_match.url_name %}active{% endif %}">
-        <div class="flex items-center gap-3">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-            </svg>
-            <span>Project Management</span>
-        </div>
-        <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-        </svg>
-    </div>
-    
-    <div class="dropdown-menu">
-        <!-- Company Management -->
-        <a href="{% url 'core:company_list' %}" class="dropdown-menu-item {% if 'company' in request.resolver_match.url_name %}active{% endif %}">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-            </svg>
-            <span>Company Management</span>
-        </a>
-        
-        <!-- Project Management -->
-        <a href="{% url 'core:project_list' %}" class="dropdown-menu-item {% if 'project' in request.resolver_match.url_name %}active{% endif %}">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2zM3 7h18M3 7l3-4m15 4l-3-4"/>
-            </svg>
-            <span>Project Management</span>
-        </a>
-        
-        <!-- Task Management -->
-        <a href="{% url 'core:task_list' %}" class="dropdown-menu-item {% if 'task' in request.resolver_match.url_name %}active{% endif %}">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-            </svg>
-            <span>Task Management</span>
-        </a>
-    </div>
-</div>
 
 
-    <!-- ==================== EMPLOYEE MANAGEMENT DROPDOWN ==================== -->
-    <div class="nav-item-dropdown">
-        <div class="nav-item {% if 'employee' in request.resolver_match.url_name or 'leave' in request.resolver_match.url_name or 'complaint' in request.resolver_match.url_name %}active{% endif %}">
-            <div class="flex items-center gap-3">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                </svg>
-                <span>Employee Management</span>
-            </div>
-            <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-        </div>
-        
-        <div class="dropdown-menu">
-            <!-- Employee -->
-            <a href="{% url 'zkteco:employee_list' %}" class="dropdown-menu-item {% if 'employee' in request.resolver_match.url_name and 'document' not in request.resolver_match.url_name %}active{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                </svg>
-                <span>Employees</span>
-            </a>
-            
-            <!-- Employee Documents -->
-            <a href="{% url 'zkteco:employee_document_list' %}" class="dropdown-menu-item {% if 'employee_document' in request.resolver_match.url_name %}active{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                <span>Employee Documents</span>
-            </a>
-            
-            <!-- Leave Management -->
-            <a href="{% url 'zkteco:leave_list' %}" class="dropdown-menu-item {% if 'leave' in request.resolver_match.url_name %}active{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-                <span>Leave Management</span>
-            </a>
-            
-            <!-- Complaints -->
-            <a href="{% url 'zkteco:complaint_list' %}" class="dropdown-menu-item {% if 'complaint' in request.resolver_match.url_name %}active{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                </svg>
-                <span>Complaints</span>
-            </a>
-        </div>
-    </div>
 
     <!-- ==================== ATTENDANCE MANAGEMENT DROPDOWN ==================== -->
     <div class="nav-item-dropdown">
@@ -209,29 +121,29 @@
             </a>
             
             <!-- Shift Management -->
-            <a href="{% url 'zkteco:shift_list' %}" class="dropdown-menu-item {% if 'shift' in request.resolver_match.url_name %}active{% endif %}">
+            <!-- <a href="{% url 'zkteco:shift_list' %}" class="dropdown-menu-item {% if 'shift' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"/>
                 </svg>
                 <span>Shift Management</span>
             </a>
-            
+             -->
             <!-- Roster Management -->
-            <a href="{% url 'zkteco:roster_list' %}" class="dropdown-menu-item {% if 'roster' in request.resolver_match.url_name %}active{% endif %}">
+            <!-- <a href="{% url 'zkteco:roster_list' %}" class="dropdown-menu-item {% if 'roster' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
                 </svg>
                 <span>Roster Management</span>
             </a>
-            
+             -->
             <!-- Holiday Management -->
-            <a href="{% url 'zkteco:holiday_list' %}" class="dropdown-menu-item {% if 'holiday' in request.resolver_match.url_name %}active{% endif %}">
+            <!-- <a href="{% url 'zkteco:holiday_list' %}" class="dropdown-menu-item {% if 'holiday' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4m8-8v16m8-8a8 8 0 11-16 0 8 8 0 0116 0z"/>
                 </svg>
                 <span>Holiday Management</span>
-            </a>
+            </a> -->
             
             <!-- Attendance Config -->
             <a href="{% url 'zkteco:config_list' %}" class="dropdown-menu-item {% if 'config' in request.resolver_match.url_name %}active{% endif %}">
@@ -258,6 +170,16 @@
         </div>
         
         <div class="dropdown-menu">
+
+        <!-- Mobile Attendance -->
+            <a href="{% url 'zkteco:mobile_attendance' %}" class="dropdown-menu-item {% if 'mobile_attendance' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                </svg>
+                <span>Mobile Attendance</span>
+            </a>
+
+
             <!-- Device Management -->
             <a href="{% url 'zkteco:device_list' %}" class="dropdown-menu-item {% if 'device' in request.resolver_match.url_name %}active{% endif %}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -284,57 +206,10 @@
                 <span>User Location</span>
             </a>
             
-            <!-- Mobile Attendance -->
-            <a href="{% url 'zkteco:mobile_attendance' %}" class="dropdown-menu-item {% if 'mobile_attendance' in request.resolver_match.url_name %}active{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                </svg>
-                <span>Mobile Attendance</span>
-            </a>
+
         </div>
     </div>
 
-    <!-- ==================== PAYROLL MANAGEMENT DROPDOWN ==================== -->
-    <div class="nav-item-dropdown">
-        <div class="nav-item {% if 'payroll' in request.resolver_match.url_name %}active{% endif %}">
-            <div class="flex items-center gap-3">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span>Payroll Management</span>
-            </div>
-            <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-        </div>
-        
-        <div class="dropdown-menu">
-            <!-- Payroll Dashboard -->
-            <a href="{% url 'zkteco:payroll_dashboard' %}" class="dropdown-menu-item {% if 'payroll_dashboard' in request.resolver_match.url_name %}active{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
-                <span>Payroll Dashboard</span>
-            </a>
-            
-            <!-- Payroll Cycles -->
-            <a href="{% url 'zkteco:payroll_cycle_list' %}" class="dropdown-menu-item {% if 'payroll_cycle' in request.resolver_match.url_name %}active{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-                <span>Payroll Cycles</span>
-            </a>
-            
-            <!-- Payroll Preview -->
-            <a href="{% url 'zkteco:payroll_preview' %}" class="dropdown-menu-item {% if 'payroll_preview' in request.resolver_match.url_name %}active{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                </svg>
-                <span>Payroll Preview</span>
-            </a>
-        </div>
-    </div>
 
     <!-- ==================== REPORTS & ANALYTICS DROPDOWN ==================== -->
     <div class="nav-item-dropdown">
