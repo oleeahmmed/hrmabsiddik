@@ -43,6 +43,7 @@ INSTALLED_APPS = [
   
     'core',
     'hr_payroll',
+    'payroll',
 ]
 # Add these settings to your settings.py
 LOGIN_URL = '/login/'  # or 'zkteco:login' if you want to use named URL

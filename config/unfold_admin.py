@@ -322,6 +322,51 @@ def get_navigation_for_user(request):
     ],
 },
 
+
+{
+    "title": _("Payroll Management"),
+    "separator": True,
+    "collapsible": True,
+    "items": [
+        {
+            "title": _("Salary Components"),
+            "icon": "account_balance_wallet",
+            "link": admin_changelist("payroll", "salarycomponent"),
+            "permission": lambda request: request.user.has_perm("payroll.view_salarycomponent"),
+        },
+        {
+            "title": _("Salary Structures"),
+            "icon": "receipt_long",
+            "link": admin_changelist("payroll", "employeesalarystructure"),
+            "permission": lambda request: request.user.has_perm("payroll.view_employeesalarystructure"),
+        },
+        {
+            "title": _("Salary Months"),
+            "icon": "calendar_month",
+            "link": admin_changelist("payroll", "salarymonth"),
+            "permission": lambda request: request.user.has_perm("payroll.view_salarymonth"),
+        },
+        {
+            "title": _("Employee Salaries"),
+            "icon": "payments",
+            "link": admin_changelist("payroll", "employeesalary"),
+            "permission": lambda request: request.user.has_perm("payroll.view_employeesalary"),
+        },
+        {
+            "title": _("Bonuses"),
+            "icon": "celebration",
+            "link": admin_changelist("payroll", "bonus"),
+            "permission": lambda request: request.user.has_perm("payroll.view_bonus"),
+        },
+        {
+            "title": _("Employee Advances"),
+            "icon": "request_quote",
+            "link": admin_changelist("payroll", "employeeadvance"),
+            "permission": lambda request: request.user.has_perm("payroll.view_employeeadvance"),
+        },
+    ],
+},
+
     ]
 
 
