@@ -1,7 +1,7 @@
 from django.urls import path
 
 # Import all views directly from their files
-from .views.dashboard_views import MainDashboardView, ProjectDashboardView, MyTasksView, MyProjectsView
+from .views.dashboard_views import MainDashboardView, ProjectDashboardView,MyProjectsView
 from .views.company_views import (
     CompanyListView, CompanyListAllView, CompanyCreateView,
     CompanyDetailView, CompanyUpdateView, CompanyDeleteView, CompanyPrintView
@@ -16,8 +16,8 @@ from .views.project_views import (
     ProjectDetailView, ProjectUpdateView, ProjectDeleteView, ProjectPrintView
 )
 from .views.task_views import (
-    TaskListView, TaskListAllView, TaskCreateView,
-    TaskDetailView, TaskUpdateView, TaskDeleteView, TaskPrintView
+    TaskListView,  TaskCreateView,
+    TaskDetailView, TaskUpdateView, TaskDeleteView
 )
 from .views.taskcomment_views import (
     TaskCommentListView, TaskCommentListAllView, TaskCommentCreateView,
@@ -30,6 +30,7 @@ from .views.project_reports import (
     task_performance_report
 )
 
+from .views.my_tasks_views import MyTasksView, MyTaskCreateView, MyTaskUpdateView, MyTaskDetailView, UpdateTaskStatusView
 
 app_name = 'core'
 
@@ -37,7 +38,7 @@ urlpatterns = [
     # ==================== DASHBOARD URLs ====================
     path('', MainDashboardView.as_view(), name='main_dashboard'),
     path('project-dashboard/', ProjectDashboardView.as_view(), name='project_dashboard'),
-    path('my-tasks/', MyTasksView.as_view(), name='my_tasks'),
+    # path('my-tasks/', MyTasksView.as_view(), name='my_tasks'),
     path('my-projects/', MyProjectsView.as_view(), name='my_projects'),
     
     # ==================== COMPANY URLs ====================
@@ -73,12 +74,10 @@ urlpatterns = [
     
     # ==================== TASK URLs ====================
     path('tasks/', TaskListView.as_view(), name='task_list'),
-    path('tasks/all/', TaskListAllView.as_view(), name='task_list_all'),
     path('tasks/create/', TaskCreateView.as_view(), name='task_create'),
     path('tasks/<int:pk>/', TaskDetailView.as_view(), name='task_detail'),
     path('tasks/<int:pk>/update/', TaskUpdateView.as_view(), name='task_update'),
     path('tasks/<int:pk>/delete/', TaskDeleteView.as_view(), name='task_delete'),
-    path('tasks/<int:pk>/print/', TaskPrintView.as_view(), name='task_print'),
     
     # ==================== TASK COMMENT URLs ====================
     path('task-comments/', TaskCommentListView.as_view(), name='taskcomment_list'),
@@ -94,4 +93,10 @@ urlpatterns = [
     path('project-reports/detailed/', project_detailed_report, name='project_detailed_report'),
     path('project-reports/task-performance/', task_performance_report, name='task_performance_report'),
     
+    # My Tasks URLs
+path('my-tasks/', MyTasksView.as_view(), name='my_tasks'),
+path('my-tasks/create/', MyTaskCreateView.as_view(), name='my_task_create'),
+path('my-tasks/<int:pk>/update/', MyTaskUpdateView.as_view(), name='my_task_update'),
+path('my-tasks/<int:pk>/detail/', MyTaskDetailView.as_view(), name='my_task_detail'),
+path('my-tasks/<int:pk>/update-status/', UpdateTaskStatusView.as_view(), name='update_task_status'),
     ]

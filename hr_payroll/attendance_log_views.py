@@ -19,7 +19,45 @@ from datetime import datetime
 from .models import AttendanceLog, Employee, ZkDevice, Location
 from .zkteco_device_manager import ZKTecoDeviceManager
 from core.models import Company
+
 logger = logging.getLogger(__name__)
+
+# Add CompanyAccessMixin
+class CompanyAccessMixin:
+    """Mixin to provide company access in class-based views"""
+    
+    def get_company(self):
+        """Get company for the current user"""
+        try:
+            # Try to get company from user's employee record
+            employee = Employee.objects.filter(user=self.request.user).first()
+            if employee:
+                return employee.company
+            
+            # Fallback: get first company (for staff/admin users)
+            company = Company.objects.first()
+            if company:
+                return company
+            
+            return None
+        except Exception as e:
+            logger.error(f"Error getting company: {str(e)}")
+            return None
+    
+    def dispatch(self, request, *args, **kwargs):
+        """Check company access before processing request"""
+        self.company = self.get_company()
+        if not self.company and not self.bypass_company_check():
+            return JsonResponse({
+                'success': False, 
+                'error': 'No company access found. Please ensure your user account is linked to an employee record.'
+            }, status=403)
+        return super().dispatch(request, *args, **kwargs)
+    
+    def bypass_company_check(self):
+        """Override in subclasses to bypass company check for specific views"""
+        return False
+
 # ==================== Attendance Log Management ====================
 
 class AttendanceLogFilterForm(forms.Form):
@@ -358,10 +396,10 @@ class AttendanceLogDetailView(LoginRequiredMixin, PermissionRequiredMixin, Detai
             except:
                 queryset = queryset.none()
         return queryset
-    
 
 
-class FetchAttendanceDataView(LoginRequiredMixin, View):
+# FIXED: Added CompanyAccessMixin to these views
+class FetchAttendanceDataView(LoginRequiredMixin, CompanyAccessMixin, View):
     """Class-based view to fetch attendance data from selected devices (preview before import)"""
     
     @method_decorator(csrf_exempt)
@@ -378,11 +416,14 @@ class FetchAttendanceDataView(LoginRequiredMixin, View):
             if not device_ids:
                 return JsonResponse({'success': False, 'error': 'No devices selected'})
             
-            company = self.get_company_from_request(request)
-            if not company:
-                return JsonResponse({'success': False, 'error': 'No company access found'})
+            # Use company from mixin
+            if not self.company:
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'No company access found. Please ensure your user account is linked to an employee record.'
+                })
             
-            devices = ZkDevice.objects.filter(id__in=device_ids, company=company)
+            devices = ZkDevice.objects.filter(id__in=device_ids, company=self.company)
             device_list = []
             
             for device in devices:
@@ -411,7 +452,7 @@ class FetchAttendanceDataView(LoginRequiredMixin, View):
                 # Find matching employee
                 employee = Employee.objects.filter(
                     Q(zkteco_id=record['zkteco_id']) | Q(employee_id=record['zkteco_id']),
-                    company=company
+                    company=self.company
                 ).first()
                 
                 # Check if already imported (duplicate check)
@@ -475,18 +516,9 @@ class FetchAttendanceDataView(LoginRequiredMixin, View):
         except Exception as e:
             logger.error(f"Error fetching attendance data: {str(e)}")
             return JsonResponse({'success': False, 'error': str(e)})
-    
-    def get_company_from_request(self, request):
-        """Helper method to get company from request"""
-        try:
-            from hr_payroll.models import Employee
-            employee = Employee.objects.get(user=request.user)
-            return employee.company
-        except Employee.DoesNotExist:
-            return None
 
 
-class ImportAttendanceDataView(LoginRequiredMixin, View):
+class ImportAttendanceDataView(LoginRequiredMixin, CompanyAccessMixin, View):
     """Class-based view to import selected attendance data to database"""
     
     @method_decorator(csrf_exempt)
@@ -504,9 +536,12 @@ class ImportAttendanceDataView(LoginRequiredMixin, View):
             if not fetched_data:
                 return JsonResponse({'success': False, 'error': 'No data to import. Please fetch data first.'})
             
-            company = self.get_company_from_request(request)
-            if not company:
-                return JsonResponse({'success': False, 'error': 'No company access found'})
+            # Use company from mixin
+            if not self.company:
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'No company access found. Please ensure your user account is linked to an employee record.'
+                })
             
             if import_all:
                 records_to_import = fetched_data
@@ -526,7 +561,7 @@ class ImportAttendanceDataView(LoginRequiredMixin, View):
                         # Find employee
                         employee = Employee.objects.filter(
                             Q(zkteco_id=record['zkteco_id']) | Q(employee_id=record['zkteco_id']),
-                            company=company
+                            company=self.company
                         ).first()
                         
                         if not employee:
@@ -536,7 +571,7 @@ class ImportAttendanceDataView(LoginRequiredMixin, View):
                         # Find device
                         device = ZkDevice.objects.filter(
                             ip_address=record['device_ip'], 
-                            company=company
+                            company=self.company
                         ).first()
                         
                         # Convert timestamp back to datetime
@@ -585,12 +620,3 @@ class ImportAttendanceDataView(LoginRequiredMixin, View):
         except Exception as e:
             logger.error(f"Error importing attendance data: {str(e)}")
             return JsonResponse({'success': False, 'error': str(e)})
-    
-    def get_company_from_request(self, request):
-        """Helper method to get company from request"""
-        try:
-            from hr_payroll.models import Employee
-            employee = Employee.objects.get(user=request.user)
-            return employee.company
-        except Employee.DoesNotExist:
-            return None

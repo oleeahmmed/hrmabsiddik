@@ -42,30 +42,13 @@
         </div>
     </div>
 
-    <!-- Location Restriction Status -->
-    <div class="px-4 pb-4">
-        <div id="restriction-status" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-sm p-3 border-l-4 border-blue-500">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <span class="text-sm font-medium text-gray-900 dark:text-white">
-                        Location Restriction: <span id="restriction-mode">Enabled</span>
-                    </span>
-                </div>
-                <span id="restriction-info" class="text-xs text-gray-500 dark:text-gray-400"></span>
-            </div>
-        </div>
-    </div>
-
     <!-- Current Location -->
     <div class="px-4 pb-4">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="font-semibold text-gray-900 dark:text-white">Current Location</h3>
-                <button onclick="getCurrentLocation()" class="text-sm text-blue-600 dark:text-blue-400 font-medium">
-                    Detect
+                <button onclick="getCurrentLocation()" class="text-sm text-blue-600 dark:text-blue-400 font-medium hover:underline">
+                    Refresh
                 </button>
             </div>
             <div id="location-status" class="flex items-center gap-2 mb-2">
@@ -75,7 +58,7 @@
             <div id="location-info" class="text-xs text-gray-500 dark:text-gray-400 space-y-1">
                 <div>Coordinates: <span id="coords">--</span></div>
                 <div>Accuracy: <span id="accuracy">--</span></div>
-                <div>Actual Location: <span id="actual-location">--</span></div>
+                <div>Address: <span id="actual-location">--</span></div>
             </div>
         </div>
     </div>
@@ -87,8 +70,38 @@
         </div>
     </div>
 
-    <!-- Available Locations -->
-    <div class="px-4 pb-4">
+    <!-- Quick Attendance (No Location Required) -->
+    <div id="quick-attendance-section" class="px-4 pb-4 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
+            <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Quick Attendance</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Mark attendance from your current location</p>
+            <div class="flex gap-2">
+                <button onclick="quickMarkAttendance('IN')" 
+                        id="quick-checkin-btn"
+                        class="flex-1 py-3 px-4 rounded-lg text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors">
+                    <span class="flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                        </svg>
+                        Check In
+                    </span>
+                </button>
+                <button onclick="quickMarkAttendance('OUT')" 
+                        id="quick-checkout-btn"
+                        class="flex-1 py-3 px-4 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors">
+                    <span class="flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                        Check Out
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Locations (Only for Restricted Mode) -->
+    <div id="locations-section" class="px-4 pb-4">
         <div class="flex items-center justify-between mb-3">
             <h3 class="font-semibold text-gray-900 dark:text-white">Available Locations</h3>
             <span id="locations-count" class="text-xs text-gray-500 dark:text-gray-400">Loading...</span>
@@ -98,15 +111,6 @@
                 <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Loading locations...</p>
             </div>
-        </div>
-        
-        <!-- No Locations Message -->
-        <div id="no-locations-message" class="hidden text-center py-8">
-            <svg class="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-            </svg>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">No locations available</p>
-            <p id="no-locations-reason" class="text-xs text-gray-400 dark:text-gray-500"></p>
         </div>
     </div>
 
@@ -140,7 +144,7 @@ let userMarker = null;
 let locationMarkers = [];
 let currentPosition = null;
 let availableLocations = [];
-let locationRestricted = true; // Default to restricted
+let locationRestricted = true;
 
 // CSRF Token
 function getCookie(name) {
@@ -205,9 +209,10 @@ function getCurrentLocation() {
             updateLocationDisplay();
             updateMapWithUserLocation();
             checkLocationProximity();
-            
-            // Try to get actual location name
             getActualLocationName(currentPosition.lat, currentPosition.lng);
+            
+            // Enable quick attendance buttons if not restricted
+            updateQuickAttendanceButtons();
         },
         function(error) {
             let message = 'Location error';
@@ -223,6 +228,7 @@ function getCurrentLocation() {
                     break;
             }
             updateLocationStatus('error', message);
+            updateQuickAttendanceButtons();
         },
         {
             enableHighAccuracy: true,
@@ -232,24 +238,9 @@ function getCurrentLocation() {
     );
 }
 
-// Get actual location name using OpenWeatherMap API
-async function getActualLocationName(lat, lng) {
-    try {
-        document.getElementById('actual-location').textContent = `Getting address...`;
-        
-        // You can also implement client-side geocoding here if you want
-        // For now, we'll rely on server-side geocoding
-        // The server will return the actual location name when marking attendance
-        
-        // Simple display of coordinates while waiting for server response
-        document.getElementById('actual-location').textContent = 
-            `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-            
-    } catch (error) {
-        console.error('Error getting location name:', error);
-        document.getElementById('actual-location').textContent = 
-            `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-    }
+// Get actual location name
+function getActualLocationName(lat, lng) {
+    document.getElementById('actual-location').textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
 }
 
 // Update location status
@@ -306,6 +297,78 @@ function updateMapWithUserLocation() {
     map.setView([currentPosition.lat, currentPosition.lng], 14);
 }
 
+// Update quick attendance buttons visibility
+function updateQuickAttendanceButtons() {
+    const quickSection = document.getElementById('quick-attendance-section');
+    const quickCheckinBtn = document.getElementById('quick-checkin-btn');
+    const quickCheckoutBtn = document.getElementById('quick-checkout-btn');
+    
+    if (!locationRestricted) {
+        // Show quick attendance section
+        quickSection.classList.remove('hidden');
+        
+        // Enable/disable based on location availability
+        if (currentPosition) {
+            quickCheckinBtn.disabled = false;
+            quickCheckoutBtn.disabled = false;
+            quickCheckinBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+            quickCheckoutBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+            quickCheckinBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+            quickCheckoutBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+        } else {
+            quickCheckinBtn.disabled = true;
+            quickCheckoutBtn.disabled = true;
+            quickCheckinBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+            quickCheckoutBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+            quickCheckinBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+            quickCheckoutBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+        }
+    } else {
+        // Hide quick attendance section in restricted mode
+        quickSection.classList.add('hidden');
+    }
+}
+
+// Quick mark attendance (no location required)
+async function quickMarkAttendance(type) {
+    if (!currentPosition) {
+        showToast('Please enable location access first', 'warning');
+        getCurrentLocation();
+        return;
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('attendance_type', type);
+        formData.append('latitude', currentPosition.lat);
+        formData.append('longitude', currentPosition.lng);
+        formData.append('device_info', navigator.userAgent);
+        
+        const response = await fetch('{% url "zkteco:mark_attendance" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken
+            },
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            showToast(data.message, 'success');
+            if (data.data.actual_location) {
+                document.getElementById('actual-location').textContent = data.data.actual_location;
+            }
+            loadAttendanceHistory();
+        } else {
+            showToast(data.message || 'Failed to mark attendance', 'error');
+        }
+    } catch (error) {
+        console.error('Error marking attendance:', error);
+        showToast('Network error', 'error');
+    }
+}
+
 // Load locations
 async function loadLocations() {
     try {
@@ -315,10 +378,28 @@ async function loadLocations() {
         if (data.status === 'success') {
             availableLocations = data.data;
             locationRestricted = data.location_restricted;
-            updateRestrictionStatus(locationRestricted);
-            displayLocations();
-            addLocationMarkers();
-            checkLocationProximity();
+            
+            console.log('Location Restricted:', locationRestricted);
+            console.log('Available Locations:', availableLocations.length);
+            
+            // Update UI based on restriction mode
+            if (locationRestricted) {
+                // Show locations section
+                document.getElementById('locations-section').classList.remove('hidden');
+                displayLocations();
+                addLocationMarkers();
+                checkLocationProximity();
+            } else {
+                // Hide locations section, show quick attendance
+                if (availableLocations.length === 0) {
+                    document.getElementById('locations-section').classList.add('hidden');
+                } else {
+                    displayLocations();
+                    addLocationMarkers();
+                }
+            }
+            
+            updateQuickAttendanceButtons();
         } else {
             showToast(data.message || 'Failed to load locations', 'error');
         }
@@ -328,45 +409,26 @@ async function loadLocations() {
     }
 }
 
-// Update restriction status display
-function updateRestrictionStatus(isRestricted) {
-    const restrictionEl = document.getElementById('restriction-status');
-    const modeEl = document.getElementById('restriction-mode');
-    const infoEl = document.getElementById('restriction-info');
-    
-    if (isRestricted) {
-        modeEl.textContent = 'Enabled';
-        infoEl.textContent = 'Must be within assigned location radius';
-        restrictionEl.classList.remove('hidden');
-    } else {
-        modeEl.textContent = 'Disabled';
-        infoEl.textContent = 'Can mark attendance from any location';
-        restrictionEl.classList.remove('hidden');
-    }
-}
-
-// Display locations
+// Display locations (for restricted mode or informational)
 function displayLocations() {
     const container = document.getElementById('locations-container');
-    const noLocationsEl = document.getElementById('no-locations-message');
-    const noLocationsReason = document.getElementById('no-locations-reason');
     const locationsCount = document.getElementById('locations-count');
     
     locationsCount.textContent = `${availableLocations.length} location(s)`;
     
     if (availableLocations.length === 0) {
-        container.classList.add('hidden');
-        noLocationsEl.classList.remove('hidden');
-        
-        if (locationRestricted) {
-            noLocationsReason.textContent = 'You are not assigned to any locations. Please contact administrator.';
-        } else {
-            noLocationsReason.textContent = 'No locations are configured in the system.';
-        }
+        container.innerHTML = `
+            <div class="text-center py-8 bg-white dark:bg-gray-800 rounded-xl p-6">
+                <svg class="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                </svg>
+                <p class="text-sm font-medium text-gray-900 dark:text-white mb-2">No locations available</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                    ${locationRestricted ? 'You are not assigned to any location.' : 'No locations configured.'}
+                </p>
+            </div>
+        `;
         return;
-    } else {
-        container.classList.remove('hidden');
-        noLocationsEl.classList.add('hidden');
     }
 
     container.innerHTML = availableLocations.map(location => {
@@ -378,32 +440,25 @@ function displayLocations() {
         const isWithinRadius = distance !== null && distance <= (location.radius / 1000);
         const distanceText = distance !== null ? `${(distance * 1000).toFixed(0)}m away` : 'Location unknown';
 
-        // Determine if buttons should be enabled
-        let buttonsEnabled = true;
-        let disabledReason = '';
+        let buttonsEnabled = !locationRestricted || (currentPosition && isWithinRadius);
+        let statusBadge = '';
         
-        if (locationRestricted) {
-            // In restricted mode, buttons are only enabled if within radius
-            buttonsEnabled = isWithinRadius;
-            if (!isWithinRadius) {
-                disabledReason = 'You must be within location radius';
-            }
+        if (isWithinRadius) {
+            statusBadge = '<span class="text-xs bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 px-2 py-1 rounded-full">✓ In Range</span>';
+        } else if (locationRestricted) {
+            statusBadge = '<span class="text-xs bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400 px-2 py-1 rounded-full">✗ Out of Range</span>';
         } else {
-            // In non-restricted mode, buttons are always enabled
-            buttonsEnabled = true;
+            statusBadge = '<span class="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 px-2 py-1 rounded-full">Outside Range</span>';
         }
 
         return `
-            <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm ${isWithinRadius ? 'ring-2 ring-green-500' : 'ring-1 ring-gray-300 dark:ring-gray-600'}">
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm ${isWithinRadius ? 'ring-2 ring-green-500' : 'ring-1 ring-gray-200 dark:ring-gray-700'}">
                 <div class="flex items-start justify-between mb-3">
                     <div class="flex-1">
                         <h4 class="font-semibold text-gray-900 dark:text-white">${location.name}</h4>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${location.address || 'No address'}</p>
                     </div>
-                    ${isWithinRadius ? 
-                        '<span class="text-xs bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 px-2 py-1 rounded-full">In Range</span>' : 
-                        '<span class="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400 px-2 py-1 rounded-full">Out of Range</span>'
-                    }
+                    ${statusBadge}
                 </div>
                 
                 <div class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 mb-3">
@@ -415,22 +470,14 @@ function displayLocations() {
                     <span>Radius: ${location.radius}m</span>
                 </div>
                 
-                ${!buttonsEnabled ? `
-                    <div class="mb-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                        <p class="text-xs text-yellow-800 dark:text-yellow-400 text-center">
-                            ${disabledReason}
-                        </p>
-                    </div>
-                ` : ''}
-                
                 <div class="flex gap-2">
                     <button onclick="markAttendance(${location.id}, 'IN')" 
-                            class="flex-1 py-2 px-4 rounded-lg text-sm font-medium text-white bg-green-600 hover:bg-green-700 ${!buttonsEnabled ? 'opacity-50 cursor-not-allowed' : ''}"
+                            class="flex-1 py-2.5 px-4 rounded-lg text-sm font-medium text-white transition-colors ${buttonsEnabled ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'}"
                             ${!buttonsEnabled ? 'disabled' : ''}>
                         Check In
                     </button>
                     <button onclick="markAttendance(${location.id}, 'OUT')" 
-                            class="flex-1 py-2 px-4 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 ${!buttonsEnabled ? 'opacity-50 cursor-not-allowed' : ''}"
+                            class="flex-1 py-2.5 px-4 rounded-lg text-sm font-medium text-white transition-colors ${buttonsEnabled ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-400 cursor-not-allowed'}"
                             ${!buttonsEnabled ? 'disabled' : ''}>
                         Check Out
                     </button>
@@ -443,7 +490,6 @@ function displayLocations() {
 // Add location markers
 function addLocationMarkers() {
     if (!map) return;
-
     locationMarkers.forEach(marker => map.removeLayer(marker));
     locationMarkers = [];
 
@@ -485,35 +531,16 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 // Check location proximity
 function checkLocationProximity() {
     if (!currentPosition || availableLocations.length === 0) return;
-
-    availableLocations.forEach(location => {
-        const distance = calculateDistance(
-            currentPosition.lat, currentPosition.lng,
-            location.latitude, location.longitude
-        );
-        location.distance = distance;
-        location.isWithinRadius = distance <= (location.radius / 1000);
-    });
-
     displayLocations();
 }
 
-// Mark attendance
+// Mark attendance at specific location
 async function markAttendance(locationId, type) {
     if (!currentPosition) {
         showToast('Please enable location access first', 'warning');
         getCurrentLocation();
         return;
     }
-
-    const location = availableLocations.find(l => l.id === locationId);
-    if (!location) {
-        showToast('Location not found', 'error');
-        return;
-    }
-
-    // Show loading for location name
-    document.getElementById('actual-location').textContent = 'Getting address...';
 
     try {
         const formData = new FormData();
@@ -534,29 +561,17 @@ async function markAttendance(locationId, type) {
         const data = await response.json();
         
         if (data.status === 'success') {
-            showToast(`${type === 'IN' ? 'Check-in' : 'Check-out'} successful!`, 'success');
-            
-            // Update actual location display with the one from server
+            showToast(data.message, 'success');
             if (data.data.actual_location) {
                 document.getElementById('actual-location').textContent = data.data.actual_location;
-            } else {
-                document.getElementById('actual-location').textContent = 
-                    `${currentPosition.lat.toFixed(6)}, ${currentPosition.lng.toFixed(6)}`;
             }
-            
             loadAttendanceHistory();
         } else {
             showToast(data.message || 'Failed to mark attendance', 'error');
-            // Reset location display on error
-            document.getElementById('actual-location').textContent = 
-                `${currentPosition.lat.toFixed(6)}, ${currentPosition.lng.toFixed(6)}`;
         }
     } catch (error) {
         console.error('Error marking attendance:', error);
         showToast('Network error', 'error');
-        // Reset location display on error
-        document.getElementById('actual-location').textContent = 
-            `${currentPosition.lat.toFixed(6)}, ${currentPosition.lng.toFixed(6)}`;
     }
 }
 
@@ -581,49 +596,13 @@ async function loadAttendanceHistory() {
 }
 
 
-
-// Helper function to truncate long text
-function truncateText(text, maxLength) {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
-}
-
-// Refresh data
-function refreshData() {
-    getCurrentLocation();
-    loadLocations();
-    loadAttendanceHistory();
-    showToast('Refreshed', 'success');
-}
-
-// Show toast
-function showToast(message, type = 'success') {
-    const colors = {
-        success: 'bg-green-600',
-        error: 'bg-red-600',
-        warning: 'bg-yellow-600',
-        info: 'bg-blue-600'
-    };
-    
-    const toast = document.createElement('div');
-    toast.className = `fixed top-4 right-4 ${colors[type]} text-white px-4 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(100%)';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
 // Display attendance history
 function displayAttendanceHistory(logs) {
     const container = document.getElementById('attendance-history');
     
     if (logs.length === 0) {
         container.innerHTML = `
-            <div class="text-center py-8">
+            <div class="text-center py-8 bg-white dark:bg-gray-800 rounded-xl">
                 <svg class="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                 </svg>
@@ -654,10 +633,8 @@ function displayAttendanceHistory(logs) {
                 </div>
                 <div class="divide-y divide-gray-200 dark:divide-gray-700">
                     ${dateLogs.map(log => {
-                        // Create Google Maps URL if coordinates are available
                         const mapsUrl = (log.latitude && log.longitude) ? 
-                            `https://www.google.com/maps?q=${log.latitude},${log.longitude}` : 
-                            null;
+                            `https://www.google.com/maps?q=${log.latitude},${log.longitude}` : null;
                         
                         return `
                         <div class="px-4 py-3">
@@ -669,28 +646,34 @@ function displayAttendanceHistory(logs) {
                                     <span class="text-sm font-medium text-gray-900 dark:text-white">${log.time}</span>
                                 </div>
                                 ${log.is_within_radius ? 
-                                    '<svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' : 
-                                    '<svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>'
+                                    '<span class="text-xs bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 px-2 py-0.5 rounded-full">In Range</span>' : 
+                                    '<span class="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400 px-2 py-0.5 rounded-full">Outside</span>'
                                 }
                             </div>
                             <div class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                                <div class="flex items-center gap-1">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="flex items-start gap-1">
+                                    <svg class="w-3 h-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                    </svg>
+                                    <span class="font-medium">${log.location}</span>
+                                </div>
+                                <div class="flex items-start gap-1">
+                                    <svg class="w-3 h-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                                     </svg>
-                                    <span>${log.location}</span>
+                                    <span class="break-all">${log.actual_location}</span>
                                 </div>
+                                ${log.distance ? `
                                 <div class="flex items-center gap-1">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                                     </svg>
-                                    <span title="${log.actual_location}">${truncateText(log.actual_location, 40)}</span>
+                                    <span>Distance: ${log.distance}m</span>
                                 </div>
-                                ${log.distance ? `<div class="flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg><span>Distance: ${log.distance}m</span></div>` : ''}
-                                
+                                ` : ''}
                                 ${mapsUrl ? `
                                 <div class="pt-1">
-                                    <a href="${mapsUrl}" target="_blank" class="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded text-xs font-medium hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors">
+                                    <a href="${mapsUrl}" target="_blank" class="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded text-xs font-medium hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors">
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
                                         </svg>
@@ -706,6 +689,63 @@ function displayAttendanceHistory(logs) {
         `;
     }).join('');
 }
+
+// Helper function to truncate text
+function truncateText(text, maxLength) {
+    if (!text || text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+}
+
+// Refresh data
+function refreshData() {
+    getCurrentLocation();
+    loadLocations();
+    loadAttendanceHistory();
+    showToast('Data refreshed', 'success');
+}
+
+// Show toast notification
+function showToast(message, type = 'success') {
+    const colors = {
+        success: 'bg-green-600',
+        error: 'bg-red-600',
+        warning: 'bg-yellow-600',
+        info: 'bg-blue-600'
+    };
+    
+    const icons = {
+        success: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>',
+        error: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>',
+        warning: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>',
+        info: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+    };
+    
+    const toast = document.createElement('div');
+    toast.className = `fixed top-4 right-4 ${colors[type]} text-white px-4 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300 flex items-center gap-2 max-w-sm`;
+    toast.innerHTML = `
+        ${icons[type]}
+        <span class="flex-1">${message}</span>
+        <button onclick="this.parentElement.remove()" class="ml-2 hover:bg-white/20 rounded p-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Animate in
+    setTimeout(() => {
+        toast.style.opacity = '1';
+    }, 10);
+    
+    // Auto remove
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
 </script>
 
 <style>
@@ -718,10 +758,59 @@ function displayAttendanceHistory(logs) {
     border-radius: 8px;
 }
 
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-thumb {
+    background: #4a5568;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #718096;
+}
+
+/* Smooth transitions */
+* {
+    transition: background-color 0.2s ease;
+}
+
 @media (max-width: 640px) {
     #map {
         height: 250px;
     }
+}
+
+/* Animation for cards */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.bg-white, .dark .dark\:bg-gray-800 {
+    animation: slideIn 0.3s ease-out;
 }
 </style>
 {% endblock %}

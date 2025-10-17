@@ -8,7 +8,7 @@ from django.shortcuts import redirect
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.utils import timezone
-from .base_views import CompanyFilterMixin, CompanyRequiredMixin, CompanyOwnershipMixin, AutoAssignOwnerMixin, CommonContextMixin
+from .base_views import CompanyFilterMixin, CompanyRequiredMixin, CompanyOwnershipMixin, CommonContextMixin
 from ..models import Project, Task
 from django.contrib.auth import get_user_model
 
@@ -219,7 +219,7 @@ class ProjectListAllView(PermissionRequiredMixin, CompanyFilterMixin, CommonCont
         return context
 
 
-class ProjectCreateView(PermissionRequiredMixin, AutoAssignOwnerMixin, CompanyRequiredMixin, CommonContextMixin, CreateView):
+class ProjectCreateView(PermissionRequiredMixin, CompanyRequiredMixin, CommonContextMixin, CreateView):
     """
     Create a new project
     Permission: core.add_project
@@ -239,6 +239,20 @@ class ProjectCreateView(PermissionRequiredMixin, AutoAssignOwnerMixin, CompanyRe
         kwargs['user'] = self.request.user
         return kwargs
     
+    def form_valid(self, form):
+        # CRITICAL FIX: Set owner and company BEFORE saving
+        form.instance.owner = self.request.user
+        
+        # Set company from user's profile
+        if hasattr(self.request.user, 'profile') and self.request.user.profile.company:
+            form.instance.company = self.request.user.profile.company
+        
+        messages.success(
+            self.request,
+            f'Project "{form.instance.name}" created successfully!'
+        )
+        return super().form_valid(form)
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update({
@@ -247,13 +261,6 @@ class ProjectCreateView(PermissionRequiredMixin, AutoAssignOwnerMixin, CompanyRe
             'back_text': 'Projects',
         })
         return context
-    
-    def form_valid(self, form):
-        messages.success(
-            self.request,
-            f'Project "{form.instance.name}" created successfully!'
-        )
-        return super().form_valid(form)
 
 
 class ProjectUpdateView(PermissionRequiredMixin, CompanyOwnershipMixin, CommonContextMixin, UpdateView):
@@ -291,6 +298,7 @@ class ProjectUpdateView(PermissionRequiredMixin, CompanyOwnershipMixin, CommonCo
             f'Project "{form.instance.name}" updated successfully!'
         )
         return super().form_valid(form)
+
 
 class ProjectDetailView(PermissionRequiredMixin, CompanyOwnershipMixin, CommonContextMixin, DetailView):
     """
@@ -338,7 +346,6 @@ class ProjectDetailView(PermissionRequiredMixin, CompanyOwnershipMixin, CommonCo
         return context
 
 
-
 class ProjectPrintView(PermissionRequiredMixin, CompanyOwnershipMixin, CommonContextMixin, DetailView):
     """
     Print project details using Print.js
@@ -368,10 +375,15 @@ class ProjectPrintView(PermissionRequiredMixin, CompanyOwnershipMixin, CommonCon
                 due_date__lt=timezone.now().date(),
                 status__in=['todo', 'in_progress']
             ).count(),
-            'print_date': timezone.now().date()
+            'print_date': timezone.now().date(),
+            'total_tasks': project.tasks.count(),
+            'completed_tasks': project.tasks.filter(status='completed').count(),
+            'pending_tasks': project.tasks.filter(status__in=['todo', 'in_progress']).count(),
+            'blocked_tasks': project.tasks.filter(is_blocked=True).count(),
         })
         
         return context
+
 
 class ProjectDeleteView(PermissionRequiredMixin, CompanyOwnershipMixin, CommonContextMixin, DeleteView):
     """
@@ -390,7 +402,41 @@ class ProjectDeleteView(PermissionRequiredMixin, CompanyOwnershipMixin, CommonCo
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         project = self.get_object()
+        context.update({
+            'task_count': project.tasks.count(),
+            'back_url': reverse_lazy('core:project_list'),
+            'back_text': 'Back to Projects',
+            'title': f'Delete Project: {project.name}',
+        })
+        return context
+    
+    def delete(self, request, *args, **kwargs):
+        project = self.get_object()
+        project_name = project.name
+        messages.success(
+            request,
+            f'Project "{project_name}" deleted successfully!'
+        )
+        return super().delete(request, *args, **kwargs)
+    """
+    Delete a project
+    Permission: core.delete_project
+    """
+    model = Project
+    template_name = 'core/project_confirm_delete.html'
+    success_url = reverse_lazy('core:project_list')
+    permission_required = 'core.delete_project'
+    
+    def handle_no_permission(self):
+        messages.error(self.request, 'You do not have permission to delete projects.')
+        return redirect('core:project_list')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        project = self.get_object()
         context['task_count'] = project.tasks.count()
+        context['back_url'] = reverse_lazy('core:project_list')
+        context['back_text'] = 'Back to Projects'
         return context
     
     def delete(self, request, *args, **kwargs):

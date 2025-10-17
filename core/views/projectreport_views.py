@@ -185,11 +185,22 @@ class ProjectReportCreateView(PermissionRequiredMixin, AutoAssignOwnerMixin, Com
         return kwargs
     
     def form_valid(self, form):
-        # Auto-assign reported_by
-        if not form.instance.reported_by:
-            form.instance.reported_by = self.request.user
+        # CRITICAL: Assign owner FIRST before any validation
+        form.instance.owner = self.request.user
         
-        messages.success(self.request, 'Project Report created successfully!')
+        # Auto-assign assigned_by to current user
+        form.instance.assigned_by = self.request.user
+        
+        # Auto-assign company from project if selected, otherwise from user profile
+        if form.cleaned_data.get('project'):
+            form.instance.company = form.cleaned_data['project'].company
+        elif hasattr(self.request.user, 'profile') and self.request.user.profile.company:
+            form.instance.company = self.request.user.profile.company
+        
+        messages.success(
+            self.request,
+            f'Task "{form.instance.title}" created successfully!'
+        )
         return super().form_valid(form)
     
     def get_initial(self):

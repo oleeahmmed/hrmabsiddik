@@ -23,12 +23,27 @@
             </div>
         </div>
 
-        <!-- To Do Tasks Card -->
-        <div class="relative overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-900 bg-gradient-to-br from-gray-500 to-gray-600 dark:from-gray-900 dark:to-gray-950 p-4 md:p-6 text-white shadow-lg">
+        <!-- Completed Tasks Card -->
+        <div class="relative overflow-hidden rounded-2xl border border-green-200 dark:border-green-900 bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-900 dark:to-emerald-950 p-4 md:p-6 text-white shadow-lg">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs md:text-sm font-medium opacity-90">To Do</p>
-                    <p class="text-xl md:text-3xl font-bold">{{ todo_count }}</p>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Completed</p>
+                    <p class="text-xl md:text-3xl font-bold">{{ completed_tasks }}</p>
+                </div>
+                <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
+                    <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overdue Tasks Card -->
+        <div class="relative overflow-hidden rounded-2xl border border-red-200 dark:border-red-900 bg-gradient-to-br from-red-500 to-rose-600 dark:from-red-900 dark:to-rose-950 p-4 md:p-6 text-white shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Overdue</p>
+                    <p class="text-xl md:text-3xl font-bold">{{ overdue_tasks }}</p>
                 </div>
                 <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
                     <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -38,31 +53,16 @@
             </div>
         </div>
 
-        <!-- In Progress Tasks Card -->
+        <!-- Blocked Tasks Card -->
         <div class="relative overflow-hidden rounded-2xl border border-yellow-200 dark:border-yellow-900 bg-gradient-to-br from-yellow-500 to-amber-600 dark:from-yellow-900 dark:to-amber-950 p-4 md:p-6 text-white shadow-lg">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs md:text-sm font-medium opacity-90">In Progress</p>
-                    <p class="text-xl md:text-3xl font-bold">{{ in_progress_count }}</p>
+                    <p class="text-xs md:text-sm font-medium opacity-90">Blocked</p>
+                    <p class="text-xl md:text-3xl font-bold">{{ blocked_tasks }}</p>
                 </div>
                 <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
                     <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        <!-- Completed Tasks Card -->
-        <div class="relative overflow-hidden rounded-2xl border border-green-200 dark:border-green-900 bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-900 dark:to-emerald-950 p-4 md:p-6 text-white shadow-lg">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs md:text-sm font-medium opacity-90">Completed</p>
-                    <p class="text-xl md:text-3xl font-bold">{{ done_count }}</p>
-                </div>
-                <div class="rounded-xl bg-white/20 dark:bg-black/40 p-2 md:p-3 backdrop-blur-sm">
-                    <svg class="h-4 w-4 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                     </svg>
                 </div>
             </div>
@@ -128,12 +128,7 @@
                         <!-- Status Filter -->
                         <div>
                             <label class="form-label">Status</label>
-                            <select name="status" class="input">
-                                <option value="">All Status</option>
-                                <option value="todo" {% if request.GET.status == 'todo' %}selected{% endif %}>To Do</option>
-                                <option value="in_progress" {% if request.GET.status == 'in_progress' %}selected{% endif %}>In Progress</option>
-                                <option value="done" {% if request.GET.status == 'done' %}selected{% endif %}>Completed</option>
-                            </select>
+                            {{ filter_form.status }}
                         </div>
                     </div>
                     
@@ -141,26 +136,19 @@
                         <!-- Project Filter -->
                         <div>
                             <label class="form-label">Project</label>
-                            <select name="project" class="input">
-                                <option value="">All Projects</option>
-                                {% for project in projects %}
-                                <option value="{{ project.id }}" {% if request.GET.project == project.id|stringformat:"s" %}selected{% endif %}>
-                                    {{ project.name }}
-                                </option>
-                                {% endfor %}
-                            </select>
+                            {{ filter_form.project }}
                         </div>
                         
-                        <!-- Date From -->
+                        <!-- Priority Filter -->
                         <div>
-                            <label class="form-label">Date From</label>
-                            {{ filter_form.date_from }}
+                            <label class="form-label">Priority</label>
+                            {{ filter_form.priority }}
                         </div>
                         
-                        <!-- Date To -->
+                        <!-- Due Date From -->
                         <div>
-                            <label class="form-label">Date To</label>
-                            {{ filter_form.date_to }}
+                            <label class="form-label">Due Date From</label>
+                            <input type="date" name="due_date_from" value="{{ request.GET.due_date_from|default:'' }}" class="input">
                         </div>
                     </div>
 
@@ -183,9 +171,8 @@
                     <tr class="bg-gradient-to-r from-primary to-primary-hover border-b border-primary/30" style="background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-hover)) 100%);">
                         <th class="text-left p-4 text-sm font-semibold text-white">Task</th>
                         <th class="text-left p-4 text-sm font-semibold text-white">Project</th>
-                        <th class="text-left p-4 text-sm font-semibold text-white">Employee</th>
-                        <th class="text-left p-4 text-sm font-semibold text-white">Date</th>
-                        <th class="text-left p-4 text-sm font-semibold text-white">Hours</th>
+                        <th class="text-left p-4 text-sm font-semibold text-white">Assigned To</th>
+                        <th class="text-left p-4 text-sm font-semibold text-white">Due Date</th>
                         <th class="text-left p-4 text-sm font-semibold text-white">Status</th>
                         <th class="text-center p-4 text-sm font-semibold text-white">Actions</th>
                     </tr>
@@ -204,6 +191,19 @@
                                     {% if task.description %}
                                     <div class="text-xs text-muted-foreground">{{ task.description|truncatewords:10 }}</div>
                                     {% endif %}
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium 
+                                            {% if task.priority == 'high' or task.priority == 'critical' %}bg-red-100 text-red-800
+                                            {% elif task.priority == 'medium' %}bg-yellow-100 text-yellow-800
+                                            {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                            {{ task.get_priority_display }}
+                                        </span>
+                                        {% if task.is_blocked %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            Blocked
+                                        </span>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                         </td>
@@ -213,41 +213,34 @@
                             {{ task.project.name|default:'-' }}
                         </td>
                         
-                        <!-- Employee -->
+                        <!-- Assigned To -->
                         <td class="p-4 text-sm text-foreground">
-                            <div class="flex items-center gap-2">
-                                <div class="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium text-primary">
-                                    {{ task.employee.name|slice:":1"|upper }}
-                                </div>
-                                <span>{{ task.employee.name }}</span>
+                            {% if task.assigned_to %}
+                                {{ task.assigned_to.get_full_name|default:task.assigned_to.username }}
+                            {% else %}
+                                <span class="text-muted-foreground">Unassigned</span>
+                            {% endif %}
+                        </td>
+                        
+                        <!-- Due Date -->
+                        <td class="p-4 text-sm text-foreground">
+                            <div class="{% if task.is_overdue %}text-red-600 font-semibold{% endif %}">
+                                {{ task.due_date|date:"M d, Y" }}
                             </div>
-                        </td>
-                        
-                        <!-- Date -->
-                        <td class="p-4 text-sm text-foreground">
-                            {{ task.date|date:"M d, Y" }}
-                        </td>
-                        
-                        <!-- Hours -->
-                        <td class="p-4 text-sm text-foreground">
-                            {{ task.hours_spent }}h
+                            {% if task.is_overdue %}
+                            <div class="text-xs text-red-500">Overdue</div>
+                            {% endif %}
                         </td>
                         
                         <!-- Status -->
                         <td class="p-4">
-                            {% if task.status == 'done' %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                                Completed
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                {% if task.status == 'completed' %}bg-green-100 text-green-800
+                                {% elif task.status == 'in_progress' %}bg-blue-100 text-blue-800
+                                {% elif task.status == 'on_hold' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ task.get_status_display }}
                             </span>
-                            {% elif task.status == 'in_progress' %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
-                                In Progress
-                            </span>
-                            {% else %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400">
-                                To Do
-                            </span>
-                            {% endif %}
                         </td>
                         
                         <!-- Actions -->
@@ -274,7 +267,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="p-8 text-center">
+                        <td colspan="6" class="p-8 text-center">
                             <div class="flex flex-col items-center justify-center space-y-3">
                                 <div class="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
                                     <svg class="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">

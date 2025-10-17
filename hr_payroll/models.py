@@ -9,7 +9,6 @@ import logging
 from django.utils.dateparse import parse_datetime
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
-
 # Import Company model from custom_auth app
 from core.models import Company
 
