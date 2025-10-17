@@ -29,6 +29,8 @@ logger = logging.getLogger(__name__)
 from django.views import View
 from django.utils.decorators import method_decorator
 from django.contrib.admin.views.decorators import staff_member_required
+
+
 class CustomAdminPageView(View):
     """Class-based custom admin page view"""
     

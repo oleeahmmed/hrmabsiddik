@@ -78,7 +78,121 @@
         <span>Dashboard</span>
     </a>
 
+<div class="nav-item-dropdown">
 
+
+    <div class="nav-item {% if 'company' in request.resolver_match.url_name or 'project' in request.resolver_match.url_name or 'task' in request.resolver_match.url_name %}active{% endif %}">
+
+
+        <div class="flex items-center gap-3">
+
+
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+
+
+            </svg>
+
+
+            <span>Project Management</span>
+
+
+        </div>
+
+
+        <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+
+
+        </svg>
+
+
+    </div>
+
+
+    
+
+
+    <div class="dropdown-menu">
+
+
+        <!-- Company Management -->
+
+
+        <a href="{% url 'core:company_list' %}" class="dropdown-menu-item {% if 'company' in request.resolver_match.url_name %}active{% endif %}">
+
+
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+
+
+            </svg>
+
+
+            <span>Company Management</span>
+
+
+        </a>
+
+
+        
+
+
+        <!-- Project Management -->
+
+
+        <a href="{% url 'core:project_list' %}" class="dropdown-menu-item {% if 'project' in request.resolver_match.url_name %}active{% endif %}">
+
+
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2zM3 7h18M3 7l3-4m15 4l-3-4"/>
+
+
+            </svg>
+
+
+            <span>Project Management</span>
+
+
+        </a>
+
+
+        
+
+
+        <!-- Task Management -->
+
+
+        <a href="{% url 'core:task_list' %}" class="dropdown-menu-item {% if 'task' in request.resolver_match.url_name %}active{% endif %}">
+
+
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+
+
+            </svg>
+
+
+            <span>Task Management</span>
+
+
+        </a>
+
+
+    </div>
+
+
+</div>
 
     <!-- ==================== ATTENDANCE MANAGEMENT DROPDOWN ==================== -->
     <div class="nav-item-dropdown">
