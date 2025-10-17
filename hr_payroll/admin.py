@@ -185,6 +185,7 @@ class EmployeeAdmin(CustomModelAdmin):
     fieldsets = (
         (_("📋 Required Fields"), {
             'fields': (
+                'company',  # ADD COMPANY FIELD HERE
                 'employee_id',
                 'name',
                 'is_active',
@@ -288,7 +289,7 @@ class EmployeeAdmin(CustomModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         """Make company readonly if user has limited permissions"""
         readonly_fields = super().get_readonly_fields(request, obj)
-        if not request.user.is_superuser:
+        if not request.user.is_superuser and obj:  # Only for existing objects
             return readonly_fields + ('company',)
         return readonly_fields
 
@@ -298,17 +299,20 @@ class EmployeeAdmin(CustomModelAdmin):
         
         # If user has a profile with company, set it as default
         try:
-            from core.models import UserProfile  # Adjust import based on your app structure
+            from core.models import UserProfile
             user_profile = UserProfile.objects.get(user=request.user)
             if user_profile.company:
-                form.base_fields['company'].initial = user_profile.company
-                
-                # If user is not superuser, limit company choices to their company only
-                if not request.user.is_superuser:
-                    form.base_fields['company'].queryset = Company.objects.filter(id=user_profile.company.id)
-                    form.base_fields['company'].empty_label = None
+                # SAFELY set initial company only if field exists
+                if 'company' in form.base_fields:
+                    form.base_fields['company'].initial = user_profile.company
                     
-        except (UserProfile.DoesNotExist, ImportError):
+                    # If user is not superuser, limit company choices to their company only
+                    if not request.user.is_superuser:
+                        form.base_fields['company'].queryset = Company.objects.filter(id=user_profile.company.id)
+                        form.base_fields['company'].empty_label = None
+                    
+        except (UserProfile.DoesNotExist, ImportError, AttributeError):
+            # If UserProfile doesn't exist or import fails, just pass
             pass
             
         return form
@@ -321,7 +325,8 @@ class EmployeeAdmin(CustomModelAdmin):
                 user_profile = UserProfile.objects.get(user=request.user)
                 if user_profile.company:
                     obj.company = user_profile.company
-            except (UserProfile.DoesNotExist, ImportError):
+            except (UserProfile.DoesNotExist, ImportError, AttributeError):
+                # If UserProfile doesn't exist, leave company as is
                 pass
         
         # Set created_by if it's a new object
@@ -338,7 +343,7 @@ class EmployeeAdmin(CustomModelAdmin):
         try:
             from core.models import UserProfile
             user_profile = UserProfile.objects.get(user=request.user)
-            if user_profile.company and not request.user.is_superuser:
+            if user_profile.company and not request.user.is_superuser and obj:
                 # Remove company field from all fieldsets
                 modified_fieldsets = []
                 for name, data in fieldsets:
@@ -356,7 +361,8 @@ class EmployeeAdmin(CustomModelAdmin):
                         modified_fieldsets.append((name, data))
                 return modified_fieldsets
                 
-        except (UserProfile.DoesNotExist, ImportError):
+        except (UserProfile.DoesNotExist, ImportError, AttributeError):
+            # If UserProfile doesn't exist, return original fieldsets
             pass
             
         return fieldsets
@@ -380,11 +386,15 @@ class EmployeeAdmin(CustomModelAdmin):
                     # Optionally filter users by company if you have that relation
                     pass
                     
-        except (UserProfile.DoesNotExist, ImportError):
+        except (UserProfile.DoesNotExist, ImportError, AttributeError):
+            # If UserProfile doesn't exist, use default behavior
             pass
             
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 @admin.register(EmployeeSeparation)
+
+
 class EmployeeSeparationAdmin(CustomModelAdmin):
     list_display = ('employee', 'separation_date', 'is_voluntary', 'created_at')
     list_filter = ('is_voluntary', 'separation_date', 'created_at')

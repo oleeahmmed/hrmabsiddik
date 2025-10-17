@@ -25,8 +25,16 @@ def get_navigation_for_user(request):
                     "link": "/admin/",
                     "permission": lambda request: request.user.is_superuser,
                 },
+
+                                    {
+                        "title": _("My Custom Page"),
+                        "icon": "rocket_launch",  # or "dashboard", "analytics", "speed"
+                        "link": reverse_lazy("admin:custom-page"),
+                        "permission": lambda request: request.user.is_staff,
+                    },
             ],
         },
+
         {
             "title": _("Authentication"),
             "separator": True,
