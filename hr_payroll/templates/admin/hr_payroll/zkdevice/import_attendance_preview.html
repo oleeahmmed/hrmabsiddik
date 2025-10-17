@@ -23,9 +23,25 @@
         font-size: 12px;
         font-weight: 600;
     }
-    .status-connected { background: #d4edda; color: #155724; }
-    .status-error { background: #f8d7da; color: #721c24; }
-    .status-fetching { background: #fff3cd; color: #856404; }
+    
+    .date-selector {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin: 20px 0;
+    }
+    .date-selector label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+    .date-selector select {
+        width: 200px;
+        padding: 8px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+    }
     
     .progress-bar {
         width: 100%;
@@ -37,7 +53,7 @@
     }
     .progress-fill {
         height: 100%;
-        background: #28a745;
+        background: #007bff;
         transition: width 0.3s ease;
         display: flex;
         align-items: center;
@@ -46,31 +62,30 @@
         font-weight: bold;
     }
     
-    .users-table {
+    .attendance-table {
         width: 100%;
         border-collapse: collapse;
         margin-top: 20px;
         background: white;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
-    .users-table th {
+    .attendance-table th {
         background: #007bff;
         color: white;
         padding: 12px;
         text-align: left;
         font-weight: 600;
+        position: sticky;
+        top: 0;
+        z-index: 10;
     }
-    .users-table td {
+    .attendance-table td {
         padding: 10px 12px;
         border-bottom: 1px solid #dee2e6;
     }
-    .users-table tr:hover {
+    .attendance-table tr:hover {
         background: #f8f9fa;
     }
-    
-    .user-new { background: #d4edda; }
-    .user-existing { background: #fff3cd; }
-    .user-duplicate { background: #f8d7da; }
     
     .summary-box {
         display: grid;
@@ -151,29 +166,46 @@
         gap: 10px;
         margin-top: 20px;
     }
+    
+    .table-container {
+        max-height: 500px;
+        overflow-y: auto;
+        position: relative;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="import-container">
-    <h1>Import Users from ZKTeco Devices</h1>
+    <h1>Import Attendance from ZKTeco Devices</h1>
     
     <div class="device-list">
         <h2>Selected Devices</h2>
         {% for device in devices %}
         <div class="device-card">
             <strong>{{ device.name }}</strong> - {{ device.ip_address }}:{{ device.port }}
-            <span class="status-badge status-connected" id="device-status-{{ device.id }}">Ready</span>
+            <span class="status-badge" style="background:#28a745;color:white;">Ready</span>
         </div>
         {% endfor %}
     </div>
     
+    <div class="date-selector">
+        <label>Select Date Range:</label>
+        <select id="daysSelect">
+            <option value="7">Last 7 Days</option>
+            <option value="15">Last 15 Days</option>
+            <option value="30" selected>Last 30 Days</option>
+            <option value="60">Last 60 Days</option>
+            <option value="90">Last 90 Days</option>
+        </select>
+    </div>
+    
     <div class="action-buttons">
-        <button class="btn btn-primary" id="fetchUsersBtn" onclick="fetchUsers()">
-            Fetch Users from Devices
+        <button class="btn btn-primary" id="fetchAttendanceBtn" onclick="fetchAttendance()">
+            Fetch Attendance from Devices
         </button>
-        <button class="btn btn-success" id="importUsersBtn" onclick="importUsers()" style="display:none;" disabled>
-            Import Users to Database
+        <button class="btn btn-success" id="importAttendanceBtn" onclick="importAttendance()" style="display:none;" disabled>
+            Import to Database
         </button>
         <a href="{% url 'admin:hr_payroll_zkdevice_changelist' %}" class="btn btn-secondary">
             Cancel
@@ -188,39 +220,46 @@
         <h2>Summary</h2>
         <div class="summary-box">
             <div class="summary-item">
-                <h3 id="totalUsers">0</h3>
-                <p>Total Users Fetched</p>
+                <h3 id="totalRecords">0</h3>
+                <p>Total Records Fetched</p>
             </div>
             <div class="summary-item">
-                <h3 id="newUsers" style="color: #28a745;">0</h3>
-                <p>New Users</p>
+                <h3 id="importedRecords" style="color: #28a745;">0</h3>
+                <p>Will Be Imported</p>
             </div>
             <div class="summary-item">
-                <h3 id="existingUsers" style="color: #ffc107;">0</h3>
-                <p>Existing Users</p>
+                <h3 id="skippedRecords" style="color: #ffc107;">0</h3>
+                <p>Will Be Skipped</p>
             </div>
             <div class="summary-item">
-                <h3 id="duplicateUsers" style="color: #dc3545;">0</h3>
-                <p>Duplicate Users</p>
+                <h3 id="missingEmployees" style="color: #dc3545;">0</h3>
+                <p>Missing Employees</p>
             </div>
         </div>
+        <p style="text-align:center;color:#6c757d;">
+            Date Range: <strong id="dateRange"></strong>
+        </p>
     </div>
     
-    <div id="usersTableContainer" style="display:none;">
-        <h2>Users Preview</h2>
-        <table class="users-table" id="usersTable">
-            <thead>
-                <tr>
-                    <th>Status</th>
-                    <th>ZKTeco ID</th>
-                    <th>Name</th>
-                    <th>Device</th>
-                    <th>Existing Employee ID</th>
-                </tr>
-            </thead>
-            <tbody id="usersTableBody">
-            </tbody>
-        </table>
+    <div id="attendanceTableContainer" style="display:none;">
+        <h2>Attendance Preview (First 100 Records)</h2>
+        <div class="table-container">
+            <table class="attendance-table" id="attendanceTable">
+                <thead>
+                    <tr>
+                        <th>ZKTeco ID</th>
+                        <th>Employee Name</th>
+                        <th>Timestamp</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Device</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceTableBody">
+                </tbody>
+            </table>
+        </div>
     </div>
     
     <div class="log-container" id="logContainer">
@@ -250,20 +289,23 @@ function updateProgress(percent, text) {
     progressFill.textContent = text || (percent + '%');
 }
 
-function fetchUsers() {
-    const fetchBtn = document.getElementById('fetchUsersBtn');
+function fetchAttendance() {
+    const fetchBtn = document.getElementById('fetchAttendanceBtn');
+    const days = document.getElementById('daysSelect').value;
+    
     fetchBtn.disabled = true;
     fetchBtn.textContent = 'Fetching...';
     
-    addLog('Starting user fetch from devices...', 'info');
+    addLog(`Starting attendance fetch for last ${days} days...`, 'info');
     updateProgress(10, 'Connecting to devices...');
     
-    fetch('{% url "admin:hr_payroll_zkdevice_import_users_execute" %}', {
+    fetch('{% url "admin:hr_payroll_zkdevice_import_attendance_execute" %}', {
         method: 'POST',
         headers: {
             'X-CSRFToken': '{{ csrf_token }}',
             'Content-Type': 'application/json',
-        }
+        },
+        body: JSON.stringify({ days: parseInt(days) })
     })
     .then(response => {
         if (!response.ok) {
@@ -282,17 +324,22 @@ function fetchUsers() {
             fetchedData = data;
             updateProgress(100, 'Fetch Complete');
             
-            addLog(`Successfully fetched ${data.analysis.total_fetched} users`, 'success');
-            addLog(`New users: ${data.analysis.new_count}`, 'info');
-            addLog(`Existing users: ${data.analysis.existing_count}`, 'info');
+            const results = data.analysis_results;
+            addLog(`Fetched ${data.total_records} attendance records successfully`, 'success');
+            addLog(`Will import: ${results.imported_count}`, 'success');
+            addLog(`Will skip: ${results.skipped_count}`, 'info');
             
-            displaySummary(data.analysis);
-            displayUsers(data.analysis);
+            if (results.missing_employees.length > 0) {
+                addLog(`Missing employees: ${results.missing_employees.join(', ')}`, 'error');
+            }
             
-            document.getElementById('importUsersBtn').style.display = 'inline-block';
-            document.getElementById('importUsersBtn').disabled = false;
+            displaySummary(data);
+            
+            document.getElementById('importAttendanceBtn').style.display = 'inline-block';
+            document.getElementById('importAttendanceBtn').disabled = false;
             
             fetchBtn.textContent = 'Fetch Complete';
+            
         } else {
             addLog(`Error: ${data.error}`, 'error');
             updateProgress(0, 'Error');
@@ -308,76 +355,33 @@ function fetchUsers() {
     });
 }
 
-function displaySummary(analysis) {
+function displaySummary(data) {
+    const results = data.analysis_results;
+    
     document.getElementById('summaryContainer').style.display = 'block';
-    document.getElementById('totalUsers').textContent = analysis.total_fetched;
-    document.getElementById('newUsers').textContent = analysis.new_count;
-    document.getElementById('existingUsers').textContent = analysis.existing_count;
-    document.getElementById('duplicateUsers').textContent = analysis.duplicate_count;
+    document.getElementById('totalRecords').textContent = data.total_records;
+    document.getElementById('importedRecords').textContent = results.imported_count;
+    document.getElementById('skippedRecords').textContent = results.skipped_count;
+    document.getElementById('missingEmployees').textContent = results.missing_employees_count;
+    document.getElementById('dateRange').textContent = 
+        `${data.date_range.start_date} to ${data.date_range.end_date}`;
 }
 
-function displayUsers(analysis) {
-    const tableContainer = document.getElementById('usersTableContainer');
-    const tableBody = document.getElementById('usersTableBody');
-    
-    tableBody.innerHTML = '';
-    
-    // Display new users
-    analysis.new_users.forEach(user => {
-        const row = tableBody.insertRow();
-        row.className = 'user-new';
-        row.innerHTML = `
-            <td><span class="status-badge" style="background:#28a745;color:white;">NEW</span></td>
-            <td>${user.user_id}</td>
-            <td>${user.name}</td>
-            <td>${user.device_name || user.device_ip}</td>
-            <td>-</td>
-        `;
-    });
-    
-    // Display existing users
-    analysis.existing_users.forEach(user => {
-        const row = tableBody.insertRow();
-        row.className = 'user-existing';
-        row.innerHTML = `
-            <td><span class="status-badge" style="background:#ffc107;color:#000;">EXISTS</span></td>
-            <td>${user.user_id}</td>
-            <td>${user.name}</td>
-            <td>${user.device_name || user.device_ip}</td>
-            <td>${user.existing_employee_id} (${user.existing_name})</td>
-        `;
-    });
-    
-    // Display duplicate users
-    analysis.duplicate_users.forEach(user => {
-        const row = tableBody.insertRow();
-        row.className = 'user-duplicate';
-        row.innerHTML = `
-            <td><span class="status-badge" style="background:#dc3545;color:white;">DUPLICATE</span></td>
-            <td>${user.user_id}</td>
-            <td>${user.name}</td>
-            <td>${user.device_name || user.device_ip}</td>
-            <td>-</td>
-        `;
-    });
-    
-    tableContainer.style.display = 'block';
-}
-
-function importUsers() {
+function importAttendance() {
     if (!fetchedData) {
-        addLog('No data to import. Please fetch users first.', 'error');
+        addLog('No data to import. Please fetch attendance first.', 'error');
         return;
     }
     
-    const importBtn = document.getElementById('importUsersBtn');
+    const importBtn = document.getElementById('importAttendanceBtn');
     importBtn.disabled = true;
     importBtn.textContent = 'Importing...';
     
     addLog('Starting import to database...', 'info');
     updateProgress(50, 'Importing to database...');
     
-    fetch('{% url "admin:hr_payroll_zkdevice_import_users_confirm" %}', {
+    // Call the confirm import endpoint
+    fetch('{% url "admin:hr_payroll_zkdevice_import_attendance_confirm" %}', {
         method: 'POST',
         headers: {
             'X-CSRFToken': '{{ csrf_token }}',
@@ -401,21 +405,18 @@ function importUsers() {
             const results = data.import_results;
             updateProgress(100, 'Import Complete');
             
-            addLog(`Imported ${results.imported_count} new employees`, 'success');
-            addLog(`Updated ${results.updated_count} existing employees`, 'success');
+            addLog(`Successfully imported ${results.imported_count} records`, 'success');
+            addLog(`Skipped ${results.skipped_count} records`, 'info');
             
             if (results.error_count > 0) {
-                addLog(`Encountered ${results.error_count} errors`, 'error');
-                results.errors.forEach(error => {
-                    addLog(error, 'error');
-                });
+                addLog(`Encountered ${results.error_count} errors during import`, 'error');
             }
             
             importBtn.textContent = 'Import Complete';
             
             setTimeout(() => {
-                addLog('Redirecting to employees list...', 'info');
-                window.location.href = '{% url "admin:hr_payroll_employee_changelist" %}';
+                addLog('Redirecting to attendance logs...', 'info');
+                window.location.href = '{% url "admin:hr_payroll_attendancelog_changelist" %}';
             }, 3000);
             
         } else {

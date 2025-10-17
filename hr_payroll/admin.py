@@ -13,6 +13,8 @@ from django.db import transaction
 import logging
 from django.contrib.admin.views.decorators import staff_member_required
 from .zkteco_device_manager import ZKTecoDeviceManager
+import logging
+import json
 
 from unfold.admin import TabularInline
 from .models import (AttendanceProcessorConfiguration,
@@ -23,6 +25,7 @@ from .models import (AttendanceProcessorConfiguration,
     Performance, PerformanceGoal, EmployeeDocument, Overtime,
     Resignation, Clearance, Complaint
 )
+logger = logging.getLogger(__name__)
 
 
 class CustomModelAdmin(ModelAdmin):
@@ -543,6 +546,7 @@ class LeaveApplicationAdmin(CustomModelAdmin):
         return 0
     duration.short_description = _("Duration (Days)")
 
+
 @admin.register(ZkDevice)
 class ZkDeviceAdmin(ModelAdmin):
     list_display = (
@@ -558,6 +562,7 @@ class ZkDeviceAdmin(ModelAdmin):
         'test_device_connection',
         'import_users_from_devices',
         'import_attendance_from_devices',
+        # 'clear_device_attendance',
     ]
     
     fieldsets = (
@@ -585,12 +590,32 @@ class ZkDeviceAdmin(ModelAdmin):
             path(
                 'import-users-preview/',
                 self.admin_site.admin_view(self.import_users_preview_view),
-                name='attendance_zkdevice_import_users_preview',
+                name='hr_payroll_zkdevice_import_users_preview',
             ),
             path(
                 'import-users-execute/',
                 self.admin_site.admin_view(self.import_users_execute_view),
-                name='attendance_zkdevice_import_users_execute',
+                name='hr_payroll_zkdevice_import_users_execute',
+            ),
+            path(
+                'import-users-confirm/',
+                self.admin_site.admin_view(self.import_users_confirm_view),
+                name='hr_payroll_zkdevice_import_users_confirm',
+            ),
+            path(
+                'import-attendance-preview/',
+                self.admin_site.admin_view(self.import_attendance_preview_view),
+                name='hr_payroll_zkdevice_import_attendance_preview',
+            ),
+            path(
+                'import-attendance-execute/',
+                self.admin_site.admin_view(self.import_attendance_execute_view),
+                name='hr_payroll_zkdevice_import_attendance_execute',
+            ),
+            path(
+                'import-attendance-confirm/',
+                self.admin_site.admin_view(self.import_attendance_confirm_view),
+                name='hr_payroll_zkdevice_import_attendance_confirm',
             ),
         ]
         return custom_urls + urls
@@ -622,7 +647,6 @@ class ZkDeviceAdmin(ModelAdmin):
         """Test connection to selected devices"""
         device_manager = ZKTecoDeviceManager()
         
-        # Prepare device list for testing
         device_list = []
         for device in queryset:
             device_list.append({
@@ -632,10 +656,8 @@ class ZkDeviceAdmin(ModelAdmin):
                 'password': device.password or 0,
             })
         
-        # Test connections
         results = device_manager.test_multiple_connections(device_list, max_workers=5)
         
-        # Process results and update devices
         success_count = 0
         failed_count = 0
         
@@ -647,11 +669,10 @@ class ZkDeviceAdmin(ModelAdmin):
                 device.last_synced = timezone.now()
                 device.save(update_fields=['last_synced'])
                 
-                # Show device info
                 info = result.get('info', {})
                 self.message_user(
                     request,
-                    f"Connected: {device.name} ({device.ip_address}) | "
+                    f"✓ Connected: {device.name} ({device.ip_address}) | "
                     f"Users: {info.get('user_count', 0)}, "
                     f"Records: {info.get('attendance_count', 0)}, "
                     f"Firmware: {info.get('firmware_version', 'Unknown')}",
@@ -662,14 +683,12 @@ class ZkDeviceAdmin(ModelAdmin):
                 error = result.get('error', 'Unknown error')
                 self.message_user(
                     request,
-                    f"Failed: {device.name} ({device.ip_address}) - {error}",
+                    f"✗ Failed: {device.name} ({device.ip_address}) - {error}",
                     messages.ERROR
                 )
         
-        # Disconnect all after testing
         device_manager.disconnect_all()
         
-        # Summary message
         summary_level = messages.SUCCESS if failed_count == 0 else messages.WARNING
         self.message_user(
             request,
@@ -679,21 +698,62 @@ class ZkDeviceAdmin(ModelAdmin):
     
     test_device_connection.short_description = _("1. Test Device Connection")
     
+    def clear_device_attendance(self, request, queryset):
+        """Clear attendance data from selected devices"""
+        device_manager = ZKTecoDeviceManager()
+        
+        success_count = 0
+        failed_count = 0
+        
+        for device in queryset:
+            try:
+                success, message = device_manager.clear_attendance_data(device.ip_address)
+                if success:
+                    success_count += 1
+                    self.message_user(
+                        request,
+                        f"✓ Cleared: {device.name} ({device.ip_address})",
+                        messages.SUCCESS
+                    )
+                else:
+                    failed_count += 1
+                    self.message_user(
+                        request,
+                        f"✗ Failed: {device.name} ({device.ip_address}) - {message}",
+                        messages.ERROR
+                    )
+            except Exception as e:
+                failed_count += 1
+                self.message_user(
+                    request,
+                    f"✗ Error: {device.name} ({device.ip_address}) - {str(e)}",
+                    messages.ERROR
+                )
+        
+        device_manager.disconnect_all()
+        
+        summary_level = messages.SUCCESS if failed_count == 0 else messages.WARNING
+        self.message_user(
+            request,
+            f"Clear attendance completed: {success_count} successful, {failed_count} failed",
+            summary_level
+        )
+    
+    clear_device_attendance.short_description = _("Clear Attendance Data")
+    
     def import_users_from_devices(self, request, queryset):
         """Import users from selected devices with preview"""
-        # Store selected device IDs in session
         device_ids = list(queryset.values_list('id', flat=True))
         request.session['import_device_ids'] = device_ids
         
-        # Redirect to preview page
         return HttpResponseRedirect(
-            reverse('admin:attendance_zkdevice_import_users_preview')
+            reverse('admin:hr_payroll_zkdevice_import_users_preview')
         )
     
     import_users_from_devices.short_description = _("2. Import Users from Devices")
     
-# In your admin.py, temporarily add this to import_users_preview_view:
     def import_users_preview_view(self, request):
+        """Preview users before importing"""
         device_ids = request.session.get('import_device_ids', [])
         
         if not device_ids:
@@ -701,14 +761,6 @@ class ZkDeviceAdmin(ModelAdmin):
             return HttpResponseRedirect(reverse('admin:hr_payroll_zkdevice_changelist'))
         
         devices = ZkDevice.objects.filter(id__in=device_ids)
-        
-        # ADD THESE DEBUG LINES:
-        import os
-        from django.conf import settings
-        template_path = 'admin/hr_payroll/zkdevice/import_users_preview.html'
-        print(f"Looking for template: {template_path}")
-        print(f"App dirs: {settings.TEMPLATES[0]['APP_DIRS']}")
-        # END DEBUG LINES
         
         context = {
             **self.admin_site.each_context(request),
@@ -720,12 +772,12 @@ class ZkDeviceAdmin(ModelAdmin):
         
         return TemplateResponse(
             request,
-            template_path,
+            'admin/hr_payroll/zkdevice/import_users_preview.html',
             context
         )
     
     def import_users_execute_view(self, request):
-        """Execute user import via AJAX"""
+        """Execute user fetch via AJAX"""
         if request.method != 'POST':
             return JsonResponse({'error': 'Invalid request method'}, status=400)
         
@@ -738,7 +790,6 @@ class ZkDeviceAdmin(ModelAdmin):
             devices = ZkDevice.objects.filter(id__in=device_ids)
             device_manager = ZKTecoDeviceManager()
             
-            # Step 1: Fetch users from devices
             device_list = []
             device_map = {}
             
@@ -751,33 +802,66 @@ class ZkDeviceAdmin(ModelAdmin):
                 })
                 device_map[device.ip_address] = device
             
-            # Fetch users
+            # Fetch users data
             all_users_data, fetch_results = device_manager.get_multiple_users_data(
                 device_list, max_workers=3
             )
             
-            # Disconnect immediately after fetching
             device_manager.disconnect_all()
             
-            # Step 2: Analyze users
+            # Analyze users data
             analysis = self._analyze_users(all_users_data, devices)
             
-            # Step 3: Import users to database
-            import_results = self._import_users_to_database(
-                analysis['new_users'],
-                analysis['existing_users'],
-                device_map
-            )
+            # Store data in session for actual import
+            request.session['user_import_data'] = {
+                'new_users': analysis['new_users'],
+                'existing_users': analysis['existing_users'],
+                'device_map': {ip: device.id for ip, device in device_map.items()}
+            }
             
-            # Step 4: Update device sync time
-            devices.update(last_synced=timezone.now())
-            
-            # Prepare response
             response_data = {
                 'success': True,
                 'analysis': analysis,
-                'import_results': import_results,
                 'fetch_results': fetch_results,
+            }
+            
+            return JsonResponse(response_data)
+            
+        except Exception as e:
+            logger.error(f"Error fetching users: {str(e)}", exc_info=True)
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    def import_users_confirm_view(self, request):
+        """Confirm and execute user import"""
+        if request.method != 'POST':
+            return JsonResponse({'error': 'Invalid request method'}, status=400)
+        
+        import_data = request.session.get('user_import_data')
+        if not import_data:
+            return JsonResponse({'error': 'No user data to import'}, status=400)
+        
+        try:
+            # Actual import logic
+            import_results = self._import_users_to_database(
+                import_data['new_users'],
+                import_data['existing_users'],
+                import_data['device_map']
+            )
+            
+            # Update device sync times
+            device_ids = list(import_data['device_map'].values())
+            ZkDevice.objects.filter(id__in=device_ids).update(last_synced=timezone.now())
+            
+            # Clear session data
+            request.session.pop('user_import_data', None)
+            request.session.pop('import_device_ids', None)
+            
+            response_data = {
+                'success': True,
+                'import_results': import_results,
             }
             
             return JsonResponse(response_data)
@@ -793,12 +877,11 @@ class ZkDeviceAdmin(ModelAdmin):
         """Analyze users data and categorize them"""
         company_ids = devices.values_list('company_id', flat=True).distinct()
         
-        # Get existing employees
         existing_employees = Employee.objects.filter(
             company_id__in=company_ids
         ).values('zkteco_id', 'employee_id', 'name', 'company_id')
         
-        existing_zkteco_ids = {emp['zkteco_id']: emp for emp in existing_employees}
+        existing_zkteco_ids = {emp['zkteco_id']: emp for emp in existing_employees if emp['zkteco_id']}
         
         new_users = []
         existing_users = []
@@ -809,14 +892,12 @@ class ZkDeviceAdmin(ModelAdmin):
         for user_data in users_data:
             zkteco_id = user_data['user_id']
             
-            # Check for duplicates in fetched data
             if zkteco_id in seen_zkteco_ids:
                 duplicate_users.append(user_data)
                 continue
             
             seen_zkteco_ids.add(zkteco_id)
             
-            # Check if exists in database
             if zkteco_id in existing_zkteco_ids:
                 existing_user = existing_zkteco_ids[zkteco_id]
                 user_data['existing_employee_id'] = existing_user['employee_id']
@@ -843,21 +924,30 @@ class ZkDeviceAdmin(ModelAdmin):
         errors = []
         
         with transaction.atomic():
-            # Import new users
             for user_data in new_users:
                 try:
                     device_ip = user_data.get('device_ip')
-                    device = device_map.get(device_ip)
+                    device_id = device_map.get(device_ip)
                     
-                    if not device:
+                    if not device_id:
                         error_count += 1
                         errors.append(f"Device not found for user {user_data['user_id']}")
                         continue
                     
-                    # Create employee
+                    device = ZkDevice.objects.get(id=device_id)
+                    
+                    # Generate unique employee ID
+                    base_emp_id = f"EMP{user_data['user_id']}"
+                    employee_id = base_emp_id
+                    counter = 1
+                    
+                    while Employee.objects.filter(employee_id=employee_id, company=device.company).exists():
+                        employee_id = f"{base_emp_id}_{counter}"
+                        counter += 1
+                    
                     employee = Employee.objects.create(
                         company=device.company,
-                        employee_id=f"EMP-{user_data['user_id']}",
+                        employee_id=employee_id,
                         zkteco_id=user_data['user_id'],
                         name=user_data['name'],
                         first_name=user_data['name'].split()[0] if user_data['name'] else '',
@@ -878,12 +968,10 @@ class ZkDeviceAdmin(ModelAdmin):
                     errors.append(error_msg)
                     logger.error(error_msg)
             
-            # Optionally update existing users (name sync)
             for user_data in existing_users:
                 try:
                     employee = Employee.objects.get(zkteco_id=user_data['user_id'])
                     
-                    # Update name if different
                     if employee.name != user_data['name']:
                         employee.name = user_data['name']
                         employee.first_name = user_data['name'].split()[0] if user_data['name'] else ''
@@ -899,59 +987,220 @@ class ZkDeviceAdmin(ModelAdmin):
             'imported_count': imported_count,
             'updated_count': updated_count,
             'error_count': error_count,
-            'errors': errors[:10],  # Limit to first 10 errors
+            'errors': errors[:10],
         }
     
     def import_attendance_from_devices(self, request, queryset):
-        """Import attendance logs from selected devices"""
-        device_manager = ZKTecoDeviceManager()
+        """Import attendance logs from selected devices with preview"""
+        device_ids = list(queryset.values_list('id', flat=True))
+        request.session['import_attendance_device_ids'] = device_ids
         
-        # Date range for import (last 30 days by default)
-        end_date = datetime.now().date()
-        start_date = end_date - timedelta(days=30)
+        return HttpResponseRedirect(
+            reverse('admin:hr_payroll_zkdevice_import_attendance_preview')
+        )
+    
+    import_attendance_from_devices.short_description = _("3. Import Attendance Logs")
+    
+    def import_attendance_preview_view(self, request):
+        """Preview attendance before importing"""
+        device_ids = request.session.get('import_attendance_device_ids', [])
         
-        # Prepare device list
-        device_list = []
-        device_map = {}
-        for device in queryset:
-            device_list.append({
-                'name': device.name,
-                'ip': device.ip_address,
-                'port': device.port,
-                'password': device.password or 0,
-            })
-            device_map[device.ip_address] = device
+        if not device_ids:
+            self.message_user(request, "No devices selected", messages.ERROR)
+            return HttpResponseRedirect(reverse('admin:hr_payroll_zkdevice_changelist'))
         
-        self.message_user(
+        devices = ZkDevice.objects.filter(id__in=device_ids)
+        
+        context = {
+            **self.admin_site.each_context(request),
+            'title': 'Import Attendance from ZKTeco Devices',
+            'devices': devices,
+            'opts': self.model._meta,
+            'app_label': self.model._meta.app_label,
+        }
+        
+        return TemplateResponse(
             request,
-            f"Fetching attendance data from {start_date} to {end_date}...",
-            messages.INFO
+            'admin/hr_payroll/zkdevice/import_attendance_preview.html',
+            context
         )
+    
+    def import_attendance_execute_view(self, request):
+        """Execute attendance fetch via AJAX"""
+        if request.method != 'POST':
+            return JsonResponse({'error': 'Invalid request method'}, status=400)
         
-        # Fetch attendance from all devices
-        all_attendance_data, results = device_manager.get_multiple_attendance_data(
-            device_list, start_date, end_date, max_workers=3
-        )
+        device_ids = request.session.get('import_attendance_device_ids', [])
         
-        # Process results and import to database
+        if not device_ids:
+            return JsonResponse({'error': 'No devices selected'}, status=400)
+        
+        try:
+            body = json.loads(request.body) if request.body else {}
+            days = body.get('days', 30)
+            
+            devices = ZkDevice.objects.filter(id__in=device_ids)
+            device_manager = ZKTecoDeviceManager()
+            
+            end_date = datetime.now().date()
+            start_date = end_date - timedelta(days=days)
+            
+            device_list = []
+            device_map = {}
+            
+            for device in devices:
+                device_list.append({
+                    'name': device.name,
+                    'ip': device.ip_address,
+                    'port': device.port,
+                    'password': device.password or 0,
+                })
+                device_map[device.ip_address] = device
+            
+            # Fetch attendance data
+            all_attendance_data, fetch_results = device_manager.get_multiple_attendance_data(
+                device_list, start_date, end_date, max_workers=3
+            )
+            
+            device_manager.disconnect_all()
+            
+            # Analyze attendance data
+            analysis_results = self._analyze_attendance_preview(
+                all_attendance_data, device_map
+            )
+            
+            # Store data in session for actual import
+            request.session['attendance_import_data'] = {
+                'attendance_data': [
+                    {
+                        'zkteco_id': record['zkteco_id'],
+                        'timestamp': record['timestamp'].isoformat(),
+                        'device_ip': record['device_ip'],
+                        'punch_type': record.get('punch_type', 0),
+                        'verify_type': record.get('verify_type', 0),
+                        'device_name': record.get('device_name', '')
+                    }
+                    for record in all_attendance_data
+                ],
+                'device_map': {ip: device.id for ip, device in device_map.items()},
+                'date_range': {
+                    'start_date': start_date.isoformat(),
+                    'end_date': end_date.isoformat(),
+                }
+            }
+            
+            response_data = {
+                'success': True,
+                'date_range': {
+                    'start_date': start_date.strftime('%Y-%m-%d'),
+                    'end_date': end_date.strftime('%Y-%m-%d'),
+                },
+                'analysis_results': analysis_results,
+                'fetch_results': fetch_results,
+                'total_records': len(all_attendance_data),
+            }
+            
+            return JsonResponse(response_data)
+            
+        except Exception as e:
+            logger.error(f"Error fetching attendance: {str(e)}", exc_info=True)
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    def import_attendance_confirm_view(self, request):
+        """Confirm and execute attendance import"""
+        if request.method != 'POST':
+            return JsonResponse({'error': 'Invalid request method'}, status=400)
+        
+        import_data = request.session.get('attendance_import_data')
+        if not import_data:
+            return JsonResponse({'error': 'No attendance data to import'}, status=400)
+        
+        try:
+            # Actual import logic
+            import_results = self._import_attendance_to_database(
+                import_data['attendance_data'], 
+                import_data['device_map']
+            )
+            
+            # Update device sync times
+            device_ids = list(import_data['device_map'].values())
+            ZkDevice.objects.filter(id__in=device_ids).update(last_synced=timezone.now())
+            
+            # Clear session data
+            request.session.pop('attendance_import_data', None)
+            request.session.pop('import_attendance_device_ids', None)
+            
+            response_data = {
+                'success': True,
+                'import_results': import_results,
+            }
+            
+            return JsonResponse(response_data)
+            
+        except Exception as e:
+            logger.error(f"Error importing attendance: {str(e)}", exc_info=True)
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    def _analyze_attendance_preview(self, attendance_data, device_map):
+        """Analyze attendance data for preview without importing"""
+        imported_count = 0
+        skipped_count = 0
+        missing_employees = set()
+        
+        for record in attendance_data:
+            device_ip = record['device_ip']
+            device = device_map.get(device_ip)
+            
+            if not device:
+                skipped_count += 1
+                continue
+            
+            zkteco_id = record['zkteco_id']
+            try:
+                employee = Employee.objects.get(
+                    zkteco_id=zkteco_id,
+                    company=device.company
+                )
+                imported_count += 1
+            except Employee.DoesNotExist:
+                missing_employees.add(zkteco_id)
+                skipped_count += 1
+                continue
+        
+        return {
+            'imported_count': imported_count,
+            'skipped_count': skipped_count,
+            'missing_employees': list(missing_employees)[:10],
+            'missing_employees_count': len(missing_employees),
+        }
+    
+    def _import_attendance_to_database(self, attendance_data, device_map):
+        """Import attendance records to database"""
         imported_count = 0
         skipped_count = 0
         error_count = 0
         missing_employees = set()
+        errors = []
         
         with transaction.atomic():
-            for attendance_record in all_attendance_data:
+            for record_data in attendance_data:
                 try:
-                    # Get device object
-                    device_ip = attendance_record['device_ip']
-                    device = device_map.get(device_ip)
+                    device_ip = record_data['device_ip']
+                    device_id = device_map.get(device_ip)
                     
-                    if not device:
+                    if not device_id:
                         skipped_count += 1
                         continue
                     
-                    # Find employee by zkteco_id
-                    zkteco_id = attendance_record['zkteco_id']
+                    device = ZkDevice.objects.get(id=device_id)
+                    zkteco_id = record_data['zkteco_id']
+                    
                     try:
                         employee = Employee.objects.get(
                             zkteco_id=zkteco_id,
@@ -962,14 +1211,16 @@ class ZkDeviceAdmin(ModelAdmin):
                         skipped_count += 1
                         continue
                     
-                    # Create or update attendance log
+                    # Convert string timestamp back to datetime
+                    timestamp = datetime.fromisoformat(record_data['timestamp'])
+                    
                     attendance_log, created = AttendanceLog.objects.get_or_create(
                         device=device,
                         employee=employee,
-                        timestamp=attendance_record['timestamp'],
+                        timestamp=timestamp,
                         defaults={
-                            'status_code': attendance_record.get('verify_type', 0),
-                            'punch_type': str(attendance_record.get('punch_type', 0)),
+                            'status_code': record_data.get('verify_type', 0),
+                            'punch_type': str(record_data.get('punch_type', 0)),
                             'source_type': 'ZK',
                         }
                     )
@@ -981,62 +1232,17 @@ class ZkDeviceAdmin(ModelAdmin):
                         
                 except Exception as e:
                     error_count += 1
-                    logger.error(f"Error importing attendance: {str(e)}")
-                    continue
+                    error_msg = f"Error importing record: {str(e)}"
+                    errors.append(error_msg)
+                    logger.error(error_msg)
         
-        # Show import summary
-        if imported_count > 0:
-            self.message_user(
-                request,
-                f"Successfully imported {imported_count} new attendance records",
-                messages.SUCCESS
-            )
-        
-        if skipped_count > 0:
-            self.message_user(
-                request,
-                f"Skipped {skipped_count} records (duplicates or missing employees)",
-                messages.WARNING
-            )
-        
-        if missing_employees:
-            self.message_user(
-                request,
-                f"Missing employees (ZKTeco IDs): {', '.join(list(missing_employees)[:10])}{'...' if len(missing_employees) > 10 else ''}",
-                messages.WARNING
-            )
-        
-        if error_count > 0:
-            self.message_user(
-                request,
-                f"Encountered {error_count} errors during import",
-                messages.ERROR
-            )
-        
-        # Show device-wise results
-        for result in results:
-            device_name = result['device']['name']
-            if result['success']:
-                self.message_user(
-                    request,
-                    f"{device_name}: Fetched {result['records_found']} records",
-                    messages.SUCCESS
-                )
-            else:
-                self.message_user(
-                    request,
-                    f"{device_name}: {result.get('error', 'Unknown error')}",
-                    messages.ERROR
-                )
-        
-        # Update last_synced for all devices
-        queryset.update(last_synced=timezone.now())
-        
-        # Disconnect all
-        device_manager.disconnect_all()
-    
-    import_attendance_from_devices.short_description = _("3. Import Attendance Logs (Last 30 Days)")
-
+        return {
+            'imported_count': imported_count,
+            'skipped_count': skipped_count,
+            'error_count': error_count,
+            'missing_employees': list(missing_employees)[:10],
+            'errors': errors[:10],
+        }
 
 @admin.register(AttendanceLog)
 class AttendanceLogAdmin(CustomModelAdmin):

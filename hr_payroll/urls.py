@@ -98,7 +98,7 @@ urlpatterns = [
     path('overtime/<int:pk>/status/', overtime_views.OvertimeStatusChangeView.as_view(), name='overtime_status_change'),
 
     # Overtime Status Change API
-path('api/overtime/<int:pk>/change-status/', overtime_views.OvertimeStatusChangeView.as_view(), name='overtime_change_status'),
+    path('api/overtime/<int:pk>/change-status/', overtime_views.OvertimeStatusChangeView.as_view(), name='overtime_change_status'),
     # ==================== HOLIDAY MANAGEMENT URLS ====================
     path('holidays/', holiday_views.HolidayListView.as_view(), name='holiday_list'),
     path('holidays/create/', holiday_views.HolidayCreateView.as_view(), name='holiday_create'),
