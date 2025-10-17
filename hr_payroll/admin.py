@@ -26,7 +26,38 @@ from .models import (AttendanceProcessorConfiguration,
     Resignation, Clearance, Complaint
 )
 logger = logging.getLogger(__name__)
+from django.views import View
+from django.utils.decorators import method_decorator
+from django.contrib.admin.views.decorators import staff_member_required
+class CustomAdminPageView(View):
+    """Class-based custom admin page view"""
+    
+    @method_decorator(staff_member_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+    
+    def get(self, request, *args, **kwargs):
+        """Handle GET requests"""
+        context = {
+            **admin.site.each_context(request),  # This adds all admin context including sidebar
+            'title': 'My Custom Page',
+            'subtitle': 'This is a custom admin page',
+            'opts': None,  # Add this to avoid template errors
+        }
+        return render(request, 'admin/custom_page.html', context)
 
+# ADD THIS TO YOUR EXISTING admin.py (usually at the bottom)
+# Get the original admin URLs and add our custom one
+original_get_urls = admin.site.get_urls
+
+def custom_get_urls():
+    from django.urls import path
+    custom_urls = [
+        path('custom-page/', admin.site.admin_view(CustomAdminPageView.as_view()), name='custom-page'),
+    ]
+    return custom_urls + original_get_urls()
+
+admin.site.get_urls = custom_get_urls
 
 class CustomModelAdmin(ModelAdmin):
     """কাস্টম বেস ModelAdmin যাতে সাধারণ সেটিংস থাকে"""
@@ -1255,6 +1286,11 @@ class AttendanceLogAdmin(CustomModelAdmin):
     ordering = ('-timestamp',)
     list_select_related = ('employee', 'device')
     
+    actions = [
+        'generate_attendance_from_logs',
+        'clear_attendance_logs',
+    ]
+    
     fieldsets = (
         (None, {
             'fields': ('employee', 'device', 'timestamp')
@@ -1263,40 +1299,234 @@ class AttendanceLogAdmin(CustomModelAdmin):
             'fields': ('status_code', 'punch_type', 'source_type'),
             'classes': ('collapse',)
         }),
+        (_("Mobile/Location Info"), {
+            'fields': ('user', 'location', 'attendance_type', 'latitude', 'longitude'),
+            'classes': ('collapse',)
+        }),
     )
     
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
-            path('mobile-attendance/', 
-                 self.admin_site.admin_view(self.mobile_attendance_view), 
-                 name='mobile_attendance_admin'),
+            path(
+                'generate-attendance-preview/',
+                self.admin_site.admin_view(self.generate_attendance_preview_view),
+                name='hr_payroll_attendancelog_generate_attendance_preview',
+            ),
+            path(
+                'generate-attendance-execute/',
+                self.admin_site.admin_view(self.generate_attendance_execute_view),
+                name='hr_payroll_attendancelog_generate_attendance_execute',
+            ),
         ]
         return custom_urls + urls
     
-    def mobile_attendance_view(self, request):
-        """Admin mobile attendance view"""
-        from django.utils import timezone
-        from django.db.models import Count
+    def generate_attendance_from_logs(self, request, queryset):
+        """Generate attendance records from selected logs with preview"""
+        # Store selected log IDs in session
+        log_ids = list(queryset.values_list('id', flat=True))
+        request.session['generate_attendance_log_ids'] = log_ids
         
-        # Get stats for the admin view
-        today = timezone.now().date()
+        return HttpResponseRedirect(
+            reverse('admin:hr_payroll_attendancelog_generate_attendance_preview')
+        )
+    
+    generate_attendance_from_logs.short_description = _("Generate Attendance Records from Logs")
+    
+    def clear_attendance_logs(self, request, queryset):
+        """Clear selected attendance logs"""
+        count = queryset.count()
+        queryset.delete()
+        
+        self.message_user(
+            request,
+            f"Successfully deleted {count} attendance logs",
+            messages.SUCCESS
+        )
+    
+    clear_attendance_logs.short_description = _("Delete Selected Attendance Logs")
+    
+    def generate_attendance_preview_view(self, request):
+        """Preview attendance generation from logs"""
+        log_ids = request.session.get('generate_attendance_log_ids', [])
+        
+        if not log_ids:
+            self.message_user(request, "No attendance logs selected", messages.ERROR)
+            return HttpResponseRedirect(reverse('admin:hr_payroll_attendancelog_changelist'))
+        
+        logs = AttendanceLog.objects.filter(id__in=log_ids).select_related('employee', 'device')
+        
+        # Calculate date range from logs
+        dates = logs.values_list('timestamp__date', flat=True).distinct().order_by('timestamp__date')
+        if dates:
+            start_date = dates.first()
+            end_date = dates.last()
+            date_range = f"{start_date} to {end_date}"
+        else:
+            date_range = "No dates found"
+        
+        # Get unique employees
+        employees = Employee.objects.filter(
+            id__in=logs.values_list('employee_id', flat=True).distinct()
+        )
         
         context = {
-            'title': 'Mobile Attendance Admin',
-            'subtitle': 'Manage mobile attendance tracking',
-            'mobile_logs_count': AttendanceLog.objects.filter(source_type='MB').count(),
-            'today_logs_count': AttendanceLog.objects.filter(
-                source_type='MB', 
-                timestamp__date=today
-            ).count(),
-            'active_locations_count': Location.objects.filter(is_active=True).count(),
-            'opts': self.model._meta,
             **self.admin_site.each_context(request),
+            'title': 'Generate Attendance Records from Logs',
+            'logs': logs,
+            'total_logs': len(log_ids),
+            'unique_employees': employees.count(),
+            'date_range': date_range,
+            'start_date': start_date if dates else None,
+            'end_date': end_date if dates else None,
+            'opts': self.model._meta,
+            'app_label': self.model._meta.app_label,
         }
         
-        return render(request, 'admin/mobile_attendance_admin.html', context)
-
+        return TemplateResponse(
+            request,
+            'admin/hr_payroll/attendancelog/generate_attendance_preview.html',
+            context
+        )
+    def generate_attendance_execute_view(self, request):
+        """Direct implementation without importing external functions"""
+        if request.method != 'POST':
+            return JsonResponse({'error': 'Invalid request method'}, status=400)
+        
+        log_ids = request.session.get('generate_attendance_log_ids', [])
+        
+        if not log_ids:
+            return JsonResponse({'error': 'No attendance logs selected'}, status=400)
+        
+        try:
+            body = json.loads(request.body) if request.body else {}
+            start_date_str = body.get('start_date')
+            end_date_str = body.get('end_date')
+            regenerate_existing = body.get('regenerate_existing', False)
+            
+            # Parse dates
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            
+            # Get logs and employees
+            logs = AttendanceLog.objects.filter(id__in=log_ids)
+            employee_ids = list(logs.values_list('employee_id', flat=True).distinct())
+            employees = Employee.objects.filter(id__in=employee_ids)
+            
+            # Get company
+            company = employees.first().company if employees.exists() else None
+            if not company:
+                return JsonResponse({'error': 'Could not determine company'}, status=400)
+            
+            # Get active configuration
+            config = AttendanceProcessorConfiguration.get_active_config(company)
+            if not config:
+                return JsonResponse({'error': 'No active attendance configuration found'}, status=400)
+            
+            config_dict = config.get_config_dict()
+            
+            # Initialize counters
+            created_count = 0
+            updated_count = 0
+            error_count = 0
+            
+            # Process each day in the range
+            current_date = start_date
+            while current_date <= end_date:
+                for employee in employees:
+                    try:
+                        # Get logs for this employee and date
+                        day_logs = logs.filter(
+                            employee=employee,
+                            timestamp__date=current_date
+                        ).order_by('timestamp')
+                        
+                        if not day_logs.exists():
+                            continue
+                        
+                        # Get first check-in and last check-out
+                        check_in = day_logs.first().timestamp if day_logs else None
+                        check_out = day_logs.last().timestamp if len(day_logs) > 1 else None
+                        
+                        # Skip if both are None
+                        if not check_in and not check_out:
+                            continue
+                        
+                        # Determine shift (simplified logic)
+                        shift = employee.default_shift
+                        
+                        # Calculate working hours
+                        working_hours = 0.0
+                        if check_in and check_out:
+                            total_seconds = (check_out - check_in).total_seconds()
+                            working_hours = round(total_seconds / 3600, 2)
+                        
+                        # Determine status (simplified)
+                        status = 'P' if working_hours > 0 else 'A'
+                        
+                        # Check if record already exists
+                        existing_attendance = Attendance.objects.filter(
+                            employee=employee,
+                            date=current_date
+                        ).first()
+                        
+                        if existing_attendance and not regenerate_existing:
+                            # Skip if exists and not regenerating
+                            continue
+                        
+                        # Create or update attendance record
+                        attendance_data = {
+                            'check_in_time': check_in,
+                            'check_out_time': check_out,
+                            'status': status,
+                            'overtime_hours': 0.0,  # Simplified
+                            'shift': shift,
+                        }
+                        
+                        if existing_attendance:
+                            # Update existing
+                            for field, value in attendance_data.items():
+                                setattr(existing_attendance, field, value)
+                            existing_attendance.save()
+                            updated_count += 1
+                        else:
+                            # Create new
+                            Attendance.objects.create(
+                                employee=employee,
+                                date=current_date,
+                                **attendance_data
+                            )
+                            created_count += 1
+                            
+                    except Exception as e:
+                        error_count += 1
+                        logger.error(f"Error processing {employee.name} on {current_date}: {str(e)}")
+                
+                current_date += timedelta(days=1)
+            
+            # Clear session data
+            request.session.pop('generate_attendance_log_ids', None)
+            
+            message = f'Successfully created {created_count} and updated {updated_count} attendance records'
+            if error_count > 0:
+                message += f' with {error_count} errors'
+            
+            return JsonResponse({
+                'success': True,
+                'message': message,
+                'results': {
+                    'records_created': created_count,
+                    'records_updated': updated_count,
+                    'error_count': error_count
+                }
+            })
+                    
+        except Exception as e:
+            logger.error(f"Error generating attendance: {str(e)}", exc_info=True)
+            return JsonResponse({
+                'success': False,
+                'error': f'Generation failed: {str(e)}'
+            }, status=500)
 
 @admin.register(Attendance)
 class AttendanceAdmin(CustomModelAdmin):

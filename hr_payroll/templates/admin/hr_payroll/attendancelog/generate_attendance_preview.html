@@ -1,0 +1,344 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    .generate-container {
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .summary-card {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+    }
+    .summary-item {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    .summary-item h3 {
+        margin: 0 0 10px 0;
+        font-size: 24px;
+        font-weight: bold;
+    }
+    .summary-item p {
+        margin: 0;
+        color: #6c757d;
+        font-size: 14px;
+    }
+    
+    .settings-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin: 20px 0;
+    }
+    .settings-card label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+    .settings-card input[type="date"] {
+        width: 200px;
+        padding: 8px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        margin-right: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .progress-bar {
+        width: 100%;
+        height: 30px;
+        background: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 10px 0;
+    }
+    .progress-fill {
+        height: 100%;
+        background: #28a745;
+        transition: width 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    .btn-primary {
+        background: #007bff;
+        color: white;
+    }
+    .btn-primary:hover {
+        background: #0056b3;
+    }
+    .btn-success {
+        background: #28a745;
+        color: white;
+    }
+    .btn-success:hover {
+        background: #218838;
+    }
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .log-container {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 15px;
+        margin-top: 20px;
+        max-height: 300px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 12px;
+    }
+    .log-entry {
+        padding: 5px 0;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .log-success { color: #28a745; }
+    .log-error { color: #dc3545; }
+    .log-info { color: #17a2b8; }
+    
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .option-checkbox {
+        margin: 15px 0;
+    }
+    .option-checkbox label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        font-weight: normal;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="generate-container">
+    <h1>Generate Attendance Records from Logs</h1>
+    
+    <div class="summary-card">
+        <h2>Selected Logs Summary</h2>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <h3>{{ total_logs }}</h3>
+                <p>Total Logs Selected</p>
+            </div>
+            <div class="summary-item">
+                <h3>{{ unique_employees }}</h3>
+                <p>Unique Employees</p>
+            </div>
+            <div class="summary-item">
+                <h3>{{ date_range }}</h3>
+                <p>Date Range</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="settings-card">
+        <h3>Generation Settings</h3>
+        <div>
+            <label for="startDate">Start Date:</label>
+            <input type="date" id="startDate" value="{{ start_date|default:'' }}">
+            
+            <label for="endDate">End Date:</label>
+            <input type="date" id="endDate" value="{{ end_date|default:'' }}">
+        </div>
+        
+        <div class="option-checkbox">
+            <label>
+                <input type="checkbox" id="regenerateExisting">
+                Regenerate existing attendance records (overwrite if exists)
+            </label>
+        </div>
+    </div>
+    
+    <div class="action-buttons">
+        <button class="btn btn-primary" id="previewBtn" onclick="previewAttendance()">
+            Preview & Generate Attendance
+        </button>
+        <a href="{% url 'admin:hr_payroll_attendancelog_changelist' %}" class="btn btn-secondary">
+            Back to Logs
+        </a>
+    </div>
+    
+    <div class="progress-bar" id="progressBar" style="display:none;">
+        <div class="progress-fill" id="progressFill">0%</div>
+    </div>
+    
+    <div id="resultsContainer" style="display:none;">
+        <h2>Generation Results</h2>
+        <div class="summary-grid" id="resultsSummary">
+            <!-- Results will be loaded here -->
+        </div>
+    </div>
+    
+    <div class="log-container" id="logContainer">
+        <h3>Generation Log</h3>
+        <div id="logContent"></div>
+    </div>
+</div>
+
+<script>
+function addLog(message, type = 'info') {
+    const logContent = document.getElementById('logContent');
+    const logEntry = document.createElement('div');
+    logEntry.className = `log-entry log-${type}`;
+    const timestamp = new Date().toLocaleTimeString();
+    logEntry.textContent = `[${timestamp}] ${message}`;
+    logContent.appendChild(logEntry);
+    logContent.scrollTop = logContent.scrollHeight;
+}
+
+function updateProgress(percent, text) {
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    progressBar.style.display = 'block';
+    progressFill.style.width = percent + '%';
+    progressFill.textContent = text || (percent + '%');
+}
+
+function previewAttendance() {
+    const previewBtn = document.getElementById('previewBtn');
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    const regenerateExisting = document.getElementById('regenerateExisting').checked;
+    
+    if (!startDate || !endDate) {
+        addLog('Please select both start and end dates', 'error');
+        return;
+    }
+    
+    previewBtn.disabled = true;
+    previewBtn.textContent = 'Generating Attendance...';
+    
+    addLog('Starting attendance generation process...', 'info');
+    updateProgress(20, 'Analyzing logs and generating preview...');
+    
+    fetch('{% url "admin:hr_payroll_attendancelog_generate_attendance_execute" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            start_date: startDate,
+            end_date: endDate,
+            regenerate_existing: regenerateExisting
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            return response.text().then(text => {
+                throw new Error(`Expected JSON, got: ${text.substring(0, 100)}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            updateProgress(100, 'Generation Complete');
+            
+            addLog('Attendance records generated successfully!', 'success');
+            addLog(data.message, 'info');
+            
+            displayResults(data);
+            
+            previewBtn.textContent = 'Generation Complete';
+            
+            // Auto-redirect after 3 seconds
+            setTimeout(() => {
+                addLog('Redirecting to attendance records...', 'info');
+                window.location.href = '{% url "admin:hr_payroll_attendance_changelist" %}';
+            }, 3000);
+            
+        } else {
+            addLog(`Error: ${data.error}`, 'error');
+            updateProgress(0, 'Error');
+            previewBtn.disabled = false;
+            previewBtn.textContent = 'Retry Generation';
+        }
+    })
+    .catch(error => {
+        addLog(`Error: ${error.message}`, 'error');
+        updateProgress(0, 'Error');
+        previewBtn.disabled = false;
+        previewBtn.textContent = 'Retry Generation';
+    });
+}
+
+function displayResults(data) {
+    const resultsContainer = document.getElementById('resultsContainer');
+    const resultsSummary = document.getElementById('resultsSummary');
+    
+    if (data.results) {
+        const results = data.results;
+        
+        resultsSummary.innerHTML = `
+            <div class="summary-item">
+                <h3 style="color: #28a745;">${results.records_created || 0}</h3>
+                <p>Records Created</p>
+            </div>
+            <div class="summary-item">
+                <h3 style="color: #ffc107;">${results.records_updated || 0}</h3>
+                <p>Records Updated</p>
+            </div>
+            <div class="summary-item">
+                <h3 style="color: #dc3545;">${results.error_count || 0}</h3>
+                <p>Errors</p>
+            </div>
+        `;
+    } else {
+        resultsSummary.innerHTML = `
+            <div class="summary-item">
+                <h3 style="color: #28a745;">Success</h3>
+                <p>Attendance records generated</p>
+            </div>
+        `;
+    }
+    
+    resultsContainer.style.display = 'block';
+}
+</script>
+{% endblock %}

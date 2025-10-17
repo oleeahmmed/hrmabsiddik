@@ -1,0 +1,99 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    .custom-page-container {
+        padding: 20px;
+    }
+    .custom-content-card {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    .hello-world-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 8px;
+    }
+    .hello-world-header h1 {
+        margin: 0;
+        font-size: 2.5em;
+        font-weight: 300;
+    }
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin: 30px 0;
+    }
+    .feature-card {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 6px;
+        border-left: 4px solid #007bff;
+    }
+    .feature-card h3 {
+        color: #007bff;
+        margin-top: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="custom-page-container">
+    <div class="hello-world-header">
+        <h1>Hello World! 🌍</h1>
+        <p style="opacity: 0.9; font-size: 1.2em;">Welcome to your custom admin page</p>
+    </div>
+
+    <div class="custom-content-card">
+        <h2>About This Page</h2>
+        <p>This is a custom page integrated into the Django admin interface. You now have:</p>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>📊 Full Admin Layout</h3>
+                <p>Complete admin sidebar, header, and styling</p>
+            </div>
+            <div class="feature-card">
+                <h3>⚡ Proper Navigation</h3>
+                <p>Breadcrumbs and admin navigation work correctly</p>
+            </div>
+            <div class="feature-card">
+                <h3>🎨 Consistent Design</h3>
+                <p>Matches the rest of your admin interface</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="custom-content-card">
+        <h2>Next Steps</h2>
+        <p>You can now add any custom functionality to this page:</p>
+        <ul>
+            <li>Custom reports and dashboards</li>
+            <li>Data visualization charts</li>
+            <li>System administration tools</li>
+            <li>Quick action buttons</li>
+            <li>Integration with your existing models</li>
+        </ul>
+        
+        <div style="margin-top: 20px; text-align: center;">
+            <a href="{% url 'admin:index' %}" class="button" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">
+                ← Back to Admin Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block sidebar %}
+{{ block.super }}
+<!-- You can add custom sidebar content here if needed -->
+{% endblock %}
