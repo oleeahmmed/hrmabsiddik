@@ -9,57 +9,198 @@ from django.utils import timezone
 from django.shortcuts import render
 from django.template.response import TemplateResponse
 from datetime import datetime, timedelta
-from django.db import transaction
+from django.db import transaction, models
 import logging
 from django.contrib.admin.views.decorators import staff_member_required
 from .zkteco_device_manager import ZKTecoDeviceManager
-import logging
 import json
 
 from unfold.admin import TabularInline
-from .models import (AttendanceProcessorConfiguration,
-    Department, Designation, Shift, Employee,
-    EmployeeSeparation, Roster, RosterAssignment, RosterDay,Location, UserLocation,
-    Holiday, LeaveType, LeaveBalance, LeaveApplication,
-    ZkDevice, AttendanceLog, Attendance,    Notice, Recruitment, JobApplication, Training, TrainingEnrollment,
-    Performance, PerformanceGoal, EmployeeDocument, Overtime,
-    Resignation, Clearance, Complaint
+from .models import (
+    AttendanceProcessorConfiguration, Department, Designation, Shift, Employee,
+    EmployeeSeparation, Roster, RosterAssignment, RosterDay, Location, UserLocation,
+    Holiday, LeaveType, LeaveBalance, LeaveApplication, ZkDevice, AttendanceLog, 
+    Attendance, Notice, Recruitment, JobApplication, Training, TrainingEnrollment,
+    Performance, PerformanceGoal, EmployeeDocument, Overtime, Resignation, 
+    Clearance, Complaint
 )
+
 logger = logging.getLogger(__name__)
+
 from django.views import View
 from django.utils.decorators import method_decorator
-from django.contrib.admin.views.decorators import staff_member_required
 
-
-class CustomAdminPageView(View):
-    """Class-based custom admin page view"""
-    
-    @method_decorator(staff_member_required)
-    def dispatch(self, *args, **kwargs):
-        return super().dispatch(*args, **kwargs)
+class HRPayrollDashboardView(View):
+    """Custom HR & Payroll Dashboard"""
     
     def get(self, request, *args, **kwargs):
-        """Handle GET requests"""
-        context = {
-            **admin.site.each_context(request),  # This adds all admin context including sidebar
-            'title': 'My Custom Page',
-            'subtitle': 'This is a custom admin page',
-            'opts': None,  # Add this to avoid template errors
-        }
+        """Handle GET requests for HR Payroll Dashboard"""
+        
+        # Get base admin context
+        context = {**admin.site.each_context(request)}
+        
+        # Get user's company if not superuser
+        user_company = None
+        if not request.user.is_superuser and hasattr(request.user, 'profile'):
+            user_company = request.user.profile.company
+        
+        # Build queryset based on user permissions
+        if request.user.is_superuser:
+            employees_qs = Employee.objects.all()
+            departments_qs = Department.objects.all()
+            designations_qs = Designation.objects.all()
+            shifts_qs = Shift.objects.all()
+            devices_qs = ZkDevice.objects.all()
+            attendance_qs = Attendance.objects.all()
+            holidays_qs = Holiday.objects.all()
+            leaves_qs = LeaveApplication.objects.all()
+            notices_qs = Notice.objects.all()
+            trainings_qs = Training.objects.all()
+        else:
+            employees_qs = Employee.objects.filter(company=user_company)
+            departments_qs = Department.objects.filter(company=user_company)
+            designations_qs = Designation.objects.filter(company=user_company)
+            shifts_qs = Shift.objects.filter(company=user_company)
+            devices_qs = ZkDevice.objects.filter(company=user_company)
+            attendance_qs = Attendance.objects.filter(employee__company=user_company)
+            holidays_qs = Holiday.objects.filter(company=user_company)
+            leaves_qs = LeaveApplication.objects.filter(employee__company=user_company)
+            notices_qs = Notice.objects.filter(company=user_company)
+            trainings_qs = Training.objects.filter(company=user_company)
+        
+        # Employee Statistics
+        total_employees = employees_qs.count()
+        active_employees = employees_qs.filter(is_active=True).count()
+        inactive_employees = employees_qs.filter(is_active=False).count()
+        
+        # Department Statistics
+        total_departments = departments_qs.count()
+        department_employee_count = departments_qs.annotate(
+            employee_count=models.Count('employee')
+        ).order_by('-employee_count')[:5]
+        
+        # Device Statistics
+        total_devices = devices_qs.count()
+        active_devices = devices_qs.filter(is_active=True).count()
+        inactive_devices = devices_qs.filter(is_active=False).count()
+        
+        # Attendance Statistics
+        today = timezone.now().date()
+        today_attendance = attendance_qs.filter(date=today)
+        present_today = today_attendance.filter(status='P').count()
+        absent_today = today_attendance.filter(status='A').count()
+        late_today = today_attendance.filter(status='L').count()
+        
+        # Monthly Attendance Summary
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+        monthly_attendance = attendance_qs.filter(
+            date__month=current_month,
+            date__year=current_year
+        )
+        total_work_days = monthly_attendance.count()
+        avg_attendance_rate = (monthly_attendance.filter(status='P').count() / total_work_days * 100) if total_work_days > 0 else 0
+        
+        # Leave Statistics
+        pending_leaves = leaves_qs.filter(status='pending').count()
+        approved_leaves = leaves_qs.filter(status='approved').count()
+        rejected_leaves = leaves_qs.filter(status='rejected').count()
+        
+        # Recent Data
+        recent_employees = employees_qs.select_related('department', 'designation').order_by('-created_at')[:5]
+        recent_attendance = attendance_qs.select_related('employee', 'shift').order_by('-date')[:5]
+        recent_leaves = leaves_qs.select_related('employee', 'leave_type').order_by('-created_at')[:5]
+        upcoming_holidays = holidays_qs.filter(date__gte=today).order_by('date')[:5]
+        
+        # Device Status
+        device_status = []
+        for device in devices_qs:
+            status_color = 'green' if device.is_active else 'red'
+            status_text = 'Active' if device.is_active else 'Inactive'
+            device_status.append({
+                'name': device.name,
+                'ip': device.ip_address,
+                'status': status_text,
+                'color': status_color,
+                'last_sync': device.last_synced
+            })
+        
+        # Add all data to context
+        context.update({
+            'title': _('HR & Payroll Dashboard'),
+            'subtitle': _('Comprehensive overview of HR operations'),
+            'opts': Employee._meta,
+            
+            # Employee Stats
+            'total_employees': total_employees,
+            'active_employees': active_employees,
+            'inactive_employees': inactive_employees,
+            
+            # Department Stats
+            'total_departments': total_departments,
+            'department_employee_count': department_employee_count,
+            
+            # Device Stats
+            'total_devices': total_devices,
+            'active_devices': active_devices,
+            'inactive_devices': inactive_devices,
+            
+            # Attendance Stats
+            'present_today': present_today,
+            'absent_today': absent_today,
+            'late_today': late_today,
+            'avg_attendance_rate': avg_attendance_rate,
+            
+            # Leave Stats
+            'pending_leaves': pending_leaves,
+            'approved_leaves': approved_leaves,
+            'rejected_leaves': rejected_leaves,
+            
+            # Other Stats
+            'total_shifts': shifts_qs.count(),
+            'total_holidays': holidays_qs.count(),
+            'total_notices': notices_qs.count(),
+            'total_trainings': trainings_qs.count(),
+            
+            # Recent Data
+            'recent_employees': recent_employees,
+            'recent_attendance': recent_attendance,
+            'recent_leaves': recent_leaves,
+            'upcoming_holidays': upcoming_holidays,
+            'device_status': device_status,
+            
+            # URLs
+            'employees_url': 'admin:hr_payroll_employee_changelist',
+            'attendance_url': 'admin:hr_payroll_attendance_changelist',
+            'devices_url': 'admin:hr_payroll_zkdevice_changelist',
+            'leaves_url': 'admin:hr_payroll_leaveapplication_changelist',
+            'departments_url': 'admin:hr_payroll_department_changelist',
+            
+            'today': today,
+            'user_company': user_company,
+        })
+        
         return render(request, 'admin/custom_page.html', context)
 
-# ADD THIS TO YOUR EXISTING admin.py (usually at the bottom)
+# Add custom URLs for HR Payroll
+def get_hr_payroll_admin_urls():
+    """Get custom URLs for HR Payroll admin"""
+    from django.urls import path
+    return [
+        path('hr-payroll-dashboard/', 
+             admin.site.admin_view(HRPayrollDashboardView.as_view()), 
+             name='hr_payroll_dashboard'),
+    ]
+
 # Get the original admin URLs and add our custom one
 original_get_urls = admin.site.get_urls
 
 def custom_get_urls():
-    from django.urls import path
-    custom_urls = [
-        path('custom-page/', admin.site.admin_view(CustomAdminPageView.as_view()), name='custom-page'),
-    ]
+    custom_urls = get_hr_payroll_admin_urls()
     return custom_urls + original_get_urls()
 
 admin.site.get_urls = custom_get_urls
+
 
 class CustomModelAdmin(ModelAdmin):
     """কাস্টম বেস ModelAdmin যাতে সাধারণ সেটিংস থাকে"""

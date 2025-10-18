@@ -325,58 +325,74 @@
     </div>
 
 
-    <!-- ==================== REPORTS & ANALYTICS DROPDOWN ==================== -->
-    <div class="nav-item-dropdown">
-        <div class="nav-item {% if 'report' in request.resolver_match.url_name or 'analytics' in request.resolver_match.url_name %}active{% endif %}">
-            <div class="flex items-center gap-3">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
-                <span>Reports & Analytics</span>
-            </div>
-            <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+<!-- ==================== REPORTS & ANALYTICS DROPDOWN (UPDATED) ==================== -->
+<div class="nav-item-dropdown">
+    <div class="nav-item {% if 'report' in request.resolver_match.url_name or 'analytics' in request.resolver_match.url_name %}active{% endif %}">
+        <div class="flex items-center gap-3">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
             </svg>
+            <span>Reports & Analytics</span>
         </div>
-        
-        <div class="dropdown-menu">
-            <!-- Reports Dashboard -->
-            <a href="{% url 'zkteco:attendance_reports_main' %}" class="dropdown-menu-item {% if 'attendance_reports_main' in request.resolver_match.url_name %}active{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
-                <span>Reports Dashboard</span>
-            </a>
-            
-
-            
-            <!-- Hourly Report -->
-            <a href="{% url 'zkteco:hourly_attendance_report' %}" class="dropdown-menu-item {% if 'hourly_attendance_report' in request.resolver_match.url_name %}active{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span>Hourly Attendance Report</span>
-            </a>
-            
-            <!-- Daily Report -->
-            <a href="{% url 'zkteco:daily_attendance_report' %}" class="dropdown-menu-item {% if 'daily_attendance_report' in request.resolver_match.url_name %}active{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-                <span>Daily Attendance Report</span>
-            </a>
-            
-            <!-- Monthly Report -->
-            <a href="{% url 'zkteco:monthly_attendance_report' %}" class="dropdown-menu-item {% if 'monthly_attendance_report' in request.resolver_match.url_name %}active{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-                <span>Monthly Attendance Report</span>
-            </a>
-            
-
-        </div>
+        <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
     </div>
+    
+    <div class="dropdown-menu">
+        <!-- Reports Dashboard -->
+        <a href="{% url 'zkteco:attendance_reports_main' %}" class="dropdown-menu-item {% if 'attendance_reports_main' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            <span>Reports Dashboard</span>
+        </a>
+        
+        <!-- Hourly Report (Kept existing structure) -->
+        <a href="{% url 'zkteco:hourly_attendance_report' %}" class="dropdown-menu-item {% if 'hourly_attendance_report' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span>Hourly Attendance Report</span>
+        </a>
+        
+        <!-- Daily Report -->
+        <a href="{% url 'zkteco:daily_attendance_report' %}" class="dropdown-menu-item {% if 'daily_attendance_report' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <span>Daily Attendance Report</span>
+        </a>
+        
+        <!-- Monthly Report -->
+        <a href="{% url 'zkteco:monthly_attendance_report' %}" class="dropdown-menu-item {% if 'monthly_attendance_report' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <span>Monthly Attendance Report</span>
+        </a>
+        
+        <!-- Employee Monthly Attendance (New Link) -->
+        <a href="{% url 'zkteco:employee_monthly_attendance' %}" class="dropdown-menu-item {% if 'employee_monthly_attendance' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <!-- User with Calendar Icon -->
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2zM9 13h6m-3-3a3 3 0 100-6 3 3 0 000 6z"/>
+            </svg>
+            <span>Employee Monthly Attendance</span>
+        </a>
+        
+        <!-- Payroll Summary Report (New Link) -->
+        <a href="{% url 'zkteco:payroll_summary_report' %}" class="dropdown-menu-item {% if 'payroll_summary_report' in request.resolver_match.url_name %}active{% endif %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <!-- Briefcase Icon for Payroll -->
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M8 20v-4h8v4z"/>
+            </svg>
+            <span>Payroll Summary Report</span>
+        </a>
+
+    </div>
+</div>
+
 </nav>
                 {% endblock %}
             </div>

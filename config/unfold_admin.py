@@ -26,12 +26,12 @@ def get_navigation_for_user(request):
                     "permission": lambda request: request.user.is_superuser,
                 },
 
-                                    {
-                        "title": _("My Custom Page"),
-                        "icon": "rocket_launch",  # or "dashboard", "analytics", "speed"
-                        "link": reverse_lazy("admin:custom-page"),
-                        "permission": lambda request: request.user.is_staff,
-                    },
+              {
+            "title": _("Hr DashBoard"),
+            "icon": "rocket_launch",
+            "link": reverse_lazy("admin:hr_payroll_dashboard"),  # FIXED: Removed extra quote
+            "permission": lambda request: request.user.is_staff,
+        },
             ],
         },
 
