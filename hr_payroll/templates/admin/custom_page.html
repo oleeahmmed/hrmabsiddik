@@ -4,36 +4,283 @@
 {% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
 
 {% block extrahead %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script
+    src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 <style>
-.attendance-badge {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.375rem;
-    font-weight: 500;
-}
-.badge-present { background-color: #dcfce7; color: #166534; }
-.badge-absent { background-color: #fee2e2; color: #991b1b; }
-.badge-late { background-color: #fef3c7; color: #92400e; }
-.badge-leave { background-color: #dbeafe; color: #1e40af; }
-.badge-mobile { background-color: #f0f9ff; color: #0369a1; }
-.badge-notice { background-color: #fef7cd; color: #92400e; }
-.badge-holiday { background-color: #f3e8ff; color: #7e22ce; }
-.map-link {
-    transition: all 0.2s ease-in-out;
-}
-.map-link:hover {
-    transform: scale(1.05);
-}
-.status-dot {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    margin-right: 6px;
-}
-.status-active { background-color: #10b981; }
-.status-inactive { background-color: #ef4444; }
-.status-pending { background-color: #f59e0b; }
+    .attendance-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.375rem;
+        font-weight: 500;
+    }
+
+    .badge-present {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+
+    .badge-absent {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    .badge-late {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+
+    .badge-leave {
+        background-color: #dbeafe;
+        color: #1e40af;
+    }
+
+    .badge-mobile {
+        background-color: #f0f9ff;
+        color: #0369a1;
+    }
+
+    .badge-notice {
+        background-color: #fef7cd;
+        color: #92400e;
+    }
+
+    .badge-holiday {
+        background-color: #f3e8ff;
+        color: #7e22ce;
+    }
+
+    .map-link {
+        transition: all 0.2s ease-in-out;
+    }
+
+    .map-link:hover {
+        transform: scale(1.05);
+    }
+
+    .status-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 6px;
+    }
+
+    .status-active {
+        background-color: #10b981;
+    }
+
+    .status-inactive {
+        background-color: #ef4444;
+    }
+
+    .status-pending {
+        background-color: #f59e0b;
+    }
+
+    /* Chart Container Styles */
+    .chart-container {
+        position: relative;
+        height: 300px;
+        width: 100%;
+    }
+
+    .chart-small {
+        height: 200px;
+    }
+
+    /* Enhanced Card Styles */
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        transform: translate(30px, -30px);
+    }
+
+    .stat-card-blue {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .stat-card-green {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .stat-card-purple {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .stat-card-orange {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+
+    /* Attendance Grid Styles */
+    .attendance-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .attendance-section {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .dark .attendance-section {
+        background: #1f2937;
+        border-color: #374151;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: between;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #f3f4f6;
+    }
+
+    .dark .section-header {
+        border-bottom-color: #374151;
+    }
+
+    .section-icon {
+        width: 2rem;
+        height: 2rem;
+        margin-right: 0.75rem;
+        padding: 0.5rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .device-icon {
+        background: #ddd6fe;
+        color: #7c3aed;
+    }
+
+    .mobile-icon {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+
+    .dark .device-icon {
+        background: #5b21b6;
+        color: #c4b5fd;
+    }
+
+    .dark .mobile-icon {
+        background: #1e40af;
+        color: #93c5fd;
+    }
+
+    /* Enhanced Log Item Styles */
+    .log-item {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        border-left: 4px solid #e5e7eb;
+        transition: all 0.2s ease;
+    }
+
+    .log-item:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .log-item.device-log {
+        border-left-color: #7c3aed;
+    }
+
+    .log-item.mobile-log {
+        border-left-color: #2563eb;
+    }
+
+    .dark .log-item {
+        background: #374151;
+        border-left-color: #6b7280;
+    }
+
+    .dark .log-item.device-log {
+        border-left-color: #a855f7;
+    }
+
+    .dark .log-item.mobile-log {
+        border-left-color: #3b82f6;
+    }
+
+    /* Location Badge */
+    .location-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        background: #ecfdf5;
+        color: #065f46;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .location-badge.out-of-radius {
+        background: #fef2f2;
+        color: #991b1b;
+    }
+
+    .dark .location-badge {
+        background: #064e3b;
+        color: #6ee7b7;
+    }
+
+    .dark .location-badge.out-of-radius {
+        background: #7f1d1d;
+        color: #fca5a5;
+    }
+
+    /* Pulse Animation for Real-time Data */
+    @keyframes pulse {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.7;
+        }
+    }
+
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .attendance-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .chart-container {
+            height: 250px;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -44,32 +291,35 @@
         <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ title }}</h1>
         <p class="text-gray-600 dark:text-gray-400 mt-2">{{ subtitle }}</p>
         {% if user_company %}
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{% trans "Viewing data for" %}: {{ user_company.name }}</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Viewing data for: {{ user_company.name }}</p>
         {% endif %}
     </div>
 
-    <!-- Statistics Grid -->
+    <!-- Enhanced Statistics Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Employees Card -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <div class="flex items-center justify-between">
+        <div class="stat-card stat-card-blue">
+            <div class="flex items-center justify-between relative z-10">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{% trans "Total Employees" %}</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ total_employees }}</p>
-                    <div class="flex items-center mt-2 space-x-4 text-xs">
-                        <span class="text-green-600 dark:text-green-400">{{ active_employees }} {% trans "active" %}</span>
-                        <span class="text-red-600 dark:text-red-400">{{ inactive_employees }} {% trans "inactive" %}</span>
+                    <p class="text-sm font-medium text-white/80">Total Employees</p>
+                    <p class="text-3xl font-bold text-white mt-2">{{ total_employees }}</p>
+                    <div class="flex items-center mt-3 space-x-3 text-xs">
+                        <span class="bg-white/20 px-2 py-1 rounded-full">{{ active_employees }} active</span>
+                        <span class="bg-white/10 px-2 py-1 rounded-full">{{ inactive_employees }} inactive</span>
                     </div>
                 </div>
-                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-full">
-                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                <div class="p-3 bg-white/20 rounded-full">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                        </path>
                     </svg>
                 </div>
             </div>
-            <div class="mt-4">
-                <a href="{% url employees_url %}" class="inline-flex items-center text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500">
-                    {% trans "Manage Employees" %}
+            <div class="mt-4 relative z-10">
+                <a href="{% url employees_url %}"
+                    class="inline-flex items-center text-sm font-medium text-white hover:text-white/80 transition-colors">
+                    Manage Employees
                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
@@ -78,27 +328,29 @@
         </div>
 
         <!-- Attendance Card -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <div class="flex items-center justify-between">
+        <div class="stat-card stat-card-green">
+            <div class="flex items-center justify-between relative z-10">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{% trans "Today's Attendance" %}</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ present_today }}/{{ active_employees }}</p>
-                    <div class="flex items-center mt-2 space-x-2 text-xs flex-wrap gap-1">
-                        <span class="badge-present attendance-badge">{{ present_today }}P</span>
-                        <span class="badge-absent attendance-badge">{{ absent_today }}A</span>
-                        <span class="badge-late attendance-badge">{{ late_today }}L</span>
-                        <span class="badge-mobile attendance-badge">{{ mobile_attendance_today }}M</span>
+                    <p class="text-sm font-medium text-white/80">Today's Attendance</p>
+                    <p class="text-3xl font-bold text-white mt-2">{{ present_today }}/{{ active_employees }}</p>
+                    <div class="flex items-center mt-3 space-x-2 text-xs flex-wrap gap-1">
+                        <span class="bg-white/20 px-2 py-1 rounded-full">{{ present_today }}P</span>
+                        <span class="bg-white/15 px-2 py-1 rounded-full">{{ absent_today }}A</span>
+                        <span class="bg-white/10 px-2 py-1 rounded-full">{{ late_today }}L</span>
+                        <span class="bg-white/25 px-2 py-1 rounded-full pulse">{{ mobile_attendance_today }}M</span>
                     </div>
                 </div>
-                <div class="p-3 bg-green-50 dark:bg-green-900/20 rounded-full">
-                    <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                <div class="p-3 bg-white/20 rounded-full">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>
             </div>
-            <div class="mt-4">
-                <a href="{% url attendance_url %}" class="inline-flex items-center text-sm font-medium text-green-600 dark:text-green-400 hover:text-green-500">
-                    {% trans "View Attendance" %}
+            <div class="mt-4 relative z-10">
+                <a href="{% url attendance_url %}"
+                    class="inline-flex items-center text-sm font-medium text-white hover:text-white/80 transition-colors">
+                    View Attendance
                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
@@ -107,25 +359,28 @@
         </div>
 
         <!-- Devices Card -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <div class="flex items-center justify-between">
+        <div class="stat-card stat-card-purple">
+            <div class="flex items-center justify-between relative z-10">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{% trans "ZK Devices" %}</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ total_devices }}</p>
-                    <div class="flex items-center mt-2 space-x-4 text-xs">
-                        <span class="text-green-600 dark:text-green-400">{{ active_devices }} {% trans "active" %}</span>
-                        <span class="text-red-600 dark:text-red-400">{{ inactive_devices }} {% trans "inactive" %}</span>
+                    <p class="text-sm font-medium text-white/80">ZK Devices</p>
+                    <p class="text-3xl font-bold text-white mt-2">{{ total_devices }}</p>
+                    <div class="flex items-center mt-3 space-x-3 text-xs">
+                        <span class="bg-white/20 px-2 py-1 rounded-full">{{ active_devices }} active</span>
+                        <span class="bg-white/10 px-2 py-1 rounded-full">{{ inactive_devices }} inactive</span>
                     </div>
                 </div>
-                <div class="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-full">
-                    <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                <div class="p-3 bg-white/20 rounded-full">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z">
+                        </path>
                     </svg>
                 </div>
             </div>
-            <div class="mt-4">
-                <a href="{% url devices_url %}" class="inline-flex items-center text-sm font-medium text-purple-600 dark:text-purple-400 hover:text-purple-500">
-                    {% trans "Manage Devices" %}
+            <div class="mt-4 relative z-10">
+                <a href="{% url devices_url %}"
+                    class="inline-flex items-center text-sm font-medium text-white hover:text-white/80 transition-colors">
+                    Manage Devices
                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
@@ -134,25 +389,28 @@
         </div>
 
         <!-- Leaves Card -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <div class="flex items-center justify-between">
+        <div class="stat-card stat-card-orange">
+            <div class="flex items-center justify-between relative z-10">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{% trans "Leave Applications" %}</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ pending_leaves }}</p>
-                    <div class="flex items-center mt-2 space-x-4 text-xs">
-                        <span class="text-yellow-600 dark:text-yellow-400">{{ pending_leaves }} {% trans "pending" %}</span>
-                        <span class="text-green-600 dark:text-green-400">{{ approved_leaves }} {% trans "approved" %}</span>
+                    <p class="text-sm font-medium text-white/80">Leave Applications</p>
+                    <p class="text-3xl font-bold text-white mt-2">{{ pending_leaves }}</p>
+                    <div class="flex items-center mt-3 space-x-3 text-xs">
+                        <span class="bg-white/20 px-2 py-1 rounded-full">{{ pending_leaves }} pending</span>
+                        <span class="bg-white/10 px-2 py-1 rounded-full">{{ approved_leaves }} approved</span>
                     </div>
                 </div>
-                <div class="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-full">
-                    <svg class="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                <div class="p-3 bg-white/20 rounded-full">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                        </path>
                     </svg>
                 </div>
             </div>
-            <div class="mt-4">
-                <a href="{% url leaves_url %}" class="inline-flex items-center text-sm font-medium text-orange-600 dark:text-orange-400 hover:text-orange-500">
-                    {% trans "Manage Leaves" %}
+            <div class="mt-4 relative z-10">
+                <a href="{% url leaves_url %}"
+                    class="inline-flex items-center text-sm font-medium text-white hover:text-white/80 transition-colors">
+                    Manage Leaves
                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
@@ -161,80 +419,297 @@
         </div>
     </div>
 
-    <!-- Three Column Layout -->
+    <!-- Charts Section -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        <!-- Left Column - Recent Attendance Logs -->
-        <div class="space-y-8">
-            <!-- Recent Attendance Logs -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{% trans "Recent Attendance Logs" %}</h2>
-                        <a href="{% url attendance_logs_url %}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500">
-                            {% trans "View all" %}
-                        </a>
-                    </div>
-                </div>
-                <div class="p-6">
-                    <div class="space-y-4">
-                        {% for log in recent_attendance_logs %}
-                        <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center justify-between mb-2">
-                                    <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                                        {{ log.employee.name }}
-                                    </h3>
-                                    <div class="flex items-center space-x-2">
-                                        {% if log.has_location %}
-                                        <a href="https://www.google.com/maps?q={{ log.latitude }},{{ log.longitude }}" 
-                                           target="_blank" 
-                                           class="map-link inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800">
-                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            </svg>
-                                            {% trans "Map" %}
-                                        </a>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">
-                                    {{ log.employee.employee_id }} • {{ log.timestamp|date:"M j, g:i A" }}
-                                </p>
-                                <div class="flex items-center mt-2 space-x-3 text-xs">
-                                    <span class="text-gray-500 dark:text-gray-400">
-                                        {{ log.attendance_type }}
-                                    </span>
-                                    <span class="text-gray-500 dark:text-gray-400">
-                                        {{ log.source_type }}
-                                    </span>
-                                    {% if log.has_location %}
-                                    <span class="{% if log.is_within_radius %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
-                                        {% if log.is_within_radius %}{% trans "In Radius" %}{% else %}{% trans "Out of Radius" %}{% endif %}
-                                    </span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        {% empty %}
-                        <p class="text-gray-500 dark:text-gray-400 text-center py-4">{% trans "No attendance logs found" %}</p>
-                        {% endfor %}
-                    </div>
+        <!-- Attendance Trend Chart -->
+        <div
+            class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Attendance Trend (Last 7 Days)</h2>
+                <div class="flex space-x-2">
+                    <span
+                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
+                        <span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                        Present
+                    </span>
+                    <span
+                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100">
+                        <span class="w-2 h-2 bg-red-500 rounded-full mr-1"></span>
+                        Absent
+                    </span>
+                    <span
+                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
+                        <span class="w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
+                        Mobile
+                    </span>
                 </div>
             </div>
-
-        
+            <div class="chart-container">
+                <canvas id="attendanceTrendChart"></canvas>
+            </div>
         </div>
 
-        <!-- Middle Column - Recent Leaves & Employees -->
+        <!-- Device vs Mobile Attendance Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Attendance Sources</h2>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Today</div>
+            </div>
+            <div class="chart-container chart-small">
+                <canvas id="attendanceSourceChart"></canvas>
+            </div>
+            <div class="mt-4 space-y-2">
+                <div class="flex items-center justify-between text-sm">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
+                        <span class="text-gray-600 dark:text-gray-300">Device</span>
+                    </div>
+                    <span class="font-semibold text-gray-900 dark:text-gray-100">{{ device_attendance_today }}</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                        <span class="text-gray-600 dark:text-gray-300">Mobile</span>
+                    </div>
+                    <span class="font-semibold text-gray-900 dark:text-gray-100">{{ mobile_attendance_today }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Analytics Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Leave Status Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Leave Applications Status</h2>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Current Month</div>
+            </div>
+            <div class="chart-container chart-small">
+                <canvas id="leaveStatusChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Real-time Activity Feed -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Live Activity Feed</h2>
+                <div class="flex items-center space-x-2">
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span class="text-xs text-gray-500 dark:text-gray-400">Live</span>
+                </div>
+            </div>
+            <div class="space-y-3 max-h-64 overflow-y-auto">
+                {% for log in recent_attendance_logs|slice:":5" %}
+                <div class="flex items-center space-x-3 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <div class="flex-shrink-0">
+                        {% if log.source_type == 'Mobile' %}
+                        <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z">
+                                </path>
+                            </svg>
+                        </div>
+                        {% else %}
+                        <div
+                            class="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+                            <svg class="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z">
+                                </path>
+                            </svg>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                            {{ log.employee.name }}
+                        </p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            {{ log.attendance_type|default:"Attendance" }} • {{ log.timestamp|timesince }} ago
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>""
+
+    <!-- Attendance Logs Section - Two Separate Rows -->
+    <div class="space-y-8 mb-8">
+        <!-- Device Attendance Row -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="section-icon device-icon mr-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z">
+                                </path>
+                            </svg>
+                        </div>
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Device Attendance</h2>
+                        <span
+                            class="ml-3 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">ZKTeco</span>
+                    </div>
+                    <a href="{% url attendance_logs_url %}"
+                        class="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-500">
+                        View all
+                    </a>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    {% for log in device_logs %}
+                    <div class="log-item device-log">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                                {{ log.employee.name }}
+                            </h4>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">
+                                {{ log.timestamp|date:"g:i A" }}
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-600 dark:text-gray-300 mb-2">
+                            {{ log.employee.employee_id }} • {{ log.device.name|default:"Uniworld" }}
+                        </p>
+                        <div class="flex items-center space-x-2 text-xs">
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100">
+                                {{ log.attendance_type|default:"Unknown" }}
+                            </span>
+                            <span class="text-gray-500 dark:text-gray-400">
+                                {{ log.timestamp|date:"M j" }}
+                            </span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-span-full">
+                        <p class="text-gray-500 dark:text-gray-400 text-center py-8">No device attendance found</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Attendance Row -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="section-icon mobile-icon mr-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z">
+                                </path>
+                            </svg>
+                        </div>
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Mobile Attendance</h2>
+                        <span
+                            class="ml-3 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">GPS</span>
+                    </div>
+                    <a href="{% url attendance_logs_url %}"
+                        class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500">
+                        View all
+                    </a>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    {% for log in mobile_logs %}
+                    <div class="log-item mobile-log">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                                {{ log.employee.name }}
+                            </h4>
+                            <div class="flex items-center space-x-1">
+                                {% if log.has_location %}
+                                <a href="https://www.google.com/maps?q={{ log.latitude }},{{ log.longitude }}"
+                                    target="_blank"
+                                    class="map-link inline-flex items-center px-1.5 py-0.5 bg-blue-100 text-blue-800 text-xs rounded hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800 transition-colors">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
+                                        </path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    Map
+                                </a>
+                                {% endif %}
+                                <span class="text-xs text-gray-500 dark:text-gray-400">
+                                    {{ log.timestamp|date:"g:i A" }}
+                                </span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-600 dark:text-gray-300 mb-2">
+                            {{ log.employee.employee_id }} • {{ log.location_name|default:"Unknown Location" }}
+                        </p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2 text-xs">
+                                <span
+                                    class="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
+                                    {{ log.attendance_type|default:"Check-in" }}
+                                </span>
+                                <span class="text-gray-500 dark:text-gray-400">
+                                    {{ log.timestamp|date:"M j" }}
+                                </span>
+                            </div>
+                            {% if log.has_location %}
+                            <span class="location-badge {% if not log.is_within_radius %}out-of-radius{% endif %}">
+                                {% if log.is_within_radius %}
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                                In Range
+                                {% else %}
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                                Out of Range
+                                {% endif %}
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% if log.has_location %}
+                        <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            <span class="font-mono">{{ log.latitude|floatformat:6 }}, {{ log.longitude|floatformat:6
+                                }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <div class="col-span-full">
+                        <p class="text-gray-500 dark:text-gray-400 text-center py-8">No mobile attendance found</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Three Column Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <!-- Left Column - Recent Leave Applications -->
         <div class="space-y-8">
-            <!-- Recent Leaves -->
+
+            <!-- Recent Leave Applications -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                 <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <div class="flex items-center justify-between">
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{% trans "Recent Leave Applications" %}</h2>
-                        <a href="{% url leaves_url %}" class="text-sm text-orange-600 dark:text-orange-400 hover:text-orange-500">
-                            {% trans "View all" %}
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Recent Leave Applications
+                        </h2>
+                        <a href="{% url leaves_url %}"
+                            class="text-sm text-orange-600 dark:text-orange-400 hover:text-orange-500">
+                            View all
                         </a>
                     </div>
                 </div>
@@ -250,7 +725,8 @@
                                     {{ leave.leave_type.name }} • {{ leave.start_date }} to {{ leave.end_date }}
                                 </p>
                                 <div class="flex items-center mt-2 space-x-4 text-xs">
-                                    <span class="{% if leave.status == 'P' %}text-yellow-600 dark:text-yellow-400{% elif leave.status == 'A' %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
+                                    <span
+                                        class="{% if leave.status == 'P' %}text-yellow-600 dark:text-yellow-400{% elif leave.status == 'A' %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
                                         {{ leave.get_status_display }}
                                     </span>
                                     <span class="text-gray-500 dark:text-gray-400">
@@ -260,19 +736,23 @@
                             </div>
                         </div>
                         {% empty %}
-                        <p class="text-gray-500 dark:text-gray-400 text-center py-4">{% trans "No leave applications found" %}</p>
+                        <p class="text-gray-500 dark:text-gray-400 text-center py-4">No leave applications found</p>
                         {% endfor %}
                     </div>
                 </div>
             </div>
+        </div>
 
+        <!-- Middle Column - Recent Employees -->
+        <div class="space-y-8">
             <!-- Recent Employees -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                 <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <div class="flex items-center justify-between">
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{% trans "Recent Employees" %}</h2>
-                        <a href="{% url employees_url %}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500">
-                            {% trans "View all" %}
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Recent Employees</h2>
+                        <a href="{% url employees_url %}"
+                            class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500">
+                            View all
                         </a>
                     </div>
                 </div>
@@ -291,14 +771,15 @@
                                     <span class="text-gray-500 dark:text-gray-400">
                                         {{ employee.designation.name|default:"No Designation" }}
                                     </span>
-                                    <span class="{% if employee.is_active %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
-                                        {% if employee.is_active %}{% trans "Active" %}{% else %}{% trans "Inactive" %}{% endif %}
+                                    <span
+                                        class="{% if employee.is_active %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
+                                        {% if employee.is_active %}Active{% else %}Inactive{% endif %}
                                     </span>
                                 </div>
                             </div>
                         </div>
                         {% empty %}
-                        <p class="text-gray-500 dark:text-gray-400 text-center py-4">{% trans "No employees found" %}</p>
+                        <p class="text-gray-500 dark:text-gray-400 text-center py-4">No employees found</p>
                         {% endfor %}
                     </div>
                 </div>
@@ -311,9 +792,10 @@
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                 <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <div class="flex items-center justify-between">
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{% trans "Upcoming Holidays" %}</h2>
-                        <a href="{% url holidays_url %}" class="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-500">
-                            {% trans "View all" %}
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Upcoming Holidays</h2>
+                        <a href="{% url holidays_url %}"
+                            class="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-500">
+                            View all
                         </a>
                     </div>
                 </div>
@@ -330,7 +812,7 @@
                             </span>
                         </div>
                         {% empty %}
-                        <p class="text-gray-500 dark:text-gray-400 text-center py-2">{% trans "No upcoming holidays" %}</p>
+                        <p class="text-gray-500 dark:text-gray-400 text-center py-2">No upcoming holidays</p>
                         {% endfor %}
                     </div>
                 </div>
@@ -340,9 +822,10 @@
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                 <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <div class="flex items-center justify-between">
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{% trans "Active Notices" %}</h2>
-                        <a href="{% url notices_url %}" class="text-sm text-yellow-600 dark:text-yellow-400 hover:text-yellow-500">
-                            {% trans "View all" %}
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Active Notices</h2>
+                        <a href="{% url notices_url %}"
+                            class="text-sm text-yellow-600 dark:text-yellow-400 hover:text-yellow-500">
+                            View all
                         </a>
                     </div>
                 </div>
@@ -364,7 +847,7 @@
                             </div>
                         </div>
                         {% empty %}
-                        <p class="text-gray-500 dark:text-gray-400 text-center py-2">{% trans "No active notices" %}</p>
+                        <p class="text-gray-500 dark:text-gray-400 text-center py-2">No active notices</p>
                         {% endfor %}
                     </div>
                 </div>
@@ -374,9 +857,10 @@
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                 <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <div class="flex items-center justify-between">
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{% trans "Device Status" %}</h2>
-                        <a href="{% url devices_url %}" class="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-500">
-                            {% trans "Manage" %}
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Device Status</h2>
+                        <a href="{% url devices_url %}"
+                            class="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-500">
+                            Manage
                         </a>
                     </div>
                 </div>
@@ -393,7 +877,7 @@
                                 </p>
                                 {% if device.last_sync %}
                                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    {% trans "Last sync" %}: {{ device.last_sync|timesince }} {% trans "ago" %}
+                                    Last sync: {{ device.last_sync|timesince }} ago
                                 </p>
                                 {% endif %}
                             </div>
@@ -401,13 +885,14 @@
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
                                     {% if device.color == 'green' %}bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400
                                     {% else %}bg-red-100 text-red-800 dark:bg-red-800/20 dark:text-red-400{% endif %}">
-                                    <span class="status-dot {% if device.color == 'green' %}status-active{% else %}status-inactive{% endif %}"></span>
+                                    <span
+                                        class="status-dot {% if device.color == 'green' %}status-active{% else %}status-inactive{% endif %}"></span>
                                     {{ device.status }}
                                 </span>
                             </div>
                         </div>
                         {% empty %}
-                        <p class="text-gray-500 dark:text-gray-400 text-center py-4">{% trans "No devices found" %}</p>
+                        <p class="text-gray-500 dark:text-gray-400 text-center py-4">No devices found</p>
                         {% endfor %}
                     </div>
                 </div>
@@ -418,76 +903,361 @@
     <!-- Additional Stats Row -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Departments -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center">
+        <div
+            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center">
             <div class="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-full inline-flex">
-                <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+                    </path>
                 </svg>
             </div>
             <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-4">{{ total_departments }}</p>
-            <p class="text-sm text-gray-600 dark:text-gray-400">{% trans "Departments" %}</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Departments</p>
         </div>
 
         <!-- Shifts -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center">
+        <div
+            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center">
             <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-full inline-flex">
-                <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
             </div>
             <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-4">{{ total_shifts }}</p>
-            <p class="text-sm text-gray-600 dark:text-gray-400">{% trans "Shifts" %}</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Shifts</p>
         </div>
 
         <!-- Holidays -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center">
+        <div
+            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center">
             <div class="p-3 bg-green-50 dark:bg-green-900/20 rounded-full inline-flex">
-                <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                    </path>
                 </svg>
             </div>
             <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-4">{{ total_holidays }}</p>
-            <p class="text-sm text-gray-600 dark:text-gray-400">{% trans "Holidays" %}</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Holidays</p>
         </div>
 
         <!-- Notices -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center">
+        <div
+            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center">
             <div class="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-full inline-flex">
-                <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+                <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z">
+                    </path>
                 </svg>
             </div>
             <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-4">{{ total_notices }}</p>
-            <p class="text-sm text-gray-600 dark:text-gray-400">{% trans "Notices" %}</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Notices</p>
         </div>
     </div>
 
     <!-- Quick Actions -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{% trans "Quick Actions" %}</h2>
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Quick Actions</h2>
         <div class="flex flex-wrap gap-4">
-            <a href="{% url 'admin:hr_payroll_employee_add' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:border-blue-700 focus:ring ring-blue-300 disabled:opacity-25 transition ease-in-out duration-150">
+            <a href="{% url 'admin:hr_payroll_employee_add' %}"
+                class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:border-blue-700 focus:ring ring-blue-300 disabled:opacity-25 transition ease-in-out duration-150">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
-                {% trans "Add Employee" %}
+                Add Employee
             </a>
-            <a href="{% url 'admin:hr_payroll_zkdevice_add' %}" class="inline-flex items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-500 active:bg-purple-700 focus:outline-none focus:border-purple-700 focus:ring ring-purple-300 disabled:opacity-25 transition ease-in-out duration-150">
+            <a href="{% url 'admin:hr_payroll_zkdevice_add' %}"
+                class="inline-flex items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-500 active:bg-purple-700 focus:outline-none focus:border-purple-700 focus:ring ring-purple-300 disabled:opacity-25 transition ease-in-out duration-150">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
-                {% trans "Add Device" %}
+                Add Device
             </a>
-            <a href="{% url 'admin:hr_payroll_attendance_add' %}" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-500 active:bg-green-700 focus:outline-none focus:border-green-700 focus:ring ring-green-300 disabled:opacity-25 transition ease-in-out duration-150">
-                {% trans "Add Attendance" %}
+            <a href="{% url 'admin:hr_payroll_attendance_add' %}"
+                class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-500 active:bg-green-700 focus:outline-none focus:border-green-700 focus:ring ring-green-300 disabled:opacity-25 transition ease-in-out duration-150">
+                Add Attendance
             </a>
-            <a href="{% url 'admin:hr_payroll_leaveapplication_add' %}" class="inline-flex items-center px-4 py-2 bg-orange-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-orange-500 active:bg-orange-700 focus:outline-none focus:border-orange-700 focus:ring ring-orange-300 disabled:opacity-25 transition ease-in-out duration-150">
-                {% trans "Add Leave" %}
+            <a href="{% url 'admin:hr_payroll_leaveapplication_add' %}"
+                class="inline-flex items-center px-4 py-2 bg-orange-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-orange-500 active:bg-orange-700 focus:outline-none focus:border-orange-700 focus:ring ring-orange-300 disabled:opacity-25 transition ease-in-out duration-150">
+                Add Leave
             </a>
-            <a href="{% url 'admin:hr_payroll_notice_add' %}" class="inline-flex items-center px-4 py-2 bg-yellow-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-500 active:bg-yellow-700 focus:outline-none focus:border-yellow-700 focus:ring ring-yellow-300 disabled:opacity-25 transition ease-in-out duration-150">
-                {% trans "Add Notice" %}
+            <a href="{% url 'admin:hr_payroll_notice_add' %}"
+                class="inline-flex items-center px-4 py-2 bg-yellow-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-500 active:bg-yellow-700 focus:outline-none focus:border-yellow-700 focus:ring ring-yellow-300 disabled:opacity-25 transition ease-in-out duration-150">
+                Add Notice
             </a>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Attendance Trend Chart
+        const attendanceTrendCtx = document.getElementById('attendanceTrendChart').getContext('2d');
+
+        // Sample data - you can replace this with actual data from your backend
+        const attendanceTrendData = {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [
+                {
+                    label: 'Present',
+                    data: [{{ present_today }}, 85, 92, 88, 95, 45, 30],
+            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+            borderColor: 'rgba(34, 197, 94, 1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: 'rgba(34, 197, 94, 1)',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 8
+        },
+            {
+                label: 'Absent',
+                data: [{{ absent_today }}, 15, 8, 12, 5, 25, 35],
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            borderColor: 'rgba(239, 68, 68, 1)',
+                borderWidth: 3,
+                    fill: true,
+                        tension: 0.4,
+                            pointBackgroundColor: 'rgba(239, 68, 68, 1)',
+                                pointBorderColor: '#fff',
+                                    pointBorderWidth: 2,
+                                        pointRadius: 6,
+                                            pointHoverRadius: 8
+    },
+        {
+            label: 'Mobile Attendance',
+            data: [{{ mobile_attendance_today }}, 25, 30, 28, 35, 15, 10],
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderColor: 'rgba(59, 130, 246, 1)',
+        borderWidth: 2,
+        fill: false,
+        tension: 0.4,
+        pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderDash: [5, 5]
+            }
+        ]
+    };
+
+    new Chart(attendanceTrendCtx, {
+        type: 'line',
+        data: attendanceTrendData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: true,
+                    intersect: false,
+                    mode: 'index'
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#6b7280'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(107, 114, 128, 0.1)'
+                    },
+                    ticks: {
+                        color: '#6b7280'
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            elements: {
+                point: {
+                    hoverRadius: 8
+                }
+            }
+        }
+    });
+
+    // Attendance Source Chart (Doughnut)
+    const attendanceSourceCtx = document.getElementById('attendanceSourceChart').getContext('2d');
+
+    const deviceAttendance = {{ device_attendance_today }};
+    const mobileAttendance = {{ mobile_attendance_today }};
+
+    const attendanceSourceData = {
+        labels: ['Device Attendance', 'Mobile Attendance'],
+        datasets: [{
+            data: [deviceAttendance, mobileAttendance],
+            backgroundColor: [
+                'rgba(124, 58, 237, 0.8)',
+                'rgba(37, 99, 235, 0.8)'
+            ],
+            borderColor: [
+                'rgba(124, 58, 237, 1)',
+                'rgba(37, 99, 235, 1)'
+            ],
+            borderWidth: 3,
+            hoverOffset: 15
+        }]
+    };
+
+    new Chart(attendanceSourceCtx, {
+        type: 'doughnut',
+        data: attendanceSourceData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function (context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+                            return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            },
+            cutout: '70%',
+            elements: {
+                arc: {
+                    borderWidth: 3
+                }
+            }
+        }
+    });
+
+    // Leave Status Chart
+    const leaveStatusCtx = document.getElementById('leaveStatusChart').getContext('2d');
+
+    const leaveStatusData = {
+        labels: ['Pending', 'Approved', 'Rejected'],
+        datasets: [{
+            data: [{{ pending_leaves }}, {{ approved_leaves }}, {{ rejected_leaves }}],
+    backgroundColor: [
+        'rgba(251, 191, 36, 0.8)',
+        'rgba(34, 197, 94, 0.8)',
+        'rgba(239, 68, 68, 0.8)'
+    ],
+        borderColor: [
+            'rgba(251, 191, 36, 1)',
+            'rgba(34, 197, 94, 1)',
+            'rgba(239, 68, 68, 1)'
+        ],
+            borderWidth: 2
+        }]
+    };
+
+    new Chart(leaveStatusCtx, {
+        type: 'bar',
+        data: leaveStatusData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    borderWidth: 1,
+                    cornerRadius: 8
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#6b7280'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(107, 114, 128, 0.1)'
+                    },
+                    ticks: {
+                        color: '#6b7280',
+                        stepSize: 1
+                    }
+                }
+            },
+            elements: {
+                bar: {
+                    borderRadius: 4
+                }
+            }
+        }
+    });
+
+    // Real-time updates simulation (optional)
+    setInterval(function () {
+        // You can add real-time data updates here
+        // For example, fetch new data from your backend and update charts
+    }, 30000); // Update every 30 seconds
+
+    // Add smooth animations to stat cards
+    const statCards = document.querySelectorAll('.stat-card');
+    statCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.style.animation = 'fadeInUp 0.6s ease forwards';
+    });
+
+    // Add CSS animation keyframes
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    `;
+    document.head.appendChild(style);
+});
+</script>
 {% endblock %}

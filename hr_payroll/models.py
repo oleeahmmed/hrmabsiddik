@@ -9,6 +9,8 @@ import logging
 from django.utils.dateparse import parse_datetime
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save, pre_save
+from django.dispatch import receiver
 # Import Company model from custom_auth app
 from core.models import Company
 
@@ -2008,3 +2010,74 @@ class Complaint(models.Model):
     
     def __str__(self):
         return f"{self.name} - {self.company.name}"
+
+
+# ==================== SIGNALS ====================
+
+@receiver(post_save, sender=LeaveApplication)
+def update_leave_balance_on_approval(sender, instance, created, **kwargs):
+    """
+    Signal to automatically update leave balance when leave application is approved
+    """
+    if not created and hasattr(instance, '_original_status'):  # Only for updates, not new creations
+        old_status = instance._original_status
+        
+        # Check if status changed to approved
+        if instance.status == 'A' and old_status != 'A':
+            # Calculate business days
+            delta = instance.end_date - instance.start_date
+            business_days = 0
+            for i in range(delta.days + 1):
+                day = instance.start_date + timedelta(days=i)
+                if day.weekday() < 5:  # Monday to Friday
+                    business_days += 1
+            
+            # Get or create leave balance
+            leave_balance, created = LeaveBalance.objects.get_or_create(
+                employee=instance.employee,
+                leave_type=instance.leave_type,
+                defaults={
+                    'entitled_days': instance.leave_type.max_days,
+                    'used_days': 0
+                }
+            )
+            
+            # Add used days
+            leave_balance.used_days += business_days
+            leave_balance.save()
+            
+        # Check if status changed from approved to something else
+        elif old_status == 'A' and instance.status != 'A':
+            # Calculate business days
+            delta = instance.end_date - instance.start_date
+            business_days = 0
+            for i in range(delta.days + 1):
+                day = instance.start_date + timedelta(days=i)
+                if day.weekday() < 5:  # Monday to Friday
+                    business_days += 1
+            
+            # Get leave balance and subtract used days
+            try:
+                leave_balance = LeaveBalance.objects.get(
+                    employee=instance.employee,
+                    leave_type=instance.leave_type
+                )
+                leave_balance.used_days = max(0, leave_balance.used_days - business_days)
+                leave_balance.save()
+            except LeaveBalance.DoesNotExist:
+                pass
+
+
+@receiver(pre_save, sender=LeaveApplication)
+def store_original_status(sender, instance, **kwargs):
+    """
+    Store the original status before saving to compare in post_save
+    """
+    if instance.pk:
+        try:
+            original = LeaveApplication.objects.get(pk=instance.pk)
+            instance._original_status = original.status
+        except LeaveApplication.DoesNotExist:
+            instance._original_status = None
+    else:
+        instance._original_status = None

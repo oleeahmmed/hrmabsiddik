@@ -4,6 +4,12 @@ from django.urls import path
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import display
 from django.http import HttpResponseRedirect
+from django.shortcuts import render
+from django.template.response import TemplateResponse
+from django.utils import timezone
+from django.db import models
+from django.contrib.auth.models import User
+from datetime import datetime, timedelta
 from .models import (
     Company, UserProfile, Project, Task, TaskComment
 )
@@ -121,6 +127,268 @@ class UserProfileAdmin(ModelAdmin):
     
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('user', 'company')
+
+
+# ==================== PROJECT DASHBOARD VIEW ====================
+
+from django.views import View
+from django.utils.decorators import method_decorator
+
+class ProjectDashboardView(View):
+    """Custom Project Dashboard"""
+    
+    def get(self, request, *args, **kwargs):
+        """Handle GET requests for Project Dashboard"""
+        
+        # Get base admin context
+        context = {**admin.site.each_context(request)}
+        
+        # Get user's company if not superuser
+        user_company = None
+        if not request.user.is_superuser and hasattr(request.user, 'profile'):
+            user_company = request.user.profile.company
+        
+        # Build queryset based on user permissions
+        if request.user.is_superuser:
+            projects_qs = Project.objects.all()
+            tasks_qs = Task.objects.all()
+            companies_qs = Company.objects.all()
+            users_qs = User.objects.all()
+        else:
+            # Filter by user's company and permissions
+            if hasattr(request.user, 'profile') and request.user.profile.company:
+                projects_qs = Project.objects.filter(
+                    company=request.user.profile.company
+                ).filter(
+                    models.Q(owner=request.user) |
+                    models.Q(technical_lead=request.user) |
+                    models.Q(project_manager=request.user) |
+                    models.Q(supervisor=request.user)
+                ).distinct()
+                
+                tasks_qs = Task.objects.filter(
+                    company=request.user.profile.company
+                ).filter(
+                    models.Q(project__owner=request.user) |
+                    models.Q(project__technical_lead=request.user) |
+                    models.Q(project__project_manager=request.user) |
+                    models.Q(project__supervisor=request.user) |
+                    models.Q(owner=request.user) |
+                    models.Q(assigned_to=request.user)
+                ).distinct()
+                
+                companies_qs = Company.objects.filter(id=request.user.profile.company.id)
+                users_qs = User.objects.filter(profile__company=request.user.profile.company)
+            else:
+                projects_qs = Project.objects.none()
+                tasks_qs = Task.objects.none()
+                companies_qs = Company.objects.none()
+                users_qs = User.objects.none()
+        
+        # Project Statistics
+        total_projects = projects_qs.count()
+        active_projects = projects_qs.filter(is_active=True).count()
+        completed_projects = projects_qs.filter(status='completed').count()
+        in_progress_projects = projects_qs.filter(status='in_progress').count()
+        planning_projects = projects_qs.filter(status='planning').count()
+        on_hold_projects = projects_qs.filter(status='on_hold').count()
+        
+        # Task Statistics
+        total_tasks = tasks_qs.count()
+        completed_tasks = tasks_qs.filter(status='completed').count()
+        in_progress_tasks = tasks_qs.filter(status='in_progress').count()
+        todo_tasks = tasks_qs.filter(status='todo').count()
+        blocked_tasks = tasks_qs.filter(is_blocked=True).count()
+        
+        # Overdue tasks
+        today = timezone.now().date()
+        overdue_tasks = tasks_qs.filter(
+            due_date__lt=today,
+            status__in=['todo', 'in_progress']
+        ).count()
+        
+        # Recent Data
+        recent_projects = projects_qs.select_related(
+            'company', 'owner', 'technical_lead', 'project_manager'
+        ).order_by('-created_at')[:10]
+        
+        recent_tasks = tasks_qs.select_related(
+            'project', 'owner', 'assigned_to', 'assigned_by'
+        ).order_by('-created_at')[:15]
+        
+        recent_comments = TaskComment.objects.filter(
+            task__in=tasks_qs
+        ).select_related(
+            'task', 'commented_by', 'owner'
+        ).order_by('-created_at')[:10]
+        
+        # Project Status Distribution
+        project_status_data = {
+            'planning': planning_projects,
+            'in_progress': in_progress_projects,
+            'completed': completed_projects,
+            'on_hold': on_hold_projects,
+        }
+        
+        # Task Status Distribution
+        task_status_data = {
+            'todo': todo_tasks,
+            'in_progress': in_progress_tasks,
+            'completed': completed_tasks,
+            'blocked': blocked_tasks,
+        }
+        
+        # Priority Distribution
+        high_priority_projects = projects_qs.filter(priority='high').count()
+        critical_priority_projects = projects_qs.filter(priority='critical').count()
+        high_priority_tasks = tasks_qs.filter(priority='high').count()
+        critical_priority_tasks = tasks_qs.filter(priority='critical').count()
+        
+        # Team Statistics
+        total_team_members = users_qs.count()
+        active_team_members = users_qs.filter(is_active=True).count()
+        
+        # Budget Statistics (if available)
+        total_budget = projects_qs.aggregate(
+            total=models.Sum('total_budget')
+        )['total'] or 0
+        
+        spent_budget = projects_qs.aggregate(
+            spent=models.Sum('spent_budget')
+        )['spent'] or 0
+        
+        # Weekly Progress Data (last 7 days)
+        weekly_progress = []
+        for i in range(7):
+            date = today - timedelta(days=6-i)
+            day_completed_tasks = tasks_qs.filter(
+                completed_at__date=date
+            ).count()
+            day_created_tasks = tasks_qs.filter(
+                created_at__date=date
+            ).count()
+            weekly_progress.append({
+                'date': date,
+                'completed': day_completed_tasks,
+                'created': day_created_tasks,
+                'day_name': date.strftime('%a')
+            })
+        
+        # Top Performers (users with most completed tasks)
+        top_performers = tasks_qs.filter(
+            status='completed',
+            assigned_to__isnull=False
+        ).values(
+            'assigned_to__username',
+            'assigned_to__first_name',
+            'assigned_to__last_name'
+        ).annotate(
+            completed_count=models.Count('id')
+        ).order_by('-completed_count')[:5]
+        
+        # Upcoming Deadlines (next 7 days)
+        next_week = today + timedelta(days=7)
+        upcoming_deadlines = tasks_qs.filter(
+            due_date__gte=today,
+            due_date__lte=next_week,
+            status__in=['todo', 'in_progress']
+        ).select_related('project', 'assigned_to').order_by('due_date')[:10]
+        
+        # Project Progress Summary
+        project_progress_summary = []
+        for project in recent_projects[:5]:
+            progress_data = {
+                'project': project,
+                'progress_percentage': project.get_progress_percentage(),
+                'total_tasks': project.tasks.count(),
+                'completed_tasks': project.tasks.filter(status='completed').count(),
+                'overdue_tasks': project.get_overdue_tasks(),
+                'budget_status': project.get_budget_status(),
+            }
+            project_progress_summary.append(progress_data)
+        
+        # Add all data to context
+        context.update({
+            'title': _('Project Management Dashboard'),
+            'subtitle': _('Comprehensive overview of project operations'),
+            'opts': Project._meta,
+            
+            # Project Stats
+            'total_projects': total_projects,
+            'active_projects': active_projects,
+            'completed_projects': completed_projects,
+            'in_progress_projects': in_progress_projects,
+            'planning_projects': planning_projects,
+            'on_hold_projects': on_hold_projects,
+            
+            # Task Stats
+            'total_tasks': total_tasks,
+            'completed_tasks': completed_tasks,
+            'in_progress_tasks': in_progress_tasks,
+            'todo_tasks': todo_tasks,
+            'blocked_tasks': blocked_tasks,
+            'overdue_tasks': overdue_tasks,
+            
+            # Priority Stats
+            'high_priority_projects': high_priority_projects,
+            'critical_priority_projects': critical_priority_projects,
+            'high_priority_tasks': high_priority_tasks,
+            'critical_priority_tasks': critical_priority_tasks,
+            
+            # Team Stats
+            'total_team_members': total_team_members,
+            'active_team_members': active_team_members,
+            
+            # Budget Stats
+            'total_budget': total_budget,
+            'spent_budget': spent_budget,
+            'remaining_budget': total_budget - spent_budget,
+            
+            # Recent Data
+            'recent_projects': recent_projects,
+            'recent_tasks': recent_tasks,
+            'recent_comments': recent_comments,
+            'upcoming_deadlines': upcoming_deadlines,
+            'project_progress_summary': project_progress_summary,
+            'top_performers': top_performers,
+            'weekly_progress': weekly_progress,
+            
+            # Chart Data
+            'project_status_data': project_status_data,
+            'task_status_data': task_status_data,
+            
+            # URLs
+            'projects_url': 'admin:core_project_changelist',
+            'tasks_url': 'admin:core_task_changelist',
+            'comments_url': 'admin:core_taskcomment_changelist',
+            'companies_url': 'admin:core_company_changelist',
+            'users_url': 'admin:core_userprofile_changelist',
+            
+            'today': today,
+            'user_company': user_company,
+        })
+        
+        return render(request, 'admin/core/project_dashboard.html', context)
+
+
+# Add custom URLs for Project Dashboard
+def get_project_admin_urls():
+    """Get custom URLs for Project admin"""
+    from django.urls import path
+    return [
+        path('project-dashboard/', 
+             admin.site.admin_view(ProjectDashboardView.as_view()), 
+             name='core_project_dashboard'),
+    ]
+
+# Get the original admin URLs and add our custom one
+original_get_urls = admin.site.get_urls
+
+def custom_get_urls():
+    custom_urls = get_project_admin_urls()
+    return custom_urls + original_get_urls()
+
+admin.site.get_urls = custom_get_urls
 
 from django.db import models
 from django.contrib.auth.models import User

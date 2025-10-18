@@ -101,7 +101,7 @@ def get_navigation_for_user(request):
                 {
                     "title": _("📊 Project Dashboard"),
                     "icon": "dashboard",
-                    "link": "/core/project-reports/dashboard/",  # 🔥 CHANGE
+                    "link": reverse_lazy("admin:core_project_dashboard"),
                     "permission": lambda request: request.user.is_authenticated,
                 },
 

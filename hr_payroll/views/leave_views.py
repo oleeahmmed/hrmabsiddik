@@ -122,8 +122,9 @@ class LeaveApplicationForm(forms.ModelForm):
                     company=employee.company
                 ).order_by('name')
                 
-                # Filter employees by company
-                if user.is_staff:
+                # Filter employees by company and user permissions
+                if user.is_staff or user.is_superuser:
+                    # Staff can apply for any employee in their company
                     self.fields['employee'].queryset = Employee.objects.filter(
                         company=employee.company,
                         is_active=True
@@ -133,10 +134,26 @@ class LeaveApplicationForm(forms.ModelForm):
                     self.fields['employee'].queryset = Employee.objects.filter(pk=employee.pk)
                     self.fields['employee'].initial = employee
                     self.fields['employee'].widget.attrs['readonly'] = True
+                    self.fields['employee'].widget.attrs['disabled'] = True
+                    
+                # Hide status field for non-staff users
+                if not user.is_staff and not user.is_superuser:
+                    if 'status' in self.fields:
+                        del self.fields['status']
                     
             except Employee.DoesNotExist:
-                self.fields['leave_type'].queryset = LeaveType.objects.none()
+                # If user doesn't have an employee record, show all leave types
+                # This allows the form to be displayed, but validation will catch the issue
+                self.fields['leave_type'].queryset = LeaveType.objects.all().order_by('name')
                 self.fields['employee'].queryset = Employee.objects.none()
+                
+                # Add a form error to inform the user
+                if hasattr(self, 'add_error'):
+                    self.add_error(None, _('No employee profile found for your account. Please contact administrator.'))
+        else:
+            # No user provided, show all leave types but no employees
+            self.fields['leave_type'].queryset = LeaveType.objects.all().order_by('name')
+            self.fields['employee'].queryset = Employee.objects.none()
 
     def clean(self):
         cleaned_data = super().clean()
@@ -193,32 +210,36 @@ class LeaveApplicationForm(forms.ModelForm):
         
         return cleaned_data
 
-class LeaveListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+class LeaveListView(LoginRequiredMixin, ListView):
     model = LeaveApplication
     template_name = 'leave/leave_list.html'
     context_object_name = 'leaves'
     paginate_by = 10
-    permission_required = 'hr_payroll.view_leaveapplication'
     
     def get_queryset(self):
         queryset = LeaveApplication.objects.select_related('employee', 'leave_type', 'approved_by')
         
-        # Regular users see only their leaves, staff see all
-        if not self.request.user.is_staff:
+        # Non-staff and non-superuser users see only their own leaves
+        if not self.request.user.is_staff and not self.request.user.is_superuser:
             try:
                 from hr_payroll.models import Employee
                 employee = Employee.objects.get(user=self.request.user)
                 queryset = queryset.filter(employee=employee)
-            except:
+            except Employee.DoesNotExist:
                 queryset = queryset.none()
         
         # Apply filters
         try:
             from hr_payroll.models import Employee
-            employee = Employee.objects.get(user=self.request.user)
-            self.filter_form = LeaveFilterForm(self.request.GET, employee=employee)
-        except:
-            # If employee doesn't exist, create form without employee context
+            if self.request.user.is_staff or self.request.user.is_superuser:
+                # Staff can see all employees in their company
+                user_employee = Employee.objects.get(user=self.request.user)
+                self.filter_form = LeaveFilterForm(self.request.GET, employee=user_employee)
+            else:
+                # Regular users only see their own data
+                employee = Employee.objects.get(user=self.request.user)
+                self.filter_form = LeaveFilterForm(self.request.GET, employee=employee)
+        except Employee.DoesNotExist:
             self.filter_form = LeaveFilterForm(self.request.GET)
         
         if self.filter_form.is_valid():
@@ -255,22 +276,56 @@ class LeaveListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         context['filter_form'] = self.filter_form
         
         # Add leave balances for current user
-        if not self.request.user.is_staff:
-            try:
-                from hr_payroll.models import Employee
+        try:
+            from hr_payroll.models import Employee
+            if self.request.user.is_staff or self.request.user.is_superuser:
+                # Staff can see all leave balances in their company
+                employee = Employee.objects.get(user=self.request.user)
+                leave_balances = LeaveBalance.objects.filter(
+                    employee__company=employee.company
+                ).select_related('leave_type', 'employee')
+            else:
+                # Regular users see only their own leave balances
                 employee = Employee.objects.get(user=self.request.user)
                 leave_balances = LeaveBalance.objects.filter(employee=employee).select_related('leave_type')
-                context['leave_balances'] = leave_balances
-            except:
-                context['leave_balances'] = []
+            context['leave_balances'] = leave_balances
+        except Employee.DoesNotExist:
+            context['leave_balances'] = []
+            # Add a message for users without employee profiles
+            if not self.request.user.is_staff and not self.request.user.is_superuser:
+                messages.warning(self.request, _('No employee profile found for your account. Please contact administrator to create your employee profile before applying for leaves.'))
+        
+        # Add user permissions context
+        context['is_staff_or_superuser'] = self.request.user.is_staff or self.request.user.is_superuser
+        
+        # Add debug info for employee profile
+        try:
+            from hr_payroll.models import Employee
+            employee = Employee.objects.get(user=self.request.user)
+            context['has_employee_profile'] = True
+            context['user_employee'] = employee
+        except Employee.DoesNotExist:
+            context['has_employee_profile'] = False
+            context['user_employee'] = None
         
         return context
-class LeaveCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+class LeaveCreateView(LoginRequiredMixin, CreateView):
     model = LeaveApplication
     form_class = LeaveApplicationForm
     template_name = 'leave/leave_form.html'
     success_url = reverse_lazy('zkteco:leave_list')
-    permission_required = 'hr_payroll.add_leaveapplication'
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Check if user has an employee record
+        if not request.user.is_staff and not request.user.is_superuser:
+            try:
+                from hr_payroll.models import Employee
+                Employee.objects.get(user=request.user)
+            except Employee.DoesNotExist:
+                messages.error(request, _('No employee profile found for your account. Please contact administrator to create your employee profile.'))
+                return redirect('zkteco:leave_list')
+        
+        return super().dispatch(request, *args, **kwargs)
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -280,17 +335,26 @@ class LeaveCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     def form_valid(self, form):
         try:
             from hr_payroll.models import Employee
-            employee = Employee.objects.get(user=self.request.user)
             
-            # If no employee selected, assign to current user
-            if not form.instance.employee:
+            # Non-staff users can only create leaves for themselves
+            if not self.request.user.is_staff and not self.request.user.is_superuser:
+                employee = Employee.objects.get(user=self.request.user)
                 form.instance.employee = employee
+            
+            # If no employee selected and user is staff, require selection
+            if not form.instance.employee:
+                if self.request.user.is_staff or self.request.user.is_superuser:
+                    messages.error(self.request, _('Please select an employee.'))
+                    return self.form_invalid(form)
+                else:
+                    employee = Employee.objects.get(user=self.request.user)
+                    form.instance.employee = employee
             
             messages.success(self.request, _('Leave application submitted successfully!'))
             return super().form_valid(form)
             
         except Employee.DoesNotExist:
-            messages.error(self.request, _('No employee profile found for your account.'))
+            messages.error(self.request, _('No employee profile found for your account. Please contact administrator to create your employee profile.'))
             return self.form_invalid(form)
     
     def form_invalid(self, form):
@@ -298,23 +362,47 @@ class LeaveCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
         return super().form_invalid(form)
 
 
-class LeaveUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+class LeaveUpdateView(LoginRequiredMixin, UpdateView):
     model = LeaveApplication
     form_class = LeaveApplicationForm
     template_name = 'leave/leave_form.html'
     success_url = reverse_lazy('zkteco:leave_list')
-    permission_required = 'hr_payroll.change_leaveapplication'
     
     def get_queryset(self):
         queryset = LeaveApplication.objects.all()
-        if not self.request.user.is_staff:
+        
+        # Non-staff users can only update their own leaves
+        if not self.request.user.is_staff and not self.request.user.is_superuser:
             try:
                 from hr_payroll.models import Employee
                 employee = Employee.objects.get(user=self.request.user)
                 queryset = queryset.filter(employee=employee)
-            except:
+            except Employee.DoesNotExist:
                 queryset = queryset.none()
+        
         return queryset
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Check if user has an employee record
+        if not request.user.is_staff and not request.user.is_superuser:
+            try:
+                from hr_payroll.models import Employee
+                Employee.objects.get(user=request.user)
+            except Employee.DoesNotExist:
+                messages.error(request, _('No employee profile found for your account. Please contact administrator to create your employee profile.'))
+                return redirect('zkteco:leave_list')
+        
+        # Check permissions before processing
+        obj = self.get_object()
+        
+        # Check if non-staff user can edit this leave
+        if not request.user.is_staff and not request.user.is_superuser:
+            # Non-staff users cannot edit approved leaves
+            if obj.status == 'A':
+                messages.error(request, _('You cannot edit an approved leave application.'))
+                return redirect('zkteco:leave_list')
+        
+        return super().dispatch(request, *args, **kwargs)
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -325,8 +413,14 @@ class LeaveUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
         old_status = self.get_object().status
         new_status = form.instance.status
         
-        # Update leave balance if status changed to/from approved
-        if old_status != new_status and (old_status == 'A' or new_status == 'A'):
+        # Non-staff users cannot change status
+        if not self.request.user.is_staff and not self.request.user.is_superuser:
+            if old_status != new_status:
+                messages.error(self.request, _('You cannot change the leave status.'))
+                return self.form_invalid(form)
+        
+        # Update leave balance if status changed to/from approved (only for staff)
+        if (self.request.user.is_staff or self.request.user.is_superuser) and old_status != new_status and (old_status == 'A' or new_status == 'A'):
             self.update_leave_balance(form.instance, old_status, new_status)
         
         messages.success(self.request, _('Leave application updated successfully!'))
@@ -367,28 +461,43 @@ class LeaveUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
         leave_balance.save()
 
 
-class LeaveDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+class LeaveDeleteView(LoginRequiredMixin, DeleteView):
     model = LeaveApplication
     template_name = 'leave/leave_confirm_delete.html'
     success_url = reverse_lazy('zkteco:leave_list')
-    permission_required = 'hr_payroll.delete_leaveapplication'
     
     def get_queryset(self):
         queryset = LeaveApplication.objects.all()
-        if not self.request.user.is_staff:
+        
+        # Non-staff users can only delete their own leaves
+        if not self.request.user.is_staff and not self.request.user.is_superuser:
             try:
                 from hr_payroll.models import Employee
                 employee = Employee.objects.get(user=self.request.user)
                 queryset = queryset.filter(employee=employee)
-            except:
+            except Employee.DoesNotExist:
                 queryset = queryset.none()
+        
         return queryset
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Check permissions before processing
+        obj = self.get_object()
+        
+        # Check if non-staff user can delete this leave
+        if not request.user.is_staff and not request.user.is_superuser:
+            # Non-staff users cannot delete approved leaves
+            if obj.status == 'A':
+                messages.error(request, _('You cannot delete an approved leave application.'))
+                return redirect('zkteco:leave_list')
+        
+        return super().dispatch(request, *args, **kwargs)
     
     def delete(self, request, *args, **kwargs):
         leave_application = self.get_object()
         
-        # If deleting an approved application, update leave balance
-        if leave_application.status == 'A':
+        # If deleting an approved application, update leave balance (only staff can do this)
+        if leave_application.status == 'A' and (request.user.is_staff or request.user.is_superuser):
             self.update_leave_balance_on_delete(leave_application)
         
         messages.success(request, _('Leave application deleted successfully!'))
@@ -415,21 +524,23 @@ class LeaveDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
             pass
 
 
-class LeaveDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
+class LeaveDetailView(LoginRequiredMixin, DetailView):
     model = LeaveApplication
     template_name = 'leave/leave_detail.html'
     context_object_name = 'leave'
-    permission_required = 'hr_payroll.view_leaveapplication'
     
     def get_queryset(self):
         queryset = LeaveApplication.objects.select_related('employee', 'leave_type', 'approved_by')
-        if not self.request.user.is_staff:
+        
+        # Non-staff users can only view their own leaves
+        if not self.request.user.is_staff and not self.request.user.is_superuser:
             try:
                 from hr_payroll.models import Employee
                 employee = Employee.objects.get(user=self.request.user)
                 queryset = queryset.filter(employee=employee)
-            except:
+            except Employee.DoesNotExist:
                 queryset = queryset.none()
+        
         return queryset
     
     def get_context_data(self, **kwargs):
@@ -462,11 +573,17 @@ class LeaveDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
         return context
 
 
-class LeaveStatusChangeView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
-    """API view for changing leave status (approve/reject)"""
+class LeaveStatusChangeView(LoginRequiredMixin, UpdateView):
+    """API view for changing leave status (approve/reject) - Only for staff"""
     model = LeaveApplication
     fields = ['status', 'approved_by']
-    permission_required = 'hr_payroll.change_leaveapplication'
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Only staff and superusers can change leave status
+        if not request.user.is_staff and not request.user.is_superuser:
+            messages.error(request, _('You do not have permission to change leave status.'))
+            return redirect('zkteco:leave_list')
+        return super().dispatch(request, *args, **kwargs)
     
     def post(self, request, *args, **kwargs):
         leave = self.get_object()
@@ -482,7 +599,8 @@ class LeaveStatusChangeView(LoginRequiredMixin, PermissionRequiredMixin, UpdateV
             if old_status != new_status and (old_status == 'A' or new_status == 'A'):
                 self.update_leave_balance(leave, old_status, new_status)
             
-            messages.success(request, _('Leave status updated successfully!'))
+            status_text = 'approved' if new_status == 'A' else 'rejected'
+            messages.success(request, _(f'Leave application {status_text} successfully!'))
         else:
             messages.error(request, _('Invalid status provided.'))
         

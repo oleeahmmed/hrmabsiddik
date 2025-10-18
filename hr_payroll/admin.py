@@ -114,10 +114,13 @@ class HRPayrollDashboardView(View):
         # Enhanced Recent Attendance Logs with Map Support
         recent_attendance_logs = attendance_logs_qs.select_related(
             'employee', 'device', 'location', 'user'
-        ).order_by('-timestamp')[:10]
+        ).order_by('-timestamp')[:20]  # Increased to 20 for better distribution
         
-        # Process attendance logs for map display
+        # Process attendance logs for map display and separate by source
         processed_logs = []
+        device_logs = []
+        mobile_logs = []
+        
         for log in recent_attendance_logs:
             log_data = {
                 'id': log.id,
@@ -133,6 +136,12 @@ class HRPayrollDashboardView(View):
                 'is_within_radius': log.is_within_radius,
             }
             processed_logs.append(log_data)
+            
+            # Separate logs by source type
+            if log.source_type == 'ZK':
+                device_logs.append(log_data)
+            elif log.source_type == 'MB':
+                mobile_logs.append(log_data)
         
         # Device Status
         device_status = []
@@ -164,6 +173,26 @@ class HRPayrollDashboardView(View):
             source_type='MB'
         ).select_related('employee', 'location').order_by('-timestamp')[:5]
         
+        # Weekly Attendance Trend Data (last 7 days)
+        weekly_attendance = []
+        for i in range(7):
+            date = today - timedelta(days=6-i)
+            day_attendance = attendance_qs.filter(date=date)
+            present_count = day_attendance.filter(status='P').count()
+            absent_count = day_attendance.filter(status='A').count()
+            weekly_attendance.append({
+                'date': date,
+                'present': present_count,
+                'absent': absent_count,
+                'day_name': date.strftime('%a')
+            })
+        
+        # Device vs Mobile Attendance Statistics
+        device_attendance_today = attendance_logs_qs.filter(
+            timestamp__date=today,
+            source_type='ZK'
+        ).count()
+        
         # Add all data to context
         context.update({
             'title': _('HR & Payroll Dashboard'),
@@ -189,6 +218,7 @@ class HRPayrollDashboardView(View):
             'late_today': late_today,
             'leave_today': leave_today,
             'mobile_attendance_today': mobile_attendance_today,
+            'device_attendance_today': device_attendance_today,
             
             # Leave Stats
             'pending_leaves': pending_leaves,
@@ -206,10 +236,13 @@ class HRPayrollDashboardView(View):
             'recent_attendance': recent_attendance,
             'recent_leaves': recent_leaves,
             'recent_attendance_logs': processed_logs,
+            'device_logs': device_logs[:10],  # Limit to 10 for display
+            'mobile_logs': mobile_logs[:10],  # Limit to 10 for display
             'upcoming_holidays': upcoming_holidays,
             'active_notices': active_notices,
             'recent_mobile_attendance': recent_mobile_attendance,
             'device_status': device_status,
+            'weekly_attendance': weekly_attendance,
             
             # URLs
             'employees_url': 'admin:hr_payroll_employee_changelist',
