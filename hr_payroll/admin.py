@@ -52,10 +52,13 @@ class HRPayrollDashboardView(View):
             shifts_qs = Shift.objects.all()
             devices_qs = ZkDevice.objects.all()
             attendance_qs = Attendance.objects.all()
+            attendance_logs_qs = AttendanceLog.objects.all()
             holidays_qs = Holiday.objects.all()
             leaves_qs = LeaveApplication.objects.all()
-            notices_qs = Notice.objects.all()
+            notices_qs = Notice.objects.filter(is_active=True)
             trainings_qs = Training.objects.all()
+            overtime_qs = Overtime.objects.all()
+            complaints_qs = Complaint.objects.all()
         else:
             employees_qs = Employee.objects.filter(company=user_company)
             departments_qs = Department.objects.filter(company=user_company)
@@ -63,10 +66,13 @@ class HRPayrollDashboardView(View):
             shifts_qs = Shift.objects.filter(company=user_company)
             devices_qs = ZkDevice.objects.filter(company=user_company)
             attendance_qs = Attendance.objects.filter(employee__company=user_company)
+            attendance_logs_qs = AttendanceLog.objects.filter(employee__company=user_company)
             holidays_qs = Holiday.objects.filter(company=user_company)
             leaves_qs = LeaveApplication.objects.filter(employee__company=user_company)
-            notices_qs = Notice.objects.filter(company=user_company)
+            notices_qs = Notice.objects.filter(company=user_company, is_active=True)
             trainings_qs = Training.objects.filter(company=user_company)
+            overtime_qs = Overtime.objects.filter(employee__company=user_company)
+            complaints_qs = Complaint.objects.filter(employee__company=user_company)
         
         # Employee Statistics
         total_employees = employees_qs.count()
@@ -75,9 +81,6 @@ class HRPayrollDashboardView(View):
         
         # Department Statistics
         total_departments = departments_qs.count()
-        department_employee_count = departments_qs.annotate(
-            employee_count=models.Count('employee')
-        ).order_by('-employee_count')[:5]
         
         # Device Statistics
         total_devices = devices_qs.count()
@@ -90,27 +93,46 @@ class HRPayrollDashboardView(View):
         present_today = today_attendance.filter(status='P').count()
         absent_today = today_attendance.filter(status='A').count()
         late_today = today_attendance.filter(status='L').count()
+        leave_today = today_attendance.filter(status='L').count()
         
-        # Monthly Attendance Summary
-        current_month = timezone.now().month
-        current_year = timezone.now().year
-        monthly_attendance = attendance_qs.filter(
-            date__month=current_month,
-            date__year=current_year
-        )
-        total_work_days = monthly_attendance.count()
-        avg_attendance_rate = (monthly_attendance.filter(status='P').count() / total_work_days * 100) if total_work_days > 0 else 0
+        # Mobile Attendance Statistics
+        mobile_attendance_today = attendance_logs_qs.filter(
+            timestamp__date=today,
+            source_type='MB'
+        ).count()
         
         # Leave Statistics
-        pending_leaves = leaves_qs.filter(status='pending').count()
-        approved_leaves = leaves_qs.filter(status='approved').count()
-        rejected_leaves = leaves_qs.filter(status='rejected').count()
+        pending_leaves = leaves_qs.filter(status='P').count()
+        approved_leaves = leaves_qs.filter(status='A').count()
+        rejected_leaves = leaves_qs.filter(status='R').count()
         
-        # Recent Data
-        recent_employees = employees_qs.select_related('department', 'designation').order_by('-created_at')[:5]
-        recent_attendance = attendance_qs.select_related('employee', 'shift').order_by('-date')[:5]
-        recent_leaves = leaves_qs.select_related('employee', 'leave_type').order_by('-created_at')[:5]
-        upcoming_holidays = holidays_qs.filter(date__gte=today).order_by('date')[:5]
+        # Recent Data (Last 10 records)
+        recent_employees = employees_qs.select_related('department', 'designation').order_by('-created_at')[:10]
+        recent_attendance = attendance_qs.select_related('employee', 'shift').order_by('-date')[:10]
+        recent_leaves = leaves_qs.select_related('employee', 'leave_type').order_by('-created_at')[:10]
+        
+        # Enhanced Recent Attendance Logs with Map Support
+        recent_attendance_logs = attendance_logs_qs.select_related(
+            'employee', 'device', 'location', 'user'
+        ).order_by('-timestamp')[:10]
+        
+        # Process attendance logs for map display
+        processed_logs = []
+        for log in recent_attendance_logs:
+            log_data = {
+                'id': log.id,
+                'employee': log.employee,
+                'timestamp': log.timestamp,
+                'device': log.device,
+                'source_type': log.get_source_type_display(),
+                'attendance_type': log.get_attendance_type_display() if log.attendance_type else 'Unknown',
+                'has_location': log.latitude is not None and log.longitude is not None,
+                'latitude': log.latitude,
+                'longitude': log.longitude,
+                'location_name': log.location.name if log.location else 'No Location',
+                'is_within_radius': log.is_within_radius,
+            }
+            processed_logs.append(log_data)
         
         # Device Status
         device_status = []
@@ -125,6 +147,23 @@ class HRPayrollDashboardView(View):
                 'last_sync': device.last_synced
             })
         
+        # Upcoming Holidays (next 30 days)
+        thirty_days_later = today + timedelta(days=30)
+        upcoming_holidays = holidays_qs.filter(
+            date__gte=today,
+            date__lte=thirty_days_later
+        ).order_by('date')[:5]
+        
+        # Active Notices
+        active_notices = notices_qs.filter(
+            expiry_date__gte=today
+        ).order_by('-published_date')[:5]
+        
+        # Recent Mobile Attendance
+        recent_mobile_attendance = attendance_logs_qs.filter(
+            source_type='MB'
+        ).select_related('employee', 'location').order_by('-timestamp')[:5]
+        
         # Add all data to context
         context.update({
             'title': _('HR & Payroll Dashboard'),
@@ -138,7 +177,6 @@ class HRPayrollDashboardView(View):
             
             # Department Stats
             'total_departments': total_departments,
-            'department_employee_count': department_employee_count,
             
             # Device Stats
             'total_devices': total_devices,
@@ -149,7 +187,8 @@ class HRPayrollDashboardView(View):
             'present_today': present_today,
             'absent_today': absent_today,
             'late_today': late_today,
-            'avg_attendance_rate': avg_attendance_rate,
+            'leave_today': leave_today,
+            'mobile_attendance_today': mobile_attendance_today,
             
             # Leave Stats
             'pending_leaves': pending_leaves,
@@ -166,22 +205,28 @@ class HRPayrollDashboardView(View):
             'recent_employees': recent_employees,
             'recent_attendance': recent_attendance,
             'recent_leaves': recent_leaves,
+            'recent_attendance_logs': processed_logs,
             'upcoming_holidays': upcoming_holidays,
+            'active_notices': active_notices,
+            'recent_mobile_attendance': recent_mobile_attendance,
             'device_status': device_status,
             
             # URLs
             'employees_url': 'admin:hr_payroll_employee_changelist',
             'attendance_url': 'admin:hr_payroll_attendance_changelist',
+            'attendance_logs_url': 'admin:hr_payroll_attendancelog_changelist',
             'devices_url': 'admin:hr_payroll_zkdevice_changelist',
             'leaves_url': 'admin:hr_payroll_leaveapplication_changelist',
             'departments_url': 'admin:hr_payroll_department_changelist',
+            'holidays_url': 'admin:hr_payroll_holiday_changelist',
+            'notices_url': 'admin:hr_payroll_notice_changelist',
+            'trainings_url': 'admin:hr_payroll_training_changelist',
             
             'today': today,
             'user_company': user_company,
         })
         
         return render(request, 'admin/custom_page.html', context)
-
 # Add custom URLs for HR Payroll
 def get_hr_payroll_admin_urls():
     """Get custom URLs for HR Payroll admin"""
